@@ -75,7 +75,7 @@ export default function HomeScreen() {
     );
   }
 
-  const name = user?.username || user?.name || 'Guest';
+  const displayName = user?.name || user?.username || '';
 
   // Extract variables with fallback mock values to avoid crashes if API has an issue
   const ltp = marketData?.ltp || 0;
@@ -95,24 +95,24 @@ export default function HomeScreen() {
         {/* Header Section */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.welcomeText}>Welcome,</Text>
-            <Text style={styles.nameText}>{name}</Text>
+            <Text style={styles.welcomeText}>Welcome{displayName ? ',' : ""}</Text>
+            {displayName ? <Text style={styles.nameText}>{displayName}</Text> : null}
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.profileButton, user?.profile ? styles.profileButtonWithImage : null]}
             onPress={() => setShowProfileMenu(true)}
             activeOpacity={0.7}
           >
             {user?.profile ? (
-              <Image 
-                source={{ uri: user.profile }} 
-                style={styles.headerAvatar} 
+              <Image
+                source={{ uri: user.profile }}
+                style={styles.headerAvatar}
               />
             ) : (
-              <Ionicons 
-                name={user ? "person-circle" : "person-circle-outline"} 
-                size={32} 
-                color={user ? "#4f46e5" : "#0f172a"} 
+              <Ionicons
+                name={user ? "person-circle" : "person-circle-outline"}
+                size={32}
+                color={user ? "#4f46e5" : "#0f172a"}
               />
             )}
           </TouchableOpacity>
@@ -221,18 +221,31 @@ export default function HomeScreen() {
           </View>
           <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
         </TouchableOpacity>
+
+        {/* Calculator Button/Card */}
+        <TouchableOpacity
+          style={styles.calculatorButton}
+          activeOpacity={0.8}
+          onPress={() => router.push('/calculator')}
+        >
+          <View style={styles.calculatorContent}>
+            <Ionicons name="calculator-outline" size={20} color="#ffffff" />
+            <Text style={styles.calculatorButtonText}>Calculator</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+        </TouchableOpacity>
       </View>
 
       {/* Side Menu Drawer overlay (Matching Screener Screen Layout!) */}
       {showProfileMenu && (
         <View style={styles.sideMenuOverlay}>
           {/* Backdrop click dismiss */}
-          <TouchableOpacity 
-            style={styles.backdrop} 
-            activeOpacity={1} 
-            onPress={() => setShowProfileMenu(false)} 
+          <TouchableOpacity
+            style={styles.backdrop}
+            activeOpacity={1}
+            onPress={() => setShowProfileMenu(false)}
           />
-          
+
           {/* Drawer Panel */}
           <View style={styles.drawerPanel}>
             {/* Custom Navigation Header (Same style as Screener Screen!) */}
@@ -250,9 +263,9 @@ export default function HomeScreen() {
                 <View style={styles.profileDetailsCard}>
                   <View style={styles.avatarCircle}>
                     {user.profile ? (
-                      <Image 
-                        source={{ uri: user.profile }} 
-                        style={styles.drawerAvatar} 
+                      <Image
+                        source={{ uri: user.profile }}
+                        style={styles.drawerAvatar}
                       />
                     ) : (
                       <Ionicons name="person" size={36} color="#4f46e5" />
@@ -263,14 +276,21 @@ export default function HomeScreen() {
                     {user.name || user.email || user.mobile || user.username || 'User'}
                   </Text>
                   <View style={styles.profileDivider} />
-                  
-                  <View style={styles.featureRow}>
-                    <Ionicons name="shield-checkmark-outline" size={20} color="#10b981" />
-                    <Text style={styles.featureText}>Premium Account Active</Text>
-                  </View>
 
-                  <TouchableOpacity 
-                    style={styles.drawerLogoutButton} 
+                  <TouchableOpacity
+                    style={styles.drawerSettingsButton}
+                    onPress={() => {
+                      setShowProfileMenu(false);
+                      router.push('/settings');
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="settings-outline" size={18} color="#ffffff" />
+                    <Text style={styles.settingsButtonText}>Settings</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.drawerLogoutButton}
                     onPress={async () => {
                       await logout();
                       setShowProfileMenu(false);
@@ -292,9 +312,9 @@ export default function HomeScreen() {
                     Log in to unlock custom algorithmic strategies, live market status metrics, and portfolio integrations.
                   </Text>
                   <View style={styles.profileDivider} />
-                  
-                  <TouchableOpacity 
-                    style={styles.drawerLoginButton} 
+
+                  <TouchableOpacity
+                    style={styles.drawerLoginButton}
                     onPress={() => {
                       setShowProfileMenu(false);
                       router.push('/login');
@@ -548,6 +568,32 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
   },
+  calculatorButton: {
+    backgroundColor: '#0f172a',
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  calculatorContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  calculatorButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
   sideMenuOverlay: {
     position: 'absolute',
     top: 0,
@@ -688,6 +734,27 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   loginButtonText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  drawerSettingsButton: {
+    backgroundColor: '#1e293b',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 14,
+    width: '100%',
+    marginBottom: 12,
+    shadowColor: '#1e293b',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  settingsButtonText: {
     color: '#ffffff',
     fontSize: 15,
     fontWeight: '700',
