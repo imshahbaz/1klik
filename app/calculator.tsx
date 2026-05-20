@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { marginAPI } from '../services/api';
 
@@ -43,6 +43,19 @@ export default function CalculatorScreen() {
   const [quantity, setQuantity] = useState('');
   const [quantityType, setQuantityType] = useState<'quantity' | 'investment'>('quantity');
 
+  // Date Picker State
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerTarget, setDatePickerTarget] = useState<'entry' | 'exit'>('entry');
+  const [pickerDate, setPickerDate] = useState(new Date());
+
+  const handlePrevMonth = () => {
+    setPickerDate(new Date(pickerDate.getFullYear(), pickerDate.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setPickerDate(new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 1));
+  };
+
   // Results State
   const [results, setResults] = useState<any>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -70,7 +83,7 @@ export default function CalculatorScreen() {
   useEffect(() => {
     if (entryDate) {
       const start = new Date(entryDate);
-      const end = exitDate ? new Date(exitDate) : new Date();
+      const end = exitDate ? new Date(exitDate) : new Date(entryDate);
 
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
         if (exitDate && end.getTime() < start.getTime()) {
@@ -420,28 +433,39 @@ export default function CalculatorScreen() {
                   <View style={styles.inputRow}>
                     <View style={[styles.inputGroup, { flex: 1 }]}>
                       <Text style={styles.inputLabel}>Entry Date</Text>
-                      <View style={styles.inputWrapper}>
+                      <TouchableOpacity 
+                        style={styles.inputWrapper}
+                        onPress={() => {
+                          setDatePickerTarget('entry');
+                          if (entryDate) setPickerDate(new Date(entryDate));
+                          setShowDatePicker(true);
+                        }}
+                        activeOpacity={0.8}
+                      >
                         <Ionicons name="calendar-outline" size={18} color="#64748b" style={styles.inputIcon} />
-                        <TextInput
-                          style={styles.textInput}
-                          placeholder="YYYY-MM-DD"
-                          value={entryDate}
-                          onChangeText={setEntryDate}
-                        />
-                      </View>
+                        <Text style={[styles.textInput, { color: entryDate ? '#0f172a' : '#94a3b8' }]}>
+                          {entryDate || 'YYYY-MM-DD'}
+                        </Text>
+                      </TouchableOpacity>
                     </View>
 
                     <View style={[styles.inputGroup, { flex: 1 }]}>
                       <Text style={styles.inputLabel}>Exit Date (Optional)</Text>
-                      <View style={styles.inputWrapper}>
+                      <TouchableOpacity 
+                        style={styles.inputWrapper}
+                        onPress={() => {
+                          setDatePickerTarget('exit');
+                          if (exitDate) setPickerDate(new Date(exitDate));
+                          else if (entryDate) setPickerDate(new Date(entryDate));
+                          setShowDatePicker(true);
+                        }}
+                        activeOpacity={0.8}
+                      >
                         <Ionicons name="calendar-outline" size={18} color="#64748b" style={styles.inputIcon} />
-                        <TextInput
-                          style={styles.textInput}
-                          placeholder="YYYY-MM-DD"
-                          value={exitDate}
-                          onChangeText={setExitDate}
-                        />
-                      </View>
+                        <Text style={[styles.textInput, { color: exitDate ? '#0f172a' : '#94a3b8' }]}>
+                          {exitDate || 'Select Exit Date'}
+                        </Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
 
@@ -627,6 +651,124 @@ export default function CalculatorScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Date Picker Modal */}
+      <Modal
+        visible={showDatePicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDatePicker(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowDatePicker(false)}
+        >
+          <View style={styles.modalCalendarContainer} onStartShouldSetResponder={() => true}>
+            <View style={styles.calendarHeader}>
+              <TouchableOpacity onPress={handlePrevMonth} style={styles.calendarNavBtn}>
+                <Ionicons name="chevron-back" size={18} color="#0f172a" />
+              </TouchableOpacity>
+              <Text style={styles.calendarMonthText}>
+                {pickerDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
+              </Text>
+              <TouchableOpacity onPress={handleNextMonth} style={styles.calendarNavBtn}>
+                <Ionicons name="chevron-forward" size={18} color="#0f172a" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.calendarGrid}>
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((label, idx) => (
+                <View key={`wk-${idx}`} style={styles.calendarHeaderDayCell}>
+                  <Text style={styles.calendarHeaderDayText}>{label}</Text>
+                </View>
+              ))}
+              {(() => {
+                const daysInMonth = new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 0).getDate();
+                const firstDayIndex = new Date(pickerDate.getFullYear(), pickerDate.getMonth(), 1).getDay();
+                const calendarDays = [];
+
+                for (let i = 0; i < firstDayIndex; i++) {
+                  calendarDays.push(null);
+                }
+                for (let i = 1; i <= daysInMonth; i++) {
+                  calendarDays.push(new Date(pickerDate.getFullYear(), pickerDate.getMonth(), i));
+                }
+
+                const currentSelectionDate = datePickerTarget === 'entry'
+                  ? (entryDate ? new Date(entryDate) : null)
+                  : (exitDate ? new Date(exitDate) : null);
+                  
+                const minAllowedDate = datePickerTarget === 'exit' && entryDate 
+                  ? new Date(entryDate) 
+                  : null;
+                  
+                if (minAllowedDate) {
+                  minAllowedDate.setHours(0, 0, 0, 0);
+                }
+
+                return calendarDays.map((dayDate, idx) => {
+                  if (!dayDate) {
+                    return <View key={`empty-${idx}`} style={styles.calendarDayCell} />;
+                  }
+                  const isSelected = currentSelectionDate && 
+                    currentSelectionDate.getDate() === dayDate.getDate() &&
+                    currentSelectionDate.getMonth() === dayDate.getMonth() &&
+                    currentSelectionDate.getFullYear() === dayDate.getFullYear();
+                  
+                  const dayDateAtMidnight = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+                  const isPastDate = minAllowedDate ? dayDateAtMidnight < minAllowedDate : false;
+
+                  return (
+                    <TouchableOpacity
+                      key={`day-${idx}`}
+                      style={[
+                        styles.calendarDayCell,
+                        isSelected && styles.selectedDayCell,
+                        isPastDate && styles.pastDayCell
+                      ]}
+                      onPress={isPastDate ? undefined : () => {
+                        // We use a manual string format so timezone adjustments don't shift the day
+                        const year = dayDate.getFullYear();
+                        const month = String(dayDate.getMonth() + 1).padStart(2, '0');
+                        const day = String(dayDate.getDate()).padStart(2, '0');
+                        const dateString = `${year}-${month}-${day}`;
+                        
+                        if (datePickerTarget === 'entry') {
+                          setEntryDate(dateString);
+                          if (exitDate && new Date(exitDate) < dayDate) {
+                            setExitDate(dateString);
+                          }
+                        } else {
+                          setExitDate(dateString);
+                        }
+                        setShowDatePicker(false);
+                      }}
+                      disabled={isPastDate}
+                      activeOpacity={isPastDate ? 1 : 0.7}
+                    >
+                      <Text style={[
+                        styles.calendarDayText,
+                        isSelected && styles.selectedDayText,
+                        isPastDate && styles.pastDayText
+                      ]}>
+                        {dayDate.getDate()}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                });
+              })()}
+            </View>
+
+            <TouchableOpacity
+              style={styles.calendarCloseBtn}
+              onPress={() => setShowDatePicker(false)}
+            >
+              <Text style={styles.calendarCloseBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1155,5 +1297,97 @@ const styles = StyleSheet.create({
   rowDivider: {
     height: 1,
     backgroundColor: '#f1f5f9',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCalendarContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    maxWidth: 340,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 5,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  calendarNavBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calendarMonthText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  calendarHeaderDayCell: {
+    width: '14.28%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  calendarHeaderDayText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  calendarDayCell: {
+    width: '14.28%',
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+  },
+  selectedDayCell: {
+    backgroundColor: '#f05a28',
+  },
+  calendarDayText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#334155',
+  },
+  selectedDayText: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  pastDayCell: {
+    backgroundColor: 'transparent',
+  },
+  pastDayText: {
+    color: '#cbd5e1',
+    textDecorationLine: 'none',
+    opacity: 0.4,
+  },
+  calendarCloseBtn: {
+    marginTop: 16,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  calendarCloseBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#475569',
   },
 });
