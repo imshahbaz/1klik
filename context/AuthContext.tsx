@@ -1,8 +1,15 @@
 import React, { createContext, useState, useEffect, useContext, useRef, ReactNode } from 'react';
-import { AppState, DeviceEventEmitter } from 'react-native';
+import { AppState, DeviceEventEmitter, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { authAPI } from '../services/api';
+import { authAPI, notificationAPI } from '../services/api';
+import {
+    requestUserPermission,
+    getFCMToken,
+    registerTokenRefresh,
+    setupForegroundListener,
+    isFirebaseInitialized,
+} from '../services/notificationService';
 
 interface AppConfig {
     auth: {
@@ -31,9 +38,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 const CONFIG_CACHE_KEY = 'app_global_config';
 const CACHE_EXPIRY = 300000;
 
-const requestNotificationPermission = async () => {
-    console.log("Notification permission requested (placeholder). Hook this up with expo-notifications or @react-native-firebase/messaging.");
-};
+// Notification permissions and listener handling is managed within the AuthProvider useEffect below
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<any>(null);
@@ -125,9 +130,59 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     useEffect(() => {
-        if (user) {
-            requestNotificationPermission();
+        let unsubscribeTokenRefresh: (() => void) | undefined;
+        let unsubscribeForegroundListener: (() => void) | undefined;
+
+        const initializeNotifications = async () => {
+            try {
+                console.log('FCM Debug: Starting notification initialization...');
+                const permissionGranted = await requestUserPermission();
+                console.log('FCM Debug: Permission granted status:', permissionGranted);
+                if (!permissionGranted) {
+                    console.log('FCM Debug: Notification permission not granted');
+                    return;
+                }
+
+                // Retrieve and save the initial token
+                console.log('FCM Debug: Retrieving FCM Token...');
+                const token = await getFCMToken();
+                console.log('FCM Debug: Retrieved token:', token ? `${token.substring(0, 10)}...` : 'null');
+                if (token) {
+                    console.log('FCM Debug: Saving token to backend via notificationAPI.saveToken...');
+                    await notificationAPI.saveToken(token);
+                    console.log('FCM Debug: FCM token saved successfully to backend');
+                }
+
+                // Register token refresh handler
+                unsubscribeTokenRefresh = registerTokenRefresh(async (newToken) => {
+                    try {
+                        console.log('FCM Debug: Token refreshed. Saving new token to backend...');
+                        await notificationAPI.saveToken(newToken);
+                        console.log('FCM Debug: Refreshed FCM token saved successfully to backend');
+                    } catch (err) {
+                        console.error('FCM Debug: Failed to save refreshed FCM token:', err);
+                    }
+                });
+
+                // Register foreground listener
+                unsubscribeForegroundListener = setupForegroundListener();
+            } catch (error) {
+                console.error('FCM Debug: Error initializing notifications:', error);
+            }
+        };
+
+        console.log('FCM Debug: useEffect check triggered. Status:', {
+            hasUser: !!user,
+            isFirebaseInitialized: isFirebaseInitialized()
+        });
+        if (user && isFirebaseInitialized()) {
+            initializeNotifications();
         }
+
+        return () => {
+            if (unsubscribeTokenRefresh) unsubscribeTokenRefresh();
+            if (unsubscribeForegroundListener) unsubscribeForegroundListener();
+        };
     }, [user]);
 
     const login = (userData: any, showLoading = true) => {

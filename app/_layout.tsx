@@ -3,6 +3,21 @@ import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '../context/AuthContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import 'react-native-reanimated';
+import { Platform } from 'react-native';
+import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
+import { isFirebaseInitialized } from '../services/notificationService';
+
+// Register background message handler
+if (isFirebaseInitialized()) {
+  try {
+    setBackgroundMessageHandler(getMessaging(), async (remoteMessage) => {
+      console.log('Message handled in the background!', remoteMessage);
+    });
+  } catch (error) {
+    console.warn('Firebase background messaging failed to initialize:', error);
+  }
+}
+
 
 function AppContent() {
   return (

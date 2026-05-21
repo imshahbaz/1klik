@@ -49,3 +49,5 @@ app-example
 .vscode/
 .claude/
 
+google-services.json
+GoogleService-Info.plist
