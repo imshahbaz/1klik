@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 import { Platform } from 'react-native';
 import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 import { isFirebaseInitialized } from '../services/notificationService';
+import { ThemeProvider as NavigationThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native';
 
 // Register background message handler
 if (isFirebaseInitialized()) {
@@ -22,9 +23,22 @@ if (isFirebaseInitialized()) {
 
 
 function AppContent() {
+  const { isDarkMode, theme } = useTheme();
+
+  const navTheme = {
+    ...(isDarkMode ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(isDarkMode ? DarkTheme.colors : DefaultTheme.colors),
+      background: theme.background,
+      card: theme.card,
+      text: theme.textPrimary,
+      border: theme.border,
+    },
+  };
+
   return (
-    <>
-      <Stack>
+    <NavigationThemeProvider value={navTheme}>
+      <Stack screenOptions={{ contentStyle: { backgroundColor: theme.background } }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="screener" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
@@ -33,7 +47,7 @@ function AppContent() {
         <Stack.Screen name="calculator" options={{ headerShown: false }} />
       </Stack>
       <StyledStatusBar />
-    </>
+    </NavigationThemeProvider>
   );
 }
 
@@ -55,4 +69,5 @@ export default function RootLayout() {
     </AuthProvider>
   );
 }
+
 

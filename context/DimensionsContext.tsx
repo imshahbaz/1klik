@@ -1,5 +1,5 @@
-import React, { createContext, useContext } from 'react';
-import { useWindowDimensions } from 'react-native';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { Dimensions } from 'react-native';
 
 interface DimensionsContextData {
   width: number;
@@ -9,10 +9,27 @@ interface DimensionsContextData {
 const DimensionsContext = createContext<DimensionsContextData | null>(null);
 
 export const DimensionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { width, height } = useWindowDimensions();
+  // Use synchronous initial dimensions to avoid a flash of 0 width/height on first mount
+  const [dimensions, setDimensions] = useState<DimensionsContextData>(() => {
+    const window = Dimensions.get('window');
+    return { width: window.width, height: window.height };
+  });
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions({ width: window.width, height: window.height });
+    });
+    return () => subscription.remove();
+  }, []);
+
+  // Memoize context value so that the reference is stable unless dimensions change
+  const value = useMemo(() => ({
+    width: dimensions.width,
+    height: dimensions.height,
+  }), [dimensions.width, dimensions.height]);
 
   return (
-    <DimensionsContext.Provider value={{ width, height }}>
+    <DimensionsContext.Provider value={value}>
       {children}
     </DimensionsContext.Provider>
   );
@@ -25,3 +42,4 @@ export const useAppDimensions = () => {
   }
   return context;
 };
+
