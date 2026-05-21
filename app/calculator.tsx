@@ -437,43 +437,41 @@ export default function CalculatorScreen() {
                 // STEP 2: DATES & POSITION SIZE METHOD
                 <View style={styles.stepContent}>
                   {/* Date fields */}
-                  <View style={styles.inputRow}>
-                    <View style={[styles.inputGroup, { flex: 1 }]}>
-                      <Text style={styles.inputLabel}>Entry Date</Text>
-                      <TouchableOpacity
-                        style={styles.inputWrapper}
-                        onPress={() => {
-                          setDatePickerTarget('entry');
-                          if (entryDate) setPickerDate(new Date(entryDate));
-                          setShowDatePicker(true);
-                        }}
-                        activeOpacity={0.8}
-                      >
-                        <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
-                        <Text style={[styles.textInput, { color: entryDate ? theme.textPrimary : theme.textSecondary }]}>
-                          {entryDate || 'YYYY-MM-DD'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Entry Date</Text>
+                    <TouchableOpacity
+                      style={styles.inputWrapper}
+                      onPress={() => {
+                        setDatePickerTarget('entry');
+                        if (entryDate) setPickerDate(new Date(entryDate));
+                        setShowDatePicker(true);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
+                      <Text style={[styles.textInput, { color: entryDate ? theme.textPrimary : theme.textSecondary }]}>
+                        {entryDate || 'YYYY-MM-DD'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
 
-                    <View style={[styles.inputGroup, { flex: 1 }]}>
-                      <Text style={styles.inputLabel}>Exit Date (Optional)</Text>
-                      <TouchableOpacity
-                        style={styles.inputWrapper}
-                        onPress={() => {
-                          setDatePickerTarget('exit');
-                          if (exitDate) setPickerDate(new Date(exitDate));
-                          else if (entryDate) setPickerDate(new Date(entryDate));
-                          setShowDatePicker(true);
-                        }}
-                        activeOpacity={0.8}
-                      >
-                        <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
-                        <Text style={[styles.textInput, { color: exitDate ? theme.textPrimary : theme.textSecondary }]}>
-                          {exitDate || 'Select Exit Date'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Exit Date (Optional)</Text>
+                    <TouchableOpacity
+                      style={styles.inputWrapper}
+                      onPress={() => {
+                        setDatePickerTarget('exit');
+                        if (exitDate) setPickerDate(new Date(exitDate));
+                        else if (entryDate) setPickerDate(new Date(entryDate));
+                        setShowDatePicker(true);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
+                      <Text style={[styles.textInput, { color: exitDate ? theme.textPrimary : theme.textSecondary }]}>
+                        {exitDate || 'Select Exit Date'}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
 
                   {/* Days held projection */}

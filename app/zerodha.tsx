@@ -1,15 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, Switch, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
+import { CustomAlert } from '../context/AlertContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { marginAPI, strategyOrderAPI, zerodhaAPI } from '../services/api';
-import { useZerodhaStyles } from '../theme/zerodhaStyles';
-import { CustomAlert } from '../context/AlertContext';
 import { getSafeBottomPadding } from '../theme/safeArea';
+import { useZerodhaStyles } from '../theme/zerodhaStyles';
 
 export default function ZerodhaDashboard() {
   const router = useRouter();
@@ -578,7 +578,7 @@ export default function ZerodhaDashboard() {
                             setPickerDate(parsedDate);
                             setEditingMtfOrderId(log.id);
                             setActiveTab('execute');
-                             CustomAlert.alert(
+                            CustomAlert.alert(
                               'Loaded to Execute Tab',
                               `Order details for ${log.symbol} loaded into execution form.`
                             );
@@ -729,7 +729,6 @@ export default function ZerodhaDashboard() {
         setZerodhaUser(payload.data);
         try {
           const marginsRes = await marginAPI.getAllMargins();
-          console.log("Margins successfully loaded:", JSON.stringify(marginsRes.data, null, 2));
           if (marginsRes.data && marginsRes.data.success === true) {
             setMarginsData(marginsRes.data.data);
           } else {
@@ -1168,7 +1167,7 @@ export default function ZerodhaDashboard() {
                     activeOpacity={0.8}
                   >
                     <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
-                    <Text 
+                    <Text
                       style={{ flex: 1, color: editTargetDate ? theme.textPrimary : theme.iconMuted, fontSize: 13, fontWeight: '600' }}
                       numberOfLines={1}
                       adjustsFontSizeToFit
@@ -1408,36 +1407,37 @@ export default function ZerodhaDashboard() {
               </TouchableOpacity>
             </View>
           ) : (
-            <>
+            (!zerodhaLoading && !zerodhaError && zerodhaUser) ? (
+              <>
+                {/* Custom Premium Segmented Tab Bar */}
+                <View style={styles.tabContainer as any}>
+                  {[
+                    { id: 'execute', label: 'EXECUTE', icon: 'flash' },
+                    { id: 'strategy', label: 'STRATEGY', icon: 'analytics' },
+                    { id: 'history', label: 'HISTORY', icon: 'receipt' },
+                  ].map((tab) => (
+                    <TouchableOpacity
+                      key={tab.id}
+                      style={[styles.tabButton, activeTab === tab.id && styles.activeTabButton] as any}
+                      onPress={() => handleTabChange(tab.id as any)}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons
+                        name={activeTab === tab.id ? (tab.icon as any) : (`${tab.icon}-outline` as any)}
+                        size={16}
+                        color={activeTab === tab.id ? theme.primary : theme.textSecondary}
+                      />
+                      <Text style={[styles.tabButtonLabel, activeTab === tab.id && styles.activeTabButtonLabel] as any}>
+                        {tab.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-              {/* Custom Premium Segmented Tab Bar */}
-              <View style={styles.tabContainer as any}>
-                {[
-                  { id: 'execute', label: 'EXECUTE', icon: 'flash' },
-                  { id: 'strategy', label: 'STRATEGY', icon: 'analytics' },
-                  { id: 'history', label: 'HISTORY', icon: 'receipt' },
-                ].map((tab) => (
-                  <TouchableOpacity
-                    key={tab.id}
-                    style={[styles.tabButton, activeTab === tab.id && styles.activeTabButton] as any}
-                    onPress={() => handleTabChange(tab.id as any)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons
-                      name={activeTab === tab.id ? (tab.icon as any) : (`${tab.icon}-outline` as any)}
-                      size={16}
-                      color={activeTab === tab.id ? theme.primary : theme.textSecondary}
-                    />
-                    <Text style={[styles.tabButtonLabel, activeTab === tab.id && styles.activeTabButtonLabel] as any}>
-                      {tab.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* Tab Views Render */}
-              {renderTabContent()}
-            </>
+                {/* Tab Views Render */}
+                {renderTabContent()}
+              </>
+            ) : null
           )}
 
         </ScrollView>
