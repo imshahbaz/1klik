@@ -1,14 +1,14 @@
-import React, { createContext, useState, useEffect, useContext, useRef, ReactNode } from 'react';
-import { AppState, DeviceEventEmitter, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { authAPI, notificationAPI, initializeBaseUrl } from '../services/api';
+import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { AppState, DeviceEventEmitter } from 'react-native';
+import { authAPI, initializeBaseUrl, notificationAPI } from '../services/api';
 import {
-    requestUserPermission,
     getFCMToken,
-    registerTokenRefresh,
-    setupForegroundListener,
     isFirebaseInitialized,
+    registerTokenRefresh,
+    requestUserPermission,
+    setupForegroundListener,
 } from '../services/notificationService';
 
 interface AppConfig {
@@ -150,30 +150,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const initializeNotifications = async () => {
             try {
-                console.log('FCM Debug: Starting notification initialization...');
                 const permissionGranted = await requestUserPermission();
-                console.log('FCM Debug: Permission granted status:', permissionGranted);
                 if (!permissionGranted) {
-                    console.log('FCM Debug: Notification permission not granted');
                     return;
                 }
 
-                // Retrieve and save the initial token
-                console.log('FCM Debug: Retrieving FCM Token...');
                 const token = await getFCMToken();
-                console.log('FCM Debug: Retrieved token:', token ? `${token.substring(0, 10)}...` : 'null');
                 if (token) {
-                    console.log('FCM Debug: Saving token to backend via notificationAPI.saveToken...');
                     await notificationAPI.saveToken(token);
-                    console.log('FCM Debug: FCM token saved successfully to backend');
                 }
 
                 // Register token refresh handler
                 unsubscribeTokenRefresh = registerTokenRefresh(async (newToken) => {
                     try {
-                        console.log('FCM Debug: Token refreshed. Saving new token to backend...');
                         await notificationAPI.saveToken(newToken);
-                        console.log('FCM Debug: Refreshed FCM token saved successfully to backend');
                     } catch (err) {
                         console.error('FCM Debug: Failed to save refreshed FCM token:', err);
                     }
@@ -186,10 +176,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
         };
 
-        console.log('FCM Debug: useEffect check triggered. Status:', {
-            hasUser: !!user,
-            isFirebaseInitialized: isFirebaseInitialized()
-        });
         if (user && isFirebaseInitialized()) {
             initializeNotifications();
         }
@@ -211,10 +197,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             // 1. Call backend API to destroy session cookie on the server
             await authAPI.logout();
-            
+
             // 2. Safely call native Google SDK sign-out if active
             try {
-                console.log("Signing out from native Google SDK...");
                 await GoogleSignin.signOut();
             } catch (googleErr) {
                 console.log("No active native Google session to sign out of:", googleErr);
