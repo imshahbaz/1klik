@@ -1,13 +1,40 @@
 import axios from 'axios';
 import { DeviceEventEmitter } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const APP_KEY = process.env.EXPO_PUBLIC_TRUECALLER_APP_KEY;
 const APP_NAME = "1Klik";
 
 const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_BACKEND_URL,
   withCredentials: true,
 });
+
+export const initializeBaseUrl = async () => {
+  try {
+    const cachedUrl = await AsyncStorage.getItem('@backend_base_url');
+    if (cachedUrl) {
+      api.defaults.baseURL = cachedUrl;
+      console.log('API: Loaded cached baseURL:', cachedUrl);
+    }
+  } catch (err) {
+    console.warn('API: Failed to read cached baseURL from AsyncStorage:', err);
+  }
+
+  try {
+    const response = await axios.get('https://gist.githubusercontent.com/imshahbaz/38a85817cd970cbac322998b1d817cb9/raw/73639b7386f85e3f0fbe97045eb89580a77235da/urls.json', { timeout: 5000 });
+    const freshUrl = response.data?.backend_url;
+    if (freshUrl) {
+      api.defaults.baseURL = freshUrl;
+      console.log('API: Dynamically resolved baseURL from Gist:', freshUrl);
+      await AsyncStorage.setItem('@backend_base_url', freshUrl);
+      return freshUrl;
+    }
+  } catch (err) {
+    console.error('API: Failed to fetch dynamic baseURL from Gist:', err.message || err);
+  }
+
+  return api.defaults.baseURL;
+};
 
 api.interceptors.response.use(
   (response) => response,

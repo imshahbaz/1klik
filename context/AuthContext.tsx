@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext, useRef, ReactNod
 import { AppState, DeviceEventEmitter, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { authAPI, notificationAPI } from '../services/api';
+import { authAPI, notificationAPI, initializeBaseUrl } from '../services/api';
 import {
     requestUserPermission,
     getFCMToken,
@@ -92,12 +92,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     useEffect(() => {
+        const initApp = async () => {
+            try {
+                await initializeBaseUrl();
+            } catch (err) {
+                console.error("FCM Debug: Base URL initialization failed:", err);
+            } finally {
+                Promise.all([fetchGlobalConfig(), refreshUserData()]);
+            }
+        };
+
         if (!isInitialized.current) {
             isInitialized.current = true;
-            Promise.all([fetchGlobalConfig(), refreshUserData()]);
+            initApp();
         }
 
-        const handleFocus = () => {
+        const handleFocus = async () => {
+            try {
+                await initializeBaseUrl();
+            } catch (err) {
+                console.error("FCM Debug: Base URL refresh on focus failed:", err);
+            }
             fetchGlobalConfig(true);
             if (isInitialized.current) {
                 refreshUserData();
