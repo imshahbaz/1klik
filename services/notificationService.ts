@@ -10,8 +10,7 @@ import {
   AuthorizationStatus,
   hasPermission,
 } from '@react-native-firebase/messaging';
-import { Platform, PermissionsAndroid } from 'react-native';
-import { CustomNotification } from '../context/AlertContext';
+import { Platform, PermissionsAndroid, DeviceEventEmitter } from 'react-native';
 
 
 /**
@@ -127,7 +126,7 @@ export function setupForegroundListener(): () => void {
       const title = String(remoteMessage.notification?.title || remoteMessage.data?.title || 'Notification');
       const body = String(remoteMessage.notification?.body || remoteMessage.data?.body || '');
       
-      CustomNotification.show(title, body, remoteMessage.data);
+      DeviceEventEmitter.emit('show-custom-notification', { title, body, data: remoteMessage.data });
     });
   } catch (error) {
     console.error('Error setting up foreground listener:', error);

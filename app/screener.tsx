@@ -1,11 +1,12 @@
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
 import { useScreenerStyles } from '../theme/screenerStyles';
 import { strategyAPI } from '../services/api';
+import { getSafeBottomPadding } from '../theme/safeArea';
 
 interface Strategy {
   name: string;
@@ -15,6 +16,7 @@ interface Strategy {
 
 export default function ScreenerScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { isDarkMode, theme } = useTheme();
   const styles = useScreenerStyles(isDarkMode);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
@@ -149,13 +151,16 @@ export default function ScreenerScreen() {
         </View>
         <View style={styles.stockRight}>
           <Text style={styles.stockPrice}>{priceText}</Text>
+          <Text style={[styles.stockChange, { color: isPositive ? theme.success : theme.danger }]}>
+            {changeText}
+          </Text>
         </View>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
       {/* Custom Navigation Header */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -253,7 +258,7 @@ export default function ScreenerScreen() {
           )}
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

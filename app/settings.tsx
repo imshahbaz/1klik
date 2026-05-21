@@ -3,17 +3,17 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View, Switch, AppState, Linking } from 'react-native';
 import { CustomAlert } from '../context/AlertContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useAppDimensions } from '../context/DimensionsContext';
 import { useSettingsStyles } from '../theme/settingsStyles';
 import { userPreferenceAPI, notificationAPI } from '../services/api';
 import { checkNotificationPermission, requestUserPermission, getFCMToken } from '../services/notificationService';
+import { getSafeBottomPadding } from '../theme/safeArea';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { width, height } = useAppDimensions();
+  const insets = useSafeAreaInsets();
   const { user, refreshUserData } = useAuth() as any;
   const { isDarkMode, theme } = useTheme();
   const styles = useSettingsStyles(isDarkMode);
@@ -156,7 +156,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
       {/* Custom Header (Matches other app screens!) */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -167,9 +167,9 @@ export default function SettingsScreen() {
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 90}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
@@ -292,8 +292,6 @@ export default function SettingsScreen() {
                 Customize your app experience.
               </Text>
 
-
-
               <View style={styles.themeToggleRow}>
                 <Text style={styles.themeToggleLabel}>Push Notifications</Text>
                 {checkingPermission ? (
@@ -312,6 +310,6 @@ export default function SettingsScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

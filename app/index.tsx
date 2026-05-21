@@ -2,15 +2,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Modal, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { angelOneApi } from '../services/api';
 import { useIndexStyles } from '../theme/globalStyles';
+import { getSafeBottomPadding } from '../theme/safeArea';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, appLoading, login, logout } = useAuth() as any;
+  const insets = useSafeAreaInsets();
+  const { user, appLoading, logout } = useAuth() as any;
   const { isDarkMode, toggleTheme, theme } = useTheme();
   const styles = useIndexStyles(isDarkMode);
   const [marketData, setMarketData] = useState<any>(null);
@@ -73,11 +75,11 @@ export default function HomeScreen() {
 
   if (appLoading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
         <View style={[styles.container, styles.centered]}>
           <ActivityIndicator size="large" color={theme.textPrimary} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -96,7 +98,7 @@ export default function HomeScreen() {
   const isBullish = change >= 0;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
       <View style={styles.container}>
         {/* Header Section */}
         <View style={styles.header}>
@@ -361,6 +363,6 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

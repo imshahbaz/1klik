@@ -3,15 +3,17 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLoginStyles } from '../theme/loginStyles';
 import { authAPI, googleAPI } from '../services/api';
 import { CustomAlert } from '../context/AlertContext';
+import { getSafeBottomPadding } from '../theme/safeArea';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { login } = useAuth() as any;
   const { isDarkMode, theme } = useTheme();
   const styles = useLoginStyles(isDarkMode);
@@ -49,7 +51,7 @@ export default function LoginScreen() {
       console.log("Native ID Token obtained successfully! Sending to Spring Boot backend...");
 
       // 2. Validate the native token with your Spring Boot backend validation endpoint
-      const backendResponse = await googleAPI.googleTokenValidation(idToken);
+      await googleAPI.googleTokenValidation(idToken);
 
       // 3. Fetch the full user details using the secure session cookie
       const meResponse = await authAPI.getMe();
@@ -58,7 +60,6 @@ export default function LoginScreen() {
       if (!meData) {
         throw new Error("Failed to load user profile from validation context.");
       }
-
 
       // 5. Update global AuthContext state & redirect home
       login(meData);
@@ -81,7 +82,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
       {/* Custom Header (Matches Screener Screen Layout!) */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -147,6 +148,6 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

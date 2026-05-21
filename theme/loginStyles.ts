@@ -1,7 +1,8 @@
 import { StyleSheet } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { Colors, lightColors, darkColors } from './colors';
 
-const createStyles = (theme: Colors) => StyleSheet.create({
+const createStyles = (theme: Colors) => ScaledSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.background,
@@ -14,7 +15,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: '16@ms',
   },
   backButton: {
     width: 40,
@@ -25,22 +26,22 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     backgroundColor: theme.borderLight,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: '18@ms',
     fontWeight: '700',
     color: theme.textPrimary,
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingBottom: 40,
+    paddingBottom: '40@ms',
   },
   container: {
-    paddingHorizontal: 24,
-    paddingTop: 10,
+    paddingHorizontal: '24@ms',
+    paddingTop: '10@ms',
   },
   titleSection: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: '40@vs',
   },
   brandIconCircle: {
     width: 64,
@@ -49,7 +50,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     backgroundColor: theme.darkCard,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: '16@vs',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
@@ -57,22 +58,22 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     elevation: 4,
   },
   brandName: {
-    fontSize: 24,
+    fontSize: '24@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    marginBottom: 8,
+    marginBottom: '8@vs',
   },
   brandTagline: {
-    fontSize: 14,
+    fontSize: '14@ms',
     color: theme.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: '10@ms',
   },
   formCard: {
     backgroundColor: theme.card,
     borderRadius: 24,
-    padding: 24,
+    padding: '24@ms',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.06,
@@ -87,14 +88,14 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.dangerBackground,
     borderRadius: 12,
-    padding: 12,
-    marginBottom: 20,
-    gap: 8,
+    padding: '12@ms',
+    marginBottom: '20@vs',
+    gap: '8@ms',
     width: '100%',
   },
   errorText: {
     color: theme.danger,
-    fontSize: 13,
+    fontSize: '13@ms',
     fontWeight: '600',
     flex: 1,
   },
@@ -113,13 +114,13 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 2,
-    marginTop: 8,
+    marginTop: '8@vs',
   },
   googleButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: '12@ms',
   },
   googleIconCircle: {
     width: 28,
@@ -131,17 +132,17 @@ const createStyles = (theme: Colors) => StyleSheet.create({
   },
   googleButtonText: {
     color: theme.textPrimary,
-    fontSize: 16,
+    fontSize: '16@ms',
     fontWeight: '700',
     letterSpacing: 0.2,
   },
   termsText: {
-    fontSize: 11,
+    fontSize: '11@ms',
     color: theme.iconMuted,
     textAlign: 'center',
     lineHeight: 16,
-    marginTop: 24,
-    paddingHorizontal: 8,
+    marginTop: '24@vs',
+    paddingHorizontal: '8@ms',
   },
 });
 

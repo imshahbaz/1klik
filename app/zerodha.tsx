@@ -2,18 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, Switch, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useAppDimensions } from '../context/DimensionsContext';
 import { marginAPI, strategyOrderAPI, zerodhaAPI } from '../services/api';
 import { useZerodhaStyles } from '../theme/zerodhaStyles';
 import { CustomAlert } from '../context/AlertContext';
+import { getSafeBottomPadding } from '../theme/safeArea';
 
 export default function ZerodhaDashboard() {
   const router = useRouter();
-  const { width, height } = useAppDimensions();
+  const insets = useSafeAreaInsets();
   const { user, appLoading, logout } = useAuth() as any;
   const { isDarkMode, theme } = useTheme();
   const styles = useZerodhaStyles(isDarkMode);
@@ -54,12 +54,10 @@ export default function ZerodhaDashboard() {
 
   // Order Execution Form State
   const [tradeSymbol, setTradeSymbol] = useState('');
-  const [tradeType, setTradeType] = useState<'BUY' | 'SELL'>('BUY');
   const [tradeQty, setTradeQty] = useState('10');
   const [targetDate, setTargetDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickerDate, setPickerDate] = useState(new Date());
-  const [tradeProduct, setTradeProduct] = useState<'MIS' | 'CNC'>('MIS');
   const [executingTrade, setExecutingTrade] = useState(false);
 
   // Strategy Deploy Toggles State
@@ -847,16 +845,17 @@ export default function ZerodhaDashboard() {
         fetchZerodhaProfile();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, appLoading]);
 
   if (appLoading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
         <View style={[styles.container, styles.centered]}>
           <ActivityIndicator size="large" color={theme.primary} />
           <Text style={styles.loadingText}>Verifying secure session...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -867,7 +866,7 @@ export default function ZerodhaDashboard() {
   if (showWebView) {
     const finalApiKey = apiKey || process.env.EXPO_PUBLIC_ZERODHA_API_KEY;
     return (
-      <SafeAreaView style={styles.webViewContainer} edges={['top', 'bottom']}>
+      <View style={[styles.webViewContainer, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
         <View style={styles.webViewHeader}>
           <TouchableOpacity
             style={styles.webViewCloseButton}
@@ -890,7 +889,7 @@ export default function ZerodhaDashboard() {
             </View>
           )}
         />
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -1106,7 +1105,7 @@ export default function ZerodhaDashboard() {
         onRequestClose={() => setEditingOrder(null)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior="padding"
           style={{ flex: 1 }}
         >
           <View style={styles.modalOverlay as any}>
@@ -1218,7 +1217,7 @@ export default function ZerodhaDashboard() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
       {/* Custom Secure Navigation Header */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -1235,9 +1234,9 @@ export default function ZerodhaDashboard() {
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 90}
       >
         <ScrollView
           style={styles.container}
@@ -1543,6 +1542,6 @@ export default function ZerodhaDashboard() {
 
       {/* Slide-Up Modifying Overlay Modal */}
       {renderModifyOrderModal()}
-    </SafeAreaView>
+    </View>
   );
 }

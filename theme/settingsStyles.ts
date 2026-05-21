@@ -1,7 +1,8 @@
 import { StyleSheet } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { Colors, lightColors, darkColors } from './colors';
 
-const createStyles = (theme: Colors) => StyleSheet.create({
+const createStyles = (theme: Colors) => ScaledSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.background,
@@ -14,7 +15,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: '16@ms',
   },
   backButton: {
     width: 40,
@@ -25,39 +26,39 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     backgroundColor: theme.borderLight,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: '18@ms',
     fontWeight: '700',
     color: theme.textPrimary,
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingBottom: 40,
+    paddingBottom: '40@ms',
   },
   container: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: '20@ms',
+    paddingTop: '20@ms',
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: '20@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    marginBottom: 6,
+    marginBottom: '6@vs',
   },
   sectionSubtitle: {
-    fontSize: 14,
+    fontSize: '14@ms',
     color: theme.textSecondary,
     lineHeight: 20,
-    marginBottom: 20,
+    marginBottom: '20@vs',
   },
   infoCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.card,
     borderRadius: 20,
-    padding: 16,
+    padding: '16@ms',
     borderWidth: 1,
     borderColor: theme.borderLight,
-    marginBottom: 20,
+    marginBottom: '20@vs',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.03,
@@ -65,7 +66,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     elevation: 2,
   },
   avatarContainer: {
-    marginRight: 16,
+    marginRight: '16@ms',
   },
   avatarImageWrapper: {
     width: 48,
@@ -77,7 +78,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
   },
   avatarInitial: {
     color: '#ffffff',
-    fontSize: 18,
+    fontSize: '18@ms',
     fontWeight: '700',
   },
   avatarPlaceholder: {
@@ -92,19 +93,19 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     flex: 1,
   },
   infoName: {
-    fontSize: 16,
+    fontSize: '16@ms',
     fontWeight: '700',
     color: theme.textPrimary,
-    marginBottom: 2,
+    marginBottom: '2@vs',
   },
   infoEmail: {
-    fontSize: 13,
+    fontSize: '13@ms',
     color: theme.textSecondary,
   },
   formCard: {
     backgroundColor: theme.card,
     borderRadius: 24,
-    padding: 20,
+    padding: '20@ms',
     borderWidth: 1,
     borderColor: theme.borderLight,
     shadowColor: '#000',
@@ -112,13 +113,13 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 12,
     elevation: 3,
-    marginBottom: 20,
+    marginBottom: '20@vs',
   },
   inputLabel: {
-    fontSize: 13,
+    fontSize: '13@ms',
     fontWeight: '700',
     color: theme.textSecondary,
-    marginBottom: 8,
+    marginBottom: '8@vs',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -128,7 +129,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     borderWidth: 1.5,
     borderColor: theme.border,
     borderRadius: 16,
-    paddingHorizontal: 14,
+    paddingHorizontal: '14@ms',
     height: 52,
     backgroundColor: theme.background,
   },
@@ -141,23 +142,23 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     backgroundColor: theme.successBackground,
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: '10@ms',
   },
   textInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: '15@ms',
     color: theme.textPrimary,
     fontWeight: '600',
   },
   helperRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    paddingHorizontal: 4,
-    gap: 6,
+    marginTop: '8@vs',
+    paddingHorizontal: '4@ms',
+    gap: '6@ms',
   },
   helperText: {
-    fontSize: 12,
+    fontSize: '12@ms',
     color: theme.textSecondary,
     flex: 1,
   },
@@ -168,10 +169,10 @@ const createStyles = (theme: Colors) => StyleSheet.create({
   alertBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    padding: '14@ms',
     borderRadius: 14,
-    marginTop: 20,
-    gap: 10,
+    marginTop: '20@vs',
+    gap: '10@ms',
   },
   successAlert: {
     backgroundColor: theme.successBackground,
@@ -180,7 +181,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
   },
   successAlertText: {
     color: theme.success,
-    fontSize: 13,
+    fontSize: '13@ms',
     fontWeight: '600',
     flex: 1,
   },
@@ -191,7 +192,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
   },
   errorAlertText: {
     color: theme.danger,
-    fontSize: 13,
+    fontSize: '13@ms',
     fontWeight: '600',
     flex: 1,
   },
@@ -202,8 +203,8 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    marginTop: 24,
+    gap: '8@ms',
+    marginTop: '24@vs',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -217,7 +218,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
   },
   saveButtonText: {
     color: theme.darkCardText,
-    fontSize: 15,
+    fontSize: '15@ms',
     fontWeight: '700',
   },
   themeToggleRow: {
@@ -225,10 +226,10 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    paddingVertical: 12,
+    paddingVertical: '12@ms',
   },
   themeToggleLabel: {
-    fontSize: 16,
+    fontSize: '16@ms',
     fontWeight: '600',
     color: theme.textPrimary,
   }

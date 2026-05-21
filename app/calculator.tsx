@@ -2,11 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
-import { useAppDimensions } from '../context/DimensionsContext';
 import { marginAPI } from '../services/api';
 import { useCalculatorStyles } from '../theme/calculatorStyles';
+import { getSafeBottomPadding } from '../theme/safeArea';
 
 interface MarginData {
   symbol: string;
@@ -15,7 +15,7 @@ interface MarginData {
 
 export default function CalculatorScreen() {
   const router = useRouter();
-  const { width, height } = useAppDimensions();
+  const insets = useSafeAreaInsets();
   const { isDarkMode, theme } = useTheme();
   const styles = useCalculatorStyles(isDarkMode);
 
@@ -26,7 +26,6 @@ export default function CalculatorScreen() {
   // API margins
   const [margins, setMargins] = useState<MarginData[]>([]);
   const [loadingMargins, setLoadingMargins] = useState(true);
-  const [marginError, setMarginError] = useState<string | null>(null);
 
   // Search Stocks states
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,14 +69,12 @@ export default function CalculatorScreen() {
   useEffect(() => {
     const fetchMargins = async () => {
       setLoadingMargins(true);
-      setMarginError(null);
       try {
         const response = await marginAPI.getAllMargins();
         const data = response?.data?.data || response?.data || [];
         setMargins(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error fetching margins:', err);
-        setMarginError('Failed to load margin data.');
       } finally {
         setLoadingMargins(false);
       }
@@ -237,7 +234,7 @@ export default function CalculatorScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
       {/* Custom Header */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => {
@@ -271,9 +268,9 @@ export default function CalculatorScreen() {
       )}
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 90}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
@@ -780,7 +777,7 @@ export default function CalculatorScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 

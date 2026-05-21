@@ -5,10 +5,10 @@ import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { AlertProvider } from '../context/AlertContext';
 import { DimensionsProvider } from '../context/DimensionsContext';
 import 'react-native-reanimated';
-import { Platform } from 'react-native';
 import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 import { isFirebaseInitialized } from '../services/notificationService';
 import { ThemeProvider as NavigationThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Register background message handler
 if (isFirebaseInitialized()) {
@@ -58,15 +58,17 @@ function StyledStatusBar() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <DimensionsProvider>
-          <AlertProvider>
-            <AppContent />
-          </AlertProvider>
-        </DimensionsProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <DimensionsProvider>
+            <AlertProvider>
+              <AppContent />
+            </AlertProvider>
+          </DimensionsProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 
