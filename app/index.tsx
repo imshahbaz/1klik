@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -99,7 +99,11 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
-      <View style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.homeScrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header Section */}
         <View style={styles.header}>
           <View style={{ flex: 1, marginRight: 12 }}>
@@ -242,7 +246,7 @@ export default function HomeScreen() {
           </View>
           <Ionicons name="chevron-forward" size={18} color={theme.iconMuted} />
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       {/* Side Menu Drawer overlay (Matching Screener Screen Layout!) */}
       <Modal

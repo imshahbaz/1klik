@@ -1,6 +1,5 @@
-import { StyleSheet } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
-import { Colors, lightColors, darkColors } from './colors';
+import { Colors, darkColors, lightColors } from './colors';
 
 const createStyles = (theme: Colors) => ScaledSheet.create({
   safeArea: {
@@ -12,6 +11,10 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     paddingHorizontal: '20@ms',
     paddingTop: '15@ms',
   },
+  homeScrollContent: {
+    flexGrow: 1,
+    paddingBottom: '24@ms',
+  },
   centered: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -20,7 +23,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '25@vs',
+    marginBottom: '18@vs',
   },
   welcomeText: {
     fontSize: '16@ms',
@@ -31,7 +34,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '28@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.5,
+    letterSpacing: 0,
+    flexShrink: 1,
   },
   profileButton: {
     padding: '4@ms',
@@ -40,8 +44,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   card: {
     backgroundColor: theme.card,
-    borderRadius: 24,
-    padding: '20@ms',
+    borderRadius: 20,
+    padding: '18@ms',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.18,
@@ -80,18 +84,21 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '20@vs',
+    marginBottom: '14@vs',
+    gap: '10@ms',
   },
   cardTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: '6@ms',
+    flexShrink: 1,
   },
   cardTitle: {
     color: theme.textSecondary,
     fontSize: '14@ms',
     fontWeight: '600',
     letterSpacing: 0.5,
+    flexShrink: 1,
   },
   badge: {
     flexDirection: 'row',
@@ -130,7 +137,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     color: theme.danger,
   },
   cardBody: {
-    marginBottom: '20@vs',
+    marginBottom: '14@vs',
   },
   indexName: {
     color: theme.darkCardSubtext,
@@ -150,7 +157,9 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     color: theme.textPrimary,
     fontSize: '36@ms',
     fontWeight: '800',
-    letterSpacing: -1,
+    letterSpacing: 0,
+    flexShrink: 1,
+    minWidth: 0,
   },
   changeContainer: {
     flexDirection: 'row',
@@ -169,9 +178,12 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: '8@ms',
   },
   footerCol: {
     alignItems: 'flex-start',
+    flex: 1,
+    minWidth: 0,
   },
   footerLabel: {
     color: theme.iconMuted,
@@ -184,13 +196,14 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     color: theme.textPrimary,
     fontSize: '14@ms',
     fontWeight: '600',
+    flexShrink: 1,
   },
   screenerButton: {
     backgroundColor: theme.card,
     borderRadius: 18,
     paddingVertical: '16@ms',
     paddingHorizontal: '20@ms',
-    marginTop: '20@vs',
+    marginTop: '16@vs',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -204,18 +217,21 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: '10@ms',
+    flex: 1,
+    minWidth: 0,
   },
   screenerButtonText: {
     color: theme.textPrimary,
     fontSize: '16@ms',
     fontWeight: '700',
     letterSpacing: 0.5,
+    flexShrink: 1,
   },
   zerodhaButton: {
     backgroundColor: theme.card,
-    borderRadius: 24,
-    padding: '20@ms',
-    marginTop: '16@vs',
+    borderRadius: 20,
+    padding: '18@ms',
+    marginTop: '14@vs',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -224,24 +240,27 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 16,
     elevation: 8,
-    minHeight: 100,
+    minHeight: 84,
   },
   zerodhaContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: '16@ms',
+    gap: '12@ms',
+    flex: 1,
+    minWidth: 0,
   },
   zerodhaButtonText: {
     color: theme.textPrimary,
     fontSize: '17@ms',
     fontWeight: '800',
     letterSpacing: 0.3,
+    flexShrink: 1,
   },
   calculatorButton: {
     backgroundColor: theme.card,
-    borderRadius: 24,
-    padding: '20@ms',
-    marginTop: '16@vs',
+    borderRadius: 20,
+    padding: '18@ms',
+    marginTop: '14@vs',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -250,18 +269,21 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 16,
     elevation: 8,
-    minHeight: 100,
+    minHeight: 84,
   },
   calculatorContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: '16@ms',
+    gap: '12@ms',
+    flex: 1,
+    minWidth: 0,
   },
   calculatorButtonText: {
     color: theme.textPrimary,
     fontSize: '17@ms',
     fontWeight: '800',
     letterSpacing: 0.3,
+    flexShrink: 1,
   },
   bigCardIconCircle: {
     width: 52,
@@ -291,7 +313,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     backgroundColor: theme.overlay,
   },
   drawerPanel: {
-    width: '80%',
+    width: '86%',
+    maxWidth: 360,
     height: '100%',
     backgroundColor: theme.background,
     shadowColor: '#000',
@@ -331,8 +354,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   profileDetailsCard: {
     backgroundColor: theme.card,
-    borderRadius: 24,
-    padding: '24@ms',
+    borderRadius: 20,
+    padding: '18@ms',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -400,6 +423,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '13@ms',
     fontWeight: '600',
     color: theme.textPrimary,
+    flexShrink: 1,
   },
   drawerLoginButton: {
     backgroundColor: theme.darkCard,

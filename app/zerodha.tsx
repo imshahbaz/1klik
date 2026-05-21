@@ -1104,8 +1104,10 @@ export default function ZerodhaDashboard() {
         onRequestClose={() => setEditingOrder(null)}
       >
         <KeyboardAvoidingView
-          behavior="padding"
-          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          enabled={Platform.OS === 'ios'}
+          style={styles.keyboardFrame}
+          keyboardVerticalOffset={insets.top + 60}
         >
           <View style={styles.modalOverlay as any}>
             <View style={styles.editModalContainer as any}>
@@ -1233,15 +1235,17 @@ export default function ZerodhaDashboard() {
       </View>
 
       <KeyboardAvoidingView
-        behavior="padding"
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 90}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        enabled={Platform.OS === 'ios'}
+        style={styles.keyboardFrame}
+        keyboardVerticalOffset={insets.top + 60}
       >
         <ScrollView
           style={styles.container}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 40 }}
+          contentContainerStyle={styles.scrollContentContainer}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         >
           {/* Connection Status Card */}
           <View style={styles.connectionCard}>

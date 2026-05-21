@@ -1,6 +1,5 @@
-import { StyleSheet } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
-import { Colors, lightColors, darkColors } from './colors';
+import { Colors, darkColors, lightColors } from './colors';
 
 const createStyles = (theme: Colors) => ScaledSheet.create({
   safeArea: {
@@ -30,18 +29,24 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontWeight: '700',
     color: theme.textPrimary,
   },
+  keyboardFrame: {
+    flex: 1,
+    minHeight: 0,
+  },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingBottom: '40@ms',
+    paddingVertical: '20@ms',
   },
   container: {
-    paddingHorizontal: '24@ms',
-    paddingTop: '10@ms',
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: '20@ms',
+    paddingTop: '8@ms',
   },
   titleSection: {
     alignItems: 'center',
-    marginBottom: '40@vs',
+    marginBottom: '24@vs',
   },
   brandIconCircle: {
     width: 64,
@@ -69,11 +74,12 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: '10@ms',
+    maxWidth: 420,
   },
   formCard: {
     backgroundColor: theme.card,
-    borderRadius: 24,
-    padding: '24@ms',
+    borderRadius: 20,
+    padding: '20@ms',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.06,
@@ -89,7 +95,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     backgroundColor: theme.dangerBackground,
     borderRadius: 12,
     padding: '12@ms',
-    marginBottom: '20@vs',
+    marginBottom: '14@vs',
     gap: '8@ms',
     width: '100%',
   },
@@ -121,6 +127,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: '12@ms',
+    maxWidth: '100%',
   },
   googleIconCircle: {
     width: 28,
@@ -135,13 +142,14 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '16@ms',
     fontWeight: '700',
     letterSpacing: 0.2,
+    flexShrink: 1,
   },
   termsText: {
     fontSize: '11@ms',
     color: theme.iconMuted,
     textAlign: 'center',
     lineHeight: 16,
-    marginTop: '24@vs',
+    marginTop: '18@vs',
     paddingHorizontal: '8@ms',
   },
 });

@@ -29,12 +29,15 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: '8@ms',
+    flexShrink: 1,
+    minWidth: 0,
   },
   headerTitle: {
     fontSize: '18@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.3,
+    letterSpacing: 0,
+    flexShrink: 1,
   },
   securedBadge: {
     flexDirection: 'row',
@@ -51,10 +54,18 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     color: theme.success,
     letterSpacing: 0.5,
   },
+  keyboardFrame: {
+    flex: 1,
+    minHeight: 0,
+  },
   container: {
     flex: 1,
     paddingHorizontal: '20@ms',
     paddingTop: '15@ms',
+  },
+  scrollContentContainer: {
+    flexGrow: 0,
+    paddingBottom: '28@ms',
   },
   centered: {
     justifyContent: 'center',
@@ -75,18 +86,20 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 4,
-    marginBottom: '20@vs',
+    marginBottom: '14@vs',
   },
   connectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: '10@ms',
   },
   brandContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: '12@ms',
     flex: 1,
+    minWidth: 0,
     marginRight: '8@ms',
   },
   kiteLogoPlaceholder: {
@@ -121,6 +134,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     paddingVertical: '5@ms',
     borderRadius: 20,
     gap: '4@ms',
+    flexShrink: 0,
   },
   activeDot: {
     width: 6,
@@ -148,6 +162,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     paddingVertical: '5@ms',
     borderRadius: 20,
     gap: '4@ms',
+    flexShrink: 0,
   },
   inactiveDot: {
     width: 6,
@@ -172,7 +187,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '15@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
   },
   syncButton: {
     flexDirection: 'row',
@@ -194,7 +209,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     padding: '16@ms',
     borderWidth: 1,
     borderColor: theme.borderLight,
-    marginBottom: '20@vs',
+    marginBottom: '14@vs',
     shadowColor: theme.textPrimary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.02,
@@ -204,10 +219,12 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   marginRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: '12@ms',
     paddingVertical: '8@ms',
   },
   marginCol: {
     flex: 1,
+    minWidth: 0,
     gap: '4@ms',
   },
   marginDivider: {
@@ -229,17 +246,19 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   horizontalDivider: {
     height: 1,
     backgroundColor: theme.borderLight,
-    marginVertical: '12@vs',
+    marginVertical: '8@vs',
   },
   totalMarginRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: '12@ms',
   },
   totalMarginLabel: {
     color: theme.textPrimary,
     fontSize: '13@ms',
     fontWeight: '700',
+    flexShrink: 1,
   },
   totalMarginValue: {
     color: theme.primary,
@@ -247,8 +266,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontWeight: '800',
   },
   holdingsList: {
-    gap: '12@ms',
-    marginBottom: '20@vs',
+    gap: '10@ms',
+    marginBottom: '14@vs',
   },
   holdingCard: {
     backgroundColor: theme.card,
@@ -266,12 +285,14 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: '10@ms',
   },
   holdingSymbol: {
     fontSize: '15@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.1,
+    letterSpacing: 0,
+    flexShrink: 1,
   },
   holdingQty: {
     fontSize: '12@ms',
@@ -297,12 +318,13 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   cardDivider: {
     height: 1,
     backgroundColor: theme.background,
-    marginVertical: '12@vs',
+    marginVertical: '8@vs',
   },
   holdingBottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: '10@ms',
   },
   holdingStatLabel: {
     fontSize: '9@ms',
@@ -332,6 +354,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: '12@ms',
     marginBottom: '12@vs',
     shadowColor: theme.textPrimary,
     shadowOffset: { width: 0, height: 4 },
@@ -381,16 +404,16 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: '12@ms',
-    marginBottom: '20@vs',
+    marginBottom: '14@vs',
     borderBottomWidth: 1,
     borderBottomColor: theme.borderLight,
-    paddingBottom: '16@ms',
+    paddingBottom: '12@ms',
   },
   formTitle: {
     fontSize: '15@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
   },
   formSubtitle: {
     fontSize: '11@ms',
@@ -499,7 +522,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '15@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
   },
   connectSubtitle: {
     fontSize: '11@ms',
@@ -518,7 +541,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: theme.border,
-    marginBottom: '20@vs',
+    marginBottom: '14@vs',
   },
   apiKeyBadgeText: {
     fontSize: '11@ms',
@@ -623,7 +646,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '15@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
   },
   successSubtitle: {
     fontSize: '11@ms',
@@ -977,7 +1000,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '15@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
   },
   tabCardSubtitle: {
     fontSize: '11@ms',
@@ -985,7 +1008,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontWeight: '500',
     lineHeight: 15,
     marginTop: '4@vs',
-    marginBottom: '20@vs',
+    marginBottom: '14@vs',
   },
   tradeTypeContainer: {
     flexDirection: 'row',
@@ -1053,7 +1076,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   productTypeContainer: {
     flexDirection: 'row',
     gap: '8@ms',
-    marginBottom: '20@vs',
+    marginBottom: '14@vs',
   },
   productTypeBtn: {
     flex: 1,
@@ -1105,7 +1128,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: '14@ms',
+    paddingVertical: '10@vs',
     borderBottomWidth: 1,
     borderBottomColor: theme.borderLight,
   },
@@ -1139,7 +1162,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     marginTop: '4@vs',
   },
   historyItem: {
-    paddingVertical: '12@ms',
+    paddingVertical: '9@vs',
     borderBottomWidth: 1,
     borderBottomColor: theme.borderLight,
   },
@@ -1147,11 +1170,14 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: '8@ms',
   },
   historyLeftInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: '8@ms',
+    flex: 1,
+    minWidth: 0,
   },
   historyTypeBadge: {
     paddingHorizontal: '6@ms',

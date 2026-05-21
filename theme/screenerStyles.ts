@@ -1,6 +1,5 @@
-import { StyleSheet } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
-import { Colors, lightColors, darkColors } from './colors';
+import { Colors, darkColors, lightColors } from './colors';
 
 const createStyles = (theme: Colors) => ScaledSheet.create({
   safeArea: {
@@ -18,7 +17,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '15@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
   },
   customHeader: {
     flexDirection: 'row',
@@ -31,22 +30,26 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     backgroundColor: theme.card,
   },
   backButton: {
-    padding: '8@ms',
-    borderRadius: 50,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: theme.borderLight,
   },
   headerTitle: {
     fontSize: '20@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.5,
+    letterSpacing: 0,
   },
   container: {
     flex: 1,
     paddingHorizontal: '20@ms',
+    minHeight: 0,
   },
   introContainer: {
-    marginVertical: '15@vs',
+    marginVertical: '12@vs',
   },
   subtext: {
     fontSize: '14@ms',
@@ -55,10 +58,11 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     lineHeight: 20,
   },
   topSection: {
-    paddingBottom: '5@ms',
+    flexShrink: 0,
+    paddingBottom: '4@ms',
   },
   carouselContainer: {
-    height: 140,
+    minHeight: 116,
     justifyContent: 'center',
   },
   centerLoading: {
@@ -75,18 +79,19 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   divider: {
     height: 1,
     backgroundColor: theme.border,
-    marginVertical: '12@vs',
+    marginVertical: '8@vs',
   },
   resultsSection: {
     flex: 1,
-    marginTop: '10@vs',
+    minHeight: 0,
+    marginTop: '6@vs',
   },
   resultsTitle: {
     fontSize: '16@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.2,
-    marginBottom: '12@vs',
+    letterSpacing: 0,
+    marginBottom: '8@vs',
   },
   resultsLoading: {
     flex: 1,
@@ -102,10 +107,11 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   resultsPlaceholder: {
     flex: 1,
+    minHeight: 180,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: '50@ms',
-    paddingHorizontal: '30@ms',
+    paddingVertical: '32@ms',
+    paddingHorizontal: '24@ms',
     gap: '12@ms',
     backgroundColor: theme.card,
     borderRadius: 20,
@@ -132,7 +138,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   stockResultCard: {
     backgroundColor: theme.card,
     borderRadius: 16,
-    padding: '16@ms',
+    padding: '14@ms',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -146,6 +152,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   stockLeft: {
     flex: 1,
+    minWidth: 0,
     paddingRight: '12@ms',
     gap: '4@ms',
   },
@@ -153,7 +160,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '15@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.1,
+    letterSpacing: 0,
   },
   stockCompany: {
     fontSize: '12@ms',
@@ -177,11 +184,14 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   stockRight: {
     alignItems: 'flex-end',
     gap: '4@ms',
+    flexShrink: 0,
+    maxWidth: '42%',
   },
   stockPrice: {
     fontSize: '15@ms',
     fontWeight: '800',
     color: theme.textPrimary,
+    flexShrink: 1,
   },
   stockChange: {
     fontSize: '12@ms',
@@ -189,20 +199,20 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   listContainer: {
     paddingRight: '20@ms',
-    paddingVertical: '10@ms',
-    gap: '12@ms',
+    paddingVertical: '8@ms',
+    gap: '10@ms',
   },
   strategyCard: {
     backgroundColor: theme.card,
-    borderRadius: 18,
-    padding: '16@ms',
+    borderRadius: 16,
+    padding: '14@ms',
     borderWidth: 1,
     borderColor: theme.border,
-    width: 170,
-    height: 120,
+    width: '150@ms',
+    minHeight: 104,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '12@ms',
+    gap: '10@ms',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
@@ -232,7 +242,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '13@ms',
     fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: -0.1,
+    letterSpacing: 0,
     textAlign: 'center',
     lineHeight: 18,
   },

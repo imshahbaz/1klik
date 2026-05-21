@@ -268,16 +268,24 @@ export default function CalculatorScreen() {
       )}
 
       <KeyboardAvoidingView
-        behavior="padding"
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 90}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        enabled={Platform.OS === 'ios' && view === 'form'}
+        style={styles.keyboardFrame}
+        keyboardVerticalOffset={insets.top + 60}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContainer}
+          contentContainerStyle={[
+            styles.scrollContainer,
+            view === 'results' ? styles.resultsScrollContainer : null,
+          ]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.container}>
+          <View style={[
+            styles.container,
+            view === 'results' ? styles.resultsContentContainer : null,
+          ]}>
             {view === 'form' ? (
               // FORM VIEWS
               activeStep === 1 ? (
@@ -778,5 +786,4 @@ export default function CalculatorScreen() {
     </View>
   );
 }
-
 

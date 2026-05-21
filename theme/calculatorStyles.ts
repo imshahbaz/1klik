@@ -1,6 +1,5 @@
-import { StyleSheet } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
-import { Colors, lightColors, darkColors } from './colors';
+import { Colors, darkColors, lightColors } from './colors';
 
 const createStyles = (theme: Colors) => ScaledSheet.create({
   safeArea: {
@@ -42,6 +41,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: '8@ms',
     marginBottom: '8@vs',
   },
   progressStepText: {
@@ -54,6 +54,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '13@ms',
     fontWeight: '700',
     color: theme.textPrimary,
+    flexShrink: 1,
+    textAlign: 'right',
   },
   progressBarBg: {
     height: 6,
@@ -65,13 +67,28 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     height: '100%',
     backgroundColor: theme.secondary,
   },
+  keyboardFrame: {
+    flex: 1,
+    minHeight: 0,
+  },
   scrollContainer: {
     flexGrow: 1,
     paddingBottom: '40@ms',
   },
+  resultsScrollContainer: {
+    flexGrow: 0,
+    paddingBottom: '24@ms',
+  },
   container: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minHeight: 0,
     paddingHorizontal: '20@ms',
     paddingTop: '20@ms',
+  },
+  resultsContentContainer: {
+    flexGrow: 0,
+    flexShrink: 0,
   },
   stepContent: {
     backgroundColor: theme.card,
@@ -243,15 +260,20 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '8@ms',
     marginBottom: '10@vs',
   },
   tabToggleBg: {
     flexDirection: 'row',
+    flexShrink: 1,
     backgroundColor: theme.borderLight,
     borderRadius: 10,
     padding: '3@ms',
   },
   toggleBtn: {
+    flex: 1,
+    minWidth: '92@ms',
     paddingHorizontal: '12@ms',
     paddingVertical: '6@ms',
     borderRadius: 8,
@@ -268,6 +290,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '11@ms',
     fontWeight: '600',
     color: theme.textSecondary,
+    textAlign: 'center',
   },
   toggleBtnTextActive: {
     color: theme.textPrimary,
@@ -297,6 +320,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
     backgroundColor: theme.background,
     borderWidth: 1,
     borderColor: theme.border,
@@ -309,6 +333,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '12@ms',
     fontWeight: '700',
     color: theme.textSecondary,
+    flexShrink: 1,
   },
   daysHeldBadge: {
     backgroundColor: theme.borderLight,
@@ -364,6 +389,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   resultsContainer: {
     width: '100%',
+    flexGrow: 0,
+    flexShrink: 0,
   },
   headlineCard: {
     borderRadius: 28,
@@ -412,6 +439,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '36@ms',
     fontWeight: '900',
     marginBottom: '10@vs',
+    textAlign: 'center',
   },
   textProfit: {
     color: theme.success,
@@ -445,6 +473,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     gap: '12@ms',
     width: '100%',
+    flexWrap: 'wrap',
   },
   resultAdjustBtn: {
     flex: 1,
@@ -480,22 +509,24 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   resultsDetailCard: {
     backgroundColor: theme.card,
-    borderRadius: 24,
-    padding: '20@ms',
+    borderRadius: 20,
+    paddingHorizontal: '18@ms',
+    paddingVertical: '16@ms',
     borderWidth: 1,
     borderColor: theme.borderLight,
-    marginBottom: '20@vs',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.02,
     shadowRadius: 8,
     elevation: 2,
+    gap: 0,
+    marginTop: '12@vs',
   },
   resultsHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: '8@ms',
-    marginBottom: '16@vs',
+    marginBottom: '8@vs',
   },
   resultsDetailCardTitle: {
     fontSize: '12@ms',
@@ -508,7 +539,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: '12@ms',
+    minHeight: 36,
+    paddingVertical: '7@vs',
     flexWrap: 'wrap',
     gap: '8@ms',
   },

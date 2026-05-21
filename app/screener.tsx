@@ -202,7 +202,6 @@ export default function ScreenerScreen() {
                 keyExtractor={(item, index) => item.name + index}
                 renderItem={renderStrategyItem}
                 contentContainerStyle={styles.listContainer}
-                snapToInterval={182} // 170 width + 12 gap
                 decelerationRate="fast"
                 ListEmptyComponent={
                   <View style={styles.emptyContainer}>
@@ -254,6 +253,7 @@ export default function ScreenerScreen() {
               renderItem={renderStockResultItem}
               contentContainerStyle={styles.resultsList}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             />
           )}
         </View>
@@ -261,5 +261,4 @@ export default function ScreenerScreen() {
     </View>
   );
 }
-
 

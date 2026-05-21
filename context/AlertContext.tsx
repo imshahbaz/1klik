@@ -306,12 +306,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   alertCard: {
     width: '100%',
-    maxWidth: 320,
-    borderRadius: 24,
+    maxWidth: 360,
+    maxHeight: '86%',
+    borderRadius: 20,
     borderWidth: 1,
     padding: 20,
     shadowColor: '#000',
@@ -324,7 +326,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   alertIconCircle: {
     width: 40,
@@ -337,11 +339,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     flex: 1,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
   },
   messageScrollView: {
-    maxHeight: 180,
-    marginBottom: 20,
+    maxHeight: 220,
+    marginBottom: 16,
   },
   alertMessage: {
     fontSize: 13,
@@ -354,12 +356,13 @@ const styles = StyleSheet.create({
   buttonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
   },
   buttonsColumn: {
     flexDirection: 'column',
   },
   alertButton: {
-    height: 44,
+    minHeight: 44,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -397,12 +400,13 @@ const styles = StyleSheet.create({
   },
   notificationTextContainer: {
     flex: 1,
+    minWidth: 0,
     marginHorizontal: 12,
   },
   notificationTitle: {
     fontSize: 13,
     fontWeight: '800',
-    letterSpacing: -0.1,
+    letterSpacing: 0,
   },
   notificationBody: {
     fontSize: 11,

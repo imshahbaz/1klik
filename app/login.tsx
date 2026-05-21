@@ -94,11 +94,13 @@ export default function LoginScreen() {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+        enabled={Platform.OS === 'ios'}
+        style={styles.keyboardFrame}
+        keyboardVerticalOffset={insets.top + 60}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.container}>
