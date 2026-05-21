@@ -1,6 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { DeviceEventEmitter } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const APP_KEY = process.env.EXPO_PUBLIC_TRUECALLER_APP_KEY;
 const APP_NAME = "1Klik";
@@ -11,22 +11,18 @@ const api = axios.create({
 
 export const initializeBaseUrl = async () => {
   try {
-    const cachedUrl = await AsyncStorage.getItem('@backend_base_url');
-    if (cachedUrl) {
-      api.defaults.baseURL = cachedUrl;
-      console.log('API: Loaded cached baseURL:', cachedUrl);
-    }
+    await AsyncStorage.removeItem('@backend_base_url');
+    console.log('API: Cleared cached baseURL from AsyncStorage');
   } catch (err) {
-    console.warn('API: Failed to read cached baseURL from AsyncStorage:', err);
+    console.warn('API: Failed to clear cached baseURL from AsyncStorage:', err);
   }
 
   try {
-    const response = await axios.get('https://gist.githubusercontent.com/imshahbaz/38a85817cd970cbac322998b1d817cb9/raw/73639b7386f85e3f0fbe97045eb89580a77235da/urls.json', { timeout: 5000 });
+    const response = await axios.get('https://gist.githubusercontent.com/imshahbaz/38a85817cd970cbac322998b1d817cb9/raw/urls.json', { timeout: 5000 });
     const freshUrl = response.data?.backend_url;
     if (freshUrl) {
       api.defaults.baseURL = freshUrl;
       console.log('API: Dynamically resolved baseURL from Gist:', freshUrl);
-      await AsyncStorage.setItem('@backend_base_url', freshUrl);
       return freshUrl;
     }
   } catch (err) {
@@ -124,7 +120,7 @@ export const googleAPI = {
       state: random
     }
   }),
-  googleTokenValidation: (token) => api.post("/api/auth/google/token", null, { 
+  googleTokenValidation: (token) => api.post("/api/auth/google/token", null, {
     params: { code: token, state: "validate" },
     headers: { nativeFlow: 'true' }
   })

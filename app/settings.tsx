@@ -1,23 +1,88 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View, Switch } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View, Switch, AppState, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useSettingsStyles } from '../theme/settingsStyles';
-import { userPreferenceAPI } from '../services/api';
+import { userPreferenceAPI, notificationAPI } from '../services/api';
+import { checkNotificationPermission, requestUserPermission, getFCMToken } from '../services/notificationService';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { user, refreshUserData } = useAuth() as any;
-  const { isDarkMode, toggleTheme, theme } = useTheme();
+  const { isDarkMode, theme } = useTheme();
   const styles = useSettingsStyles(isDarkMode);
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [checkingPermission, setCheckingPermission] = useState(true);
+
+  const syncNotificationPermission = async () => {
+    try {
+      const isEnabled = await checkNotificationPermission();
+      setNotificationsEnabled(isEnabled);
+    } catch (err) {
+      console.error('Settings: Failed to check notification permission:', err);
+    } finally {
+      setCheckingPermission(false);
+    }
+  };
+
+  useEffect(() => {
+    syncNotificationPermission();
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        syncNotificationPermission();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const handleNotificationToggle = async (value: boolean) => {
+    if (value) {
+      const granted = await requestUserPermission();
+      if (granted) {
+        setNotificationsEnabled(true);
+        try {
+          const token = await getFCMToken();
+          if (token) {
+            await notificationAPI.saveToken(token);
+            console.log('Settings: FCM token saved successfully to backend');
+          }
+        } catch (tokenErr) {
+          console.error('Settings: Failed to save FCM token:', tokenErr);
+        }
+      } else {
+        setNotificationsEnabled(false);
+        Alert.alert(
+          'Notifications Blocked',
+          'Push notifications are disabled for this app. Please enable them in your device settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() }
+          ]
+        );
+      }
+    } else {
+      Alert.alert(
+        'Disable Notifications',
+        'To disable notifications, please turn them off in your device system settings.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() }
+        ]
+      );
+    }
+  };
 
   useEffect(() => {
     if (user?.username) {
@@ -223,14 +288,20 @@ export default function SettingsScreen() {
                 Customize your app experience.
               </Text>
 
+
+
               <View style={styles.themeToggleRow}>
-                <Text style={styles.themeToggleLabel}>Dark Mode</Text>
-                <Switch
-                  value={isDarkMode}
-                  onValueChange={toggleTheme}
-                  trackColor={{ false: theme.border, true: theme.primary }}
-                  thumbColor={theme.card}
-                />
+                <Text style={styles.themeToggleLabel}>Push Notifications</Text>
+                {checkingPermission ? (
+                  <ActivityIndicator size="small" color={theme.primary} />
+                ) : (
+                  <Switch
+                    value={notificationsEnabled}
+                    onValueChange={handleNotificationToggle}
+                    trackColor={{ false: theme.border, true: theme.primary }}
+                    thumbColor={theme.card}
+                  />
+                )}
               </View>
             </View>
 

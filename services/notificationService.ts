@@ -8,6 +8,7 @@ import {
   registerDeviceForRemoteMessages,
   isDeviceRegisteredForRemoteMessages,
   AuthorizationStatus,
+  hasPermission,
 } from '@react-native-firebase/messaging';
 import { Alert, Platform, PermissionsAndroid } from 'react-native';
 
@@ -50,6 +51,7 @@ export async function requestUserPermission(): Promise<boolean> {
         }
         console.log('FCM Debug: Android POST_NOTIFICATIONS permission granted');
       }
+      return true;
     }
 
     const messagingInstance = getMessaging();
@@ -133,5 +135,36 @@ export function setupForegroundListener(): () => void {
   } catch (error) {
     console.error('Error setting up foreground listener:', error);
     return () => {};
+  }
+}
+
+/**
+ * Check if push notification permissions are granted on the device.
+ */
+export async function checkNotificationPermission(): Promise<boolean> {
+  if (!isFirebaseInitialized()) return false;
+  try {
+    if (Platform.OS === 'android') {
+      const apiLevel = typeof Platform.Version === 'number' 
+        ? Platform.Version 
+        : parseInt(String(Platform.Version), 10);
+      
+      if (apiLevel >= 33) {
+        const hasAndroidPermission = await PermissionsAndroid.check(
+          'android.permission.POST_NOTIFICATIONS' as any
+        );
+        return hasAndroidPermission;
+      }
+      return true;
+    }
+    const messagingInstance = getMessaging();
+    const authStatus = await hasPermission(messagingInstance);
+    return (
+      authStatus === AuthorizationStatus.AUTHORIZED ||
+      authStatus === AuthorizationStatus.PROVISIONAL
+    );
+  } catch (error) {
+    console.error('Error checking notification permission:', error);
+    return false;
   }
 }

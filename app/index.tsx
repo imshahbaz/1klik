@@ -52,6 +52,8 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (appLoading) return;
+
       // Initial fetch with loader
       fetchMarketStatus(true);
 
@@ -66,7 +68,7 @@ export default function HomeScreen() {
           refreshIntervalRef.current = null;
         }
       };
-    }, [])
+    }, [appLoading])
   );
 
   if (appLoading) {
