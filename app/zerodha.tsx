@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { marginAPI, strategyOrderAPI, zerodhaAPI } from '../services/api';
 import { useZerodhaStyles } from '../theme/zerodhaStyles';
+import { CustomAlert } from '../context/AlertContext';
 
 export default function ZerodhaDashboard() {
   const router = useRouter();
@@ -196,11 +197,11 @@ export default function ZerodhaDashboard() {
 
   const handleExecuteOrder = async () => {
     if (!tradeSymbol.trim()) {
-      Alert.alert('Execution Alert', 'Please enter or select a stock symbol.');
+      CustomAlert.alert('Execution Alert', 'Please enter or select a stock symbol.');
       return;
     }
     if (!tradeQty || parseInt(tradeQty) <= 0) {
-      Alert.alert('Execution Alert', 'Please enter a valid quantity.');
+      CustomAlert.alert('Execution Alert', 'Please enter a valid quantity.');
       return;
     }
 
@@ -231,7 +232,7 @@ export default function ZerodhaDashboard() {
           reason: undefined,
         } : o));
 
-        Alert.alert(
+        CustomAlert.alert(
           'Order Updated Successfully',
           `Successfully updated scheduled MTF order for ${tradeSymbol.toUpperCase()} to ${tradeQty} shares, target date: ${formatDateString(targetDate)}.`
         );
@@ -254,7 +255,7 @@ export default function ZerodhaDashboard() {
         };
 
         setMtfOrders([newOrder, ...mtfOrders]);
-        Alert.alert(
+        CustomAlert.alert(
           'Order Placed Successfully',
           `Successfully registered MTF order for ${tradeQty} shares of ${tradeSymbol.toUpperCase()} target date: ${formatDateString(targetDate)}.`
         );
@@ -276,12 +277,12 @@ export default function ZerodhaDashboard() {
         } : o));
 
         if (isConflict) {
-          Alert.alert(
+          CustomAlert.alert(
             'Scheduling Conflict',
             err?.response?.data?.message || 'An MTF order is already scheduled for this symbol on the selected target date.'
           );
         } else {
-          Alert.alert(
+          CustomAlert.alert(
             'Update Failed',
             `Could not update MTF order: ${errMsg}`
           );
@@ -301,12 +302,12 @@ export default function ZerodhaDashboard() {
         setMtfOrders([rejectedOrder, ...mtfOrders]);
 
         if (isConflict) {
-          Alert.alert(
+          CustomAlert.alert(
             'Scheduling Conflict',
             err?.response?.data?.message || 'An MTF order is already scheduled for this symbol on the selected target date.'
           );
         } else {
-          Alert.alert(
+          CustomAlert.alert(
             'Order Failed',
             `Could not place MTF order: ${errMsg}`
           );
@@ -407,7 +408,7 @@ export default function ZerodhaDashboard() {
                   activeOpacity={0.7}
                 >
                   <Ionicons name="calendar-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon} />
-                  <Text style={styles.datePickerText as any}>
+                  <Text style={styles.datePickerText as any} numberOfLines={1} adjustsFontSizeToFit>
                     {formatDateString(targetDate)}
                   </Text>
                 </TouchableOpacity>
@@ -577,7 +578,7 @@ export default function ZerodhaDashboard() {
                             setPickerDate(parsedDate);
                             setEditingMtfOrderId(log.id);
                             setActiveTab('execute');
-                            Alert.alert(
+                             CustomAlert.alert(
                               'Loaded to Execute Tab',
                               `Order details for ${log.symbol} loaded into execution form.`
                             );
@@ -764,7 +765,7 @@ export default function ZerodhaDashboard() {
   const handleConnectKite = () => {
     const finalApiKey = apiKey || process.env.EXPO_PUBLIC_ZERODHA_API_KEY;
     if (!finalApiKey) {
-      Alert.alert("Missing API Key", "No saved API Key found. Please save your API config first.");
+      CustomAlert.alert("Missing API Key", "No saved API Key found. Please save your API config first.");
       return;
     }
     setShowWebView(true);
@@ -791,7 +792,7 @@ export default function ZerodhaDashboard() {
           const res = await zerodhaAPI.login(requestToken, user?.id || user?.userId || '');
           console.log("Zerodha authentication response:", res.data);
 
-          Alert.alert(
+          CustomAlert.alert(
             "Connection Successful",
             "Your Zerodha Kite session has been successfully established and authenticated!",
             [{ text: "OK", onPress: () => fetchZerodhaProfile() }]
@@ -799,7 +800,7 @@ export default function ZerodhaDashboard() {
         } catch (err: any) {
           console.error("Failed to complete Zerodha login:", err);
           const errMsg = err.response?.data?.message || err.message || "Failed to authenticate session with the backend.";
-          Alert.alert("Authentication Failed", errMsg);
+          CustomAlert.alert("Authentication Failed", errMsg);
           setIsTokenExpired(true);
         } finally {
           setZerodhaLoading(false);
@@ -822,7 +823,7 @@ export default function ZerodhaDashboard() {
         apiSecret: apiSecret.trim(),
       });
       console.log("Config saved response:", res.data);
-      Alert.alert(
+      CustomAlert.alert(
         "Configuration Saved",
         "Your Zerodha Kite API credentials have been successfully updated. We will now attempt to load your profile.",
         [{ text: "OK", onPress: () => fetchZerodhaProfile() }]
@@ -892,7 +893,7 @@ export default function ZerodhaDashboard() {
   }
 
   const handleDeleteMtfOrder = async (orderId: string) => {
-    Alert.alert(
+    CustomAlert.alert(
       'Cancel MTF Order',
       'Are you sure you want to cancel and delete this scheduled MTF order?',
       [
@@ -906,12 +907,12 @@ export default function ZerodhaDashboard() {
               const res = await zerodhaAPI.deleteOrder(orderId);
               if (res.data?.success !== false) {
                 setMtfOrders(prev => prev.filter(o => o.id !== orderId));
-                Alert.alert('Order Cancelled', 'Scheduled MTF order has been successfully cancelled.');
+                CustomAlert.alert('Order Cancelled', 'Scheduled MTF order has been successfully cancelled.');
               }
             } catch (err: any) {
               console.error('Failed to delete MTF order:', err);
               setMtfOrders(prev => prev.filter(o => o.id !== orderId));
-              Alert.alert('Order Cancelled', 'Scheduled MTF order has been cancelled.');
+              CustomAlert.alert('Order Cancelled', 'Scheduled MTF order has been cancelled.');
             }
           }
         }
@@ -920,7 +921,7 @@ export default function ZerodhaDashboard() {
   };
 
   const handleDeleteStrategyOrder = async (orderId: string) => {
-    Alert.alert(
+    CustomAlert.alert(
       'Delete Strategy Order',
       'Are you sure you want to delete this Strategy order log?',
       [
@@ -934,12 +935,12 @@ export default function ZerodhaDashboard() {
               const res = await strategyOrderAPI.deleteOrder(orderId);
               if (res.data?.success !== false) {
                 setStrategyOrders(prev => prev.filter(o => o.id !== orderId));
-                Alert.alert('Order Deleted', 'Strategy order log has been successfully deleted.');
+                CustomAlert.alert('Order Deleted', 'Strategy order log has been successfully deleted.');
               }
             } catch (err: any) {
               console.error('Failed to delete Strategy order:', err);
               setStrategyOrders(prev => prev.filter(o => o.id !== orderId));
-              Alert.alert('Order Deleted', 'Strategy order log has been deleted.');
+              CustomAlert.alert('Order Deleted', 'Strategy order log has been deleted.');
             }
           }
         }
@@ -1036,7 +1037,7 @@ export default function ZerodhaDashboard() {
     const handleSaveChanges = async () => {
       const qtyNum = parseInt(editQty);
       if (isNaN(qtyNum) || qtyNum <= 0) {
-        Alert.alert('Validation Error', 'Please enter a valid quantity.');
+        CustomAlert.alert('Validation Error', 'Please enter a valid quantity.');
         return;
       }
 
@@ -1058,7 +1059,7 @@ export default function ZerodhaDashboard() {
             targetDate: editTargetDate ? formatDateString(editTargetDate) : o.targetDate,
           } : o));
 
-          Alert.alert('Success', 'Scheduled MTF order modified successfully.');
+          CustomAlert.alert('Success', 'Scheduled MTF order modified successfully.');
         } else {
           const payload = {
             symbol: editingOrder.symbol,
@@ -1073,7 +1074,7 @@ export default function ZerodhaDashboard() {
             qty: qtyNum,
           } : o));
 
-          Alert.alert('Success', 'Strategy order modified successfully.');
+          CustomAlert.alert('Success', 'Strategy order modified successfully.');
         }
         setEditingOrder(null);
       } catch (err: any) {
@@ -1090,7 +1091,7 @@ export default function ZerodhaDashboard() {
             qty: qtyNum,
           } : o));
         }
-        Alert.alert('Success', 'Order modified successfully.');
+        CustomAlert.alert('Success', 'Order modified successfully.');
         setEditingOrder(null);
       }
     };
@@ -1162,7 +1163,11 @@ export default function ZerodhaDashboard() {
                   activeOpacity={0.8}
                 >
                   <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
-                  <Text style={{ flex: 1, color: editTargetDate ? theme.textPrimary : theme.iconMuted, fontSize: 13, fontWeight: '600' }}>
+                  <Text 
+                    style={{ flex: 1, color: editTargetDate ? theme.textPrimary : theme.iconMuted, fontSize: 13, fontWeight: '600' }}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
                     {editTargetDate ? formatDateString(editTargetDate) : 'Select Target Date'}
                   </Text>
                   <Ionicons name="chevron-down" size={16} color={theme.iconMuted} />

@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View, Switch, AppState, Linking, Alert } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View, Switch, AppState, Linking } from 'react-native';
+import { CustomAlert } from '../context/AlertContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -63,7 +64,7 @@ export default function SettingsScreen() {
         }
       } else {
         setNotificationsEnabled(false);
-        Alert.alert(
+        CustomAlert.alert(
           'Notifications Blocked',
           'Push notifications are disabled for this app. Please enable them in your device settings.',
           [
@@ -73,7 +74,7 @@ export default function SettingsScreen() {
         );
       }
     } else {
-      Alert.alert(
+      CustomAlert.alert(
         'Disable Notifications',
         'To disable notifications, please turn them off in your device system settings.',
         [

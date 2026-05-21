@@ -10,7 +10,9 @@ import {
   AuthorizationStatus,
   hasPermission,
 } from '@react-native-firebase/messaging';
-import { Alert, Platform, PermissionsAndroid } from 'react-native';
+import { Platform, PermissionsAndroid } from 'react-native';
+import { CustomNotification } from '../context/AlertContext';
+
 
 /**
  * Helper to check if Firebase native SDK is fully initialized on the platform.
@@ -125,12 +127,7 @@ export function setupForegroundListener(): () => void {
       const title = String(remoteMessage.notification?.title || remoteMessage.data?.title || 'Notification');
       const body = String(remoteMessage.notification?.body || remoteMessage.data?.body || '');
       
-      Alert.alert(
-        title,
-        body,
-        [{ text: 'OK', style: 'default' }],
-        { cancelable: true }
-      );
+      CustomNotification.show(title, body, remoteMessage.data);
     });
   } catch (error) {
     console.error('Error setting up foreground listener:', error);

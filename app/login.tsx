@@ -2,12 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLoginStyles } from '../theme/loginStyles';
 import { authAPI, googleAPI } from '../services/api';
+import { CustomAlert } from '../context/AlertContext';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -72,7 +73,7 @@ export default function LoginScreen() {
       } else {
         const errMsg = err.response?.data?.message || err.response?.data?.error || err.message || 'Google Sign-In failed. Please try again.';
         setError(errMsg);
-        Alert.alert('Login Failed', errMsg);
+        CustomAlert.alert('Login Failed', errMsg);
       }
     } finally {
       setLoading(false);

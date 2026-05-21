@@ -100,9 +100,9 @@ export default function HomeScreen() {
       <View style={styles.container}>
         {/* Header Section */}
         <View style={styles.header}>
-          <View>
+          <View style={{ flex: 1, marginRight: 12 }}>
             <Text style={styles.welcomeText}>Welcome{displayName ? ',' : ""}</Text>
-            {displayName ? <Text style={styles.nameText}>{displayName}</Text> : null}
+            {displayName ? <Text style={styles.nameText} numberOfLines={1} adjustsFontSizeToFit>{displayName}</Text> : null}
           </View>
           <TouchableOpacity
             style={[styles.profileButton, user?.profile ? styles.profileButtonWithImage : null]}
@@ -160,7 +160,7 @@ export default function HomeScreen() {
             <View style={styles.cardBody}>
               <Text style={styles.indexName}>{symbol}</Text>
               <View style={styles.priceContainer}>
-                <Text style={styles.indexPrice}>
+                <Text style={styles.indexPrice} numberOfLines={1} adjustsFontSizeToFit>
                   {ltp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </Text>
                 <View style={styles.changeContainer}>

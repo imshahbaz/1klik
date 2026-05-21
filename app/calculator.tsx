@@ -325,9 +325,9 @@ export default function CalculatorScreen() {
                               }}
                               activeOpacity={0.7}
                             >
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, marginRight: 8 }}>
                                 <Ionicons name="trending-up" size={14} color={theme.primary} />
-                                <Text style={styles.suggestionRowSymbol}>{marginItem.symbol}</Text>
+                                <Text style={styles.suggestionRowSymbol} numberOfLines={1} adjustsFontSizeToFit>{marginItem.symbol}</Text>
                               </View>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                                 {marginItem.margin ? (
@@ -598,32 +598,32 @@ export default function CalculatorScreen() {
                     </View>
 
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Stock Symbol</Text>
-                      <Text style={styles.detailValueBold}>{results.symbol}</Text>
+                      <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Stock Symbol</Text>
+                      <Text style={styles.detailValueBold} numberOfLines={1} adjustsFontSizeToFit>{results.symbol}</Text>
                     </View>
                     <View style={styles.rowDivider} />
 
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Shares Quantity</Text>
-                      <Text style={styles.detailValue}>{results.shares} shares</Text>
+                      <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Shares Quantity</Text>
+                      <Text style={styles.detailValue} numberOfLines={1} adjustsFontSizeToFit>{results.shares} shares</Text>
                     </View>
                     <View style={styles.rowDivider} />
 
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Total Position Value</Text>
-                      <Text style={styles.detailValue}>{formatCurrency(results.totalValue)}</Text>
+                      <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Total Position Value</Text>
+                      <Text style={styles.detailValue} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(results.totalValue)}</Text>
                     </View>
                     <View style={styles.rowDivider} />
 
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Your Required Capital</Text>
-                      <Text style={styles.detailValueBold}>{formatCurrency(results.margin)}</Text>
+                      <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Your Required Capital</Text>
+                      <Text style={styles.detailValueBold} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(results.margin)}</Text>
                     </View>
                     <View style={styles.rowDivider} />
 
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Exit Target Price</Text>
-                      <Text style={styles.detailValue}>{formatCurrency(results.sellPrice)}</Text>
+                      <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Exit Target Price</Text>
+                      <Text style={styles.detailValue} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(results.sellPrice)}</Text>
                     </View>
                   </View>
 
@@ -635,22 +635,22 @@ export default function CalculatorScreen() {
                     </View>
 
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Gross Profit / Loss</Text>
-                      <Text style={[styles.detailValue, results.isProfit ? styles.textProfit : styles.textLoss]}>
+                      <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Gross Profit / Loss</Text>
+                      <Text style={[styles.detailValue, results.isProfit ? styles.textProfit : styles.textLoss]} numberOfLines={1} adjustsFontSizeToFit>
                         {formatCurrency(results.gross)}
                       </Text>
                     </View>
                     <View style={styles.rowDivider} />
 
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>MTF Interest (15% p.a.)</Text>
-                      <Text style={styles.detailValue}>{formatCurrency(results.interest)}</Text>
+                      <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>MTF Interest (15% p.a.)</Text>
+                      <Text style={styles.detailValue} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(results.interest)}</Text>
                     </View>
                     <View style={styles.rowDivider} />
 
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Total Charges & Taxes</Text>
-                      <Text style={styles.detailValueBold}>{formatCurrency(results.charges)}</Text>
+                      <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Total Charges & Taxes</Text>
+                      <Text style={styles.detailValueBold} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(results.charges)}</Text>
                     </View>
                   </View>
                 </View>

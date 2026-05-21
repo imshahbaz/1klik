@@ -142,6 +142,8 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   indexPrice: {
     color: theme.textPrimary,

@@ -92,6 +92,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
   },
   inputRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 16,
     marginBottom: 20,
   },
@@ -200,6 +201,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: theme.textPrimary,
+    flexShrink: 1,
   },
   suggestionRowBadge: {
     fontSize: 10,
@@ -506,21 +508,26 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   detailLabel: {
     fontSize: 13,
     color: theme.textSecondary,
     fontWeight: '500',
+    flexShrink: 1,
   },
   detailValue: {
     fontSize: 13,
     color: theme.textPrimary,
     fontWeight: '600',
+    flexShrink: 1,
   },
   detailValueBold: {
     fontSize: 14,
     color: theme.textPrimary,
     fontWeight: '800',
+    flexShrink: 1,
   },
   rowDivider: {
     height: 1,

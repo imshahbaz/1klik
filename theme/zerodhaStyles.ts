@@ -85,6 +85,8 @@ const createStyles = (theme: Colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
+    marginRight: 8,
   },
   kiteLogoPlaceholder: {
     width: 44,
@@ -934,11 +936,11 @@ const createStyles = (theme: Colors) => StyleSheet.create({
   },
   tabButton: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
+    gap: 2,
+    paddingVertical: 8,
     borderRadius: 10,
   },
   activeTabButton: {
@@ -1044,6 +1046,7 @@ const createStyles = (theme: Colors) => StyleSheet.create({
   },
   formInputRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
   },
   productTypeContainer: {
