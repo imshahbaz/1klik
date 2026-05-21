@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Modal } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
 import { marginAPI } from '../services/api';
+import { useCalculatorStyles } from '../theme/calculatorStyles';
 
 interface MarginData {
   symbol: string;
@@ -12,6 +14,8 @@ interface MarginData {
 
 export default function CalculatorScreen() {
   const router = useRouter();
+  const { isDarkMode, theme } = useTheme();
+  const styles = useCalculatorStyles(isDarkMode);
 
   // Navigation Steps
   const [view, setView] = useState<'form' | 'results'>('form');
@@ -243,7 +247,7 @@ export default function CalculatorScreen() {
             router.back();
           }
         }}>
-          <Ionicons name="arrow-back" size={24} color="#0f172a" />
+          <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>MTF Trade Calculator</Text>
         <View style={{ width: 40 }} />
@@ -283,7 +287,7 @@ export default function CalculatorScreen() {
                   <View style={styles.formInputGroup}>
                     <Text style={styles.formInputLabel}>SYMBOL</Text>
                     <View style={[styles.formInputWrapper, errors.stock ? styles.inputError : null]}>
-                      <Ionicons name="trending-up-outline" size={18} color="#64748b" style={styles.formInputIcon} />
+                      <Ionicons name="trending-up-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
                       <TextInput
                         style={styles.formTextInput}
                         value={selectedSymbol || searchQuery}
@@ -295,11 +299,12 @@ export default function CalculatorScreen() {
                         autoCapitalize="characters"
                         autoCorrect={false}
                         placeholder={loadingMargins ? "Loading stocks..." : "e.g. RELIANCE"}
+                        placeholderTextColor={theme.placeholder}
                         onFocus={() => setShowDropdown(true)}
                         editable={!loadingMargins}
                       />
                       {loadingMargins && (
-                        <ActivityIndicator size="small" color="#f05a28" style={{ marginRight: 8 }} />
+                        <ActivityIndicator size="small" color={theme.primary} style={{ marginRight: 8 }} />
                       )}
                     </View>
                     {errors.stock ? <Text style={styles.errorText}>{errors.stock}</Text> : null}
@@ -321,7 +326,7 @@ export default function CalculatorScreen() {
                               activeOpacity={0.7}
                             >
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                <Ionicons name="trending-up" size={14} color="#f05a28" />
+                                <Ionicons name="trending-up" size={14} color={theme.primary} />
                                 <Text style={styles.suggestionRowSymbol}>{marginItem.symbol}</Text>
                               </View>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -330,7 +335,7 @@ export default function CalculatorScreen() {
                                     {marginItem.margin}x
                                   </Text>
                                 ) : null}
-                                <Ionicons name="chevron-forward" size={14} color="#94a3b8" />
+                                <Ionicons name="chevron-forward" size={14} color={theme.iconMuted} />
                               </View>
                             </TouchableOpacity>
                           ))}
@@ -342,10 +347,10 @@ export default function CalculatorScreen() {
                   {/* Selected leverage indicator */}
                   {selectedSymbol ? (
                     <View style={styles.leverageIndicatorBox}>
-                      <Ionicons name="shield-checkmark-outline" size={18} color="#10b981" />
+                      <Ionicons name="shield-checkmark-outline" size={18} color={theme.success} />
                       <Text style={styles.leverageIndicatorText}>
                         Leverage for <Text style={{ fontWeight: '700' }}>{selectedSymbol}</Text> is{' '}
-                        <Text style={{ fontWeight: '700', color: '#10b981' }}>{selectedLeverage}x</Text>
+                        <Text style={{ fontWeight: '700', color: theme.success }}>{selectedLeverage}x</Text>
                       </Text>
                     </View>
                   ) : null}
@@ -359,6 +364,7 @@ export default function CalculatorScreen() {
                         style={styles.textInput}
                         keyboardType="numeric"
                         placeholder="0.00"
+                        placeholderTextColor={theme.placeholder}
                         value={buyPrice}
                         onChangeText={(t) => {
                           const clean = t.replace(/[^0-9.]/g, '');
@@ -402,6 +408,7 @@ export default function CalculatorScreen() {
                         style={styles.textInput}
                         keyboardType="numeric"
                         placeholder={sellType === 'exact' ? "Exit target price" : "Percentage profit target"}
+                        placeholderTextColor={theme.placeholder}
                         value={sellPrice}
                         onChangeText={(t) => {
                           const clean = t.replace(/[^0-9.]/g, '');
@@ -433,7 +440,7 @@ export default function CalculatorScreen() {
                   <View style={styles.inputRow}>
                     <View style={[styles.inputGroup, { flex: 1 }]}>
                       <Text style={styles.inputLabel}>Entry Date</Text>
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={styles.inputWrapper}
                         onPress={() => {
                           setDatePickerTarget('entry');
@@ -442,8 +449,8 @@ export default function CalculatorScreen() {
                         }}
                         activeOpacity={0.8}
                       >
-                        <Ionicons name="calendar-outline" size={18} color="#64748b" style={styles.inputIcon} />
-                        <Text style={[styles.textInput, { color: entryDate ? '#0f172a' : '#94a3b8' }]}>
+                        <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
+                        <Text style={[styles.textInput, { color: entryDate ? theme.textPrimary : theme.textSecondary }]}>
                           {entryDate || 'YYYY-MM-DD'}
                         </Text>
                       </TouchableOpacity>
@@ -451,7 +458,7 @@ export default function CalculatorScreen() {
 
                     <View style={[styles.inputGroup, { flex: 1 }]}>
                       <Text style={styles.inputLabel}>Exit Date (Optional)</Text>
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={styles.inputWrapper}
                         onPress={() => {
                           setDatePickerTarget('exit');
@@ -461,8 +468,8 @@ export default function CalculatorScreen() {
                         }}
                         activeOpacity={0.8}
                       >
-                        <Ionicons name="calendar-outline" size={18} color="#64748b" style={styles.inputIcon} />
-                        <Text style={[styles.textInput, { color: exitDate ? '#0f172a' : '#94a3b8' }]}>
+                        <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
+                        <Text style={[styles.textInput, { color: exitDate ? theme.textPrimary : theme.textSecondary }]}>
                           {exitDate || 'Select Exit Date'}
                         </Text>
                       </TouchableOpacity>
@@ -509,6 +516,7 @@ export default function CalculatorScreen() {
                         style={styles.textInput}
                         keyboardType="numeric"
                         placeholder={quantityType === 'quantity' ? "Number of shares" : "Total capital amount"}
+                        placeholderTextColor={theme.placeholder}
                         value={quantity}
                         onChangeText={(t) => {
                           const clean = t.replace(/[^0-9.]/g, '');
@@ -527,7 +535,7 @@ export default function CalculatorScreen() {
                       onPress={() => setActiveStep(1)}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name="arrow-back" size={18} color="#64748b" />
+                      <Ionicons name="arrow-back" size={18} color={theme.iconMuted} />
                       <Text style={styles.secondaryActionText}>Back</Text>
                     </TouchableOpacity>
 
@@ -569,7 +577,7 @@ export default function CalculatorScreen() {
                         style={styles.resultAdjustBtn}
                         onPress={() => setView('form')}
                       >
-                        <Ionicons name="create-outline" size={16} color="#0f172a" />
+                        <Ionicons name="create-outline" size={16} color={theme.textPrimary} />
                         <Text style={styles.resultAdjustBtnText}>Adjust</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
@@ -585,7 +593,7 @@ export default function CalculatorScreen() {
                   {/* Section 1: Position Summary */}
                   <View style={styles.resultsDetailCard}>
                     <View style={styles.resultsHeaderRow}>
-                      <Ionicons name="wallet-outline" size={18} color="#4f46e5" />
+                      <Ionicons name="wallet-outline" size={18} color={theme.secondary} />
                       <Text style={styles.resultsDetailCardTitle}>Position Summary</Text>
                     </View>
 
@@ -594,7 +602,7 @@ export default function CalculatorScreen() {
                       <Text style={styles.detailValueBold}>{results.symbol}</Text>
                     </View>
                     <View style={styles.rowDivider} />
-                    
+
                     <View style={styles.detailRow}>
                       <Text style={styles.detailLabel}>Shares Quantity</Text>
                       <Text style={styles.detailValue}>{results.shares} shares</Text>
@@ -622,7 +630,7 @@ export default function CalculatorScreen() {
                   {/* Section 2: Cost Breakdown */}
                   <View style={styles.resultsDetailCard}>
                     <View style={styles.resultsHeaderRow}>
-                      <Ionicons name="receipt-outline" size={18} color="#f43f5e" />
+                      <Ionicons name="receipt-outline" size={18} color={theme.danger} />
                       <Text style={styles.resultsDetailCardTitle}>Cost Breakdown</Text>
                     </View>
 
@@ -667,13 +675,13 @@ export default function CalculatorScreen() {
           <View style={styles.modalCalendarContainer} onStartShouldSetResponder={() => true}>
             <View style={styles.calendarHeader}>
               <TouchableOpacity onPress={handlePrevMonth} style={styles.calendarNavBtn}>
-                <Ionicons name="chevron-back" size={18} color="#0f172a" />
+                <Ionicons name="chevron-back" size={18} color={theme.textPrimary} />
               </TouchableOpacity>
               <Text style={styles.calendarMonthText}>
                 {pickerDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
               </Text>
               <TouchableOpacity onPress={handleNextMonth} style={styles.calendarNavBtn}>
-                <Ionicons name="chevron-forward" size={18} color="#0f172a" />
+                <Ionicons name="chevron-forward" size={18} color={theme.textPrimary} />
               </TouchableOpacity>
             </View>
 
@@ -698,11 +706,11 @@ export default function CalculatorScreen() {
                 const currentSelectionDate = datePickerTarget === 'entry'
                   ? (entryDate ? new Date(entryDate) : null)
                   : (exitDate ? new Date(exitDate) : null);
-                  
-                const minAllowedDate = datePickerTarget === 'exit' && entryDate 
-                  ? new Date(entryDate) 
+
+                const minAllowedDate = datePickerTarget === 'exit' && entryDate
+                  ? new Date(entryDate)
                   : null;
-                  
+
                 if (minAllowedDate) {
                   minAllowedDate.setHours(0, 0, 0, 0);
                 }
@@ -711,11 +719,11 @@ export default function CalculatorScreen() {
                   if (!dayDate) {
                     return <View key={`empty-${idx}`} style={styles.calendarDayCell} />;
                   }
-                  const isSelected = currentSelectionDate && 
+                  const isSelected = currentSelectionDate &&
                     currentSelectionDate.getDate() === dayDate.getDate() &&
                     currentSelectionDate.getMonth() === dayDate.getMonth() &&
                     currentSelectionDate.getFullYear() === dayDate.getFullYear();
-                  
+
                   const dayDateAtMidnight = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
                   const isPastDate = minAllowedDate ? dayDateAtMidnight < minAllowedDate : false;
 
@@ -733,7 +741,7 @@ export default function CalculatorScreen() {
                         const month = String(dayDate.getMonth() + 1).padStart(2, '0');
                         const day = String(dayDate.getDate()).padStart(2, '0');
                         const dateString = `${year}-${month}-${day}`;
-                        
+
                         if (datePickerTarget === 'entry') {
                           setEntryDate(dateString);
                           if (exitDate && new Date(exitDate) < dayDate) {
@@ -773,621 +781,4 @@ export default function CalculatorScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  customHeader: {
-    height: 60,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f1f5f9',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  progressContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 15,
-    backgroundColor: '#ffffff',
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  progressStepText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#6366f1',
-    letterSpacing: 0.5,
-  },
-  progressTitleText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  progressBarBg: {
-    height: 6,
-    backgroundColor: '#e2e8f0',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#4f46e5',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingBottom: 40,
-  },
-  container: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  stepContent: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  inputGroup: {
-    marginBottom: 20,
-    width: '100%',
-    position: 'relative',
-    zIndex: 10,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#64748b',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    height: 52,
-    backgroundColor: '#f8fafc',
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  inputCurrencyPrefix: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#64748b',
-    marginRight: 6,
-  },
-  inputCurrencySuffix: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#64748b',
-    marginLeft: 6,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#0f172a',
-    fontWeight: '600',
-  },
-  inputError: {
-    borderColor: '#f43f5e',
-    backgroundColor: '#fff1f2',
-  },
-  errorText: {
-    fontSize: 12,
-    color: '#f43f5e',
-    fontWeight: '600',
-    marginTop: 6,
-    marginLeft: 4,
-  },
-  formInputGroup: {
-    marginBottom: 14,
-  },
-  formInputLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#64748b',
-    letterSpacing: 0.8,
-    marginBottom: 6,
-  },
-  formInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    backgroundColor: '#f8fafc',
-    paddingHorizontal: 12,
-    height: 48,
-  },
-  formInputIcon: {
-    marginRight: 8,
-  },
-  formTextInput: {
-    flex: 1,
-    color: '#0f172a',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  verticalDropdownContainer: {
-    marginTop: 8,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    overflow: 'hidden',
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  suggestionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  suggestionRowSymbol: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  suggestionRowBadge: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#f05a28',
-    backgroundColor: '#fff7ed',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  dropdownEmptyText: {
-    textAlign: 'center',
-    paddingVertical: 16,
-    color: '#64748b',
-    fontSize: 13,
-  },
-  leverageIndicatorBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0fdf4',
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
-    padding: 12,
-    borderRadius: 14,
-    marginBottom: 20,
-    gap: 8,
-  },
-  leverageIndicatorText: {
-    fontSize: 13,
-    color: '#166534',
-    flex: 1,
-  },
-  exitStrategyBox: {
-    marginBottom: 20,
-  },
-  exitHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  tabToggleBg: {
-    flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
-    borderRadius: 10,
-    padding: 3,
-  },
-  toggleBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  toggleBtnActive: {
-    backgroundColor: '#ffffff',
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  toggleBtnText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#64748b',
-  },
-  toggleBtnTextActive: {
-    color: '#0f172a',
-    fontWeight: '700',
-  },
-  primaryActionButton: {
-    backgroundColor: '#4f46e5',
-    height: 52,
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 10,
-    shadowColor: '#4f46e5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  primaryActionText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  daysHeldPreviewBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderStyle: 'dashed',
-    padding: 14,
-    borderRadius: 16,
-    marginBottom: 20,
-  },
-  daysHeldPreviewLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#64748b',
-  },
-  daysHeldBadge: {
-    backgroundColor: '#e0e7ff',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  daysHeldBadgeText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#4338ca',
-  },
-  actionButtonsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 10,
-  },
-  secondaryActionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    borderRadius: 16,
-    height: 52,
-    gap: 6,
-  },
-  secondaryActionText: {
-    color: '#64748b',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  calculateActionButton: {
-    flex: 1.5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#10b981',
-    borderRadius: 16,
-    height: 52,
-    gap: 6,
-    shadowColor: '#10b981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  calculateActionText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  resultsContainer: {
-    width: '100%',
-  },
-  headlineCard: {
-    borderRadius: 28,
-    padding: 24,
-    alignItems: 'center',
-    borderWidth: 1,
-    marginBottom: 20,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 15,
-    elevation: 4,
-  },
-  headlineCardProfit: {
-    backgroundColor: '#f0fdf4',
-    borderColor: '#bbf7d0',
-    shadowColor: '#10b981',
-  },
-  headlineCardLoss: {
-    backgroundColor: '#fff1f2',
-    borderColor: '#fecaca',
-    shadowColor: '#f43f5e',
-  },
-  iconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  iconCircleProfit: {
-    backgroundColor: '#10b981',
-  },
-  iconCircleLoss: {
-    backgroundColor: '#f43f5e',
-  },
-  headlineLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#64748b',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  headlinePnLValue: {
-    fontSize: 36,
-    fontWeight: '900',
-    marginBottom: 10,
-  },
-  textProfit: {
-    color: '#047857',
-  },
-  textLoss: {
-    color: '#b91c1c',
-  },
-  roiBadge: {
-    borderRadius: 100,
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    marginBottom: 20,
-  },
-  roiBadgeProfit: {
-    backgroundColor: '#d1fae5',
-  },
-  roiBadgeLoss: {
-    backgroundColor: '#ffe4e6',
-  },
-  roiBadgeText: {
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  roiBadgeTextProfit: {
-    color: '#065f46',
-  },
-  roiBadgeTextLoss: {
-    color: '#991b1b',
-  },
-  resultActionsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    width: '100%',
-  },
-  resultAdjustBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: '#cbd5e1',
-    borderRadius: 14,
-    height: 46,
-    gap: 6,
-  },
-  resultAdjustBtnText: {
-    color: '#0f172a',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  resultResetBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0f172a',
-    borderRadius: 14,
-    height: 46,
-    gap: 6,
-  },
-  resultResetBtnText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  resultsDetailCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    marginBottom: 20,
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.02,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  resultsHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  resultsDetailCardTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#0f172a',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  detailLabel: {
-    fontSize: 13,
-    color: '#64748b',
-    fontWeight: '500',
-  },
-  detailValue: {
-    fontSize: 13,
-    color: '#0f172a',
-    fontWeight: '600',
-  },
-  detailValueBold: {
-    fontSize: 14,
-    color: '#0f172a',
-    fontWeight: '800',
-  },
-  rowDivider: {
-    height: 1,
-    backgroundColor: '#f1f5f9',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalCalendarContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 20,
-    width: '100%',
-    maxWidth: 340,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 5,
-  },
-  calendarHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  calendarNavBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  calendarMonthText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  calendarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  calendarHeaderDayCell: {
-    width: '14.28%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  calendarHeaderDayText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748b',
-  },
-  calendarDayCell: {
-    width: '14.28%',
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 20,
-  },
-  selectedDayCell: {
-    backgroundColor: '#f05a28',
-  },
-  calendarDayText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#334155',
-  },
-  selectedDayText: {
-    color: '#ffffff',
-    fontWeight: '700',
-  },
-  pastDayCell: {
-    backgroundColor: 'transparent',
-  },
-  pastDayText: {
-    color: '#cbd5e1',
-    textDecorationLine: 'none',
-    opacity: 0.4,
-  },
-  calendarCloseBtn: {
-    marginTop: 16,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  calendarCloseBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#475569',
-  },
-});
+

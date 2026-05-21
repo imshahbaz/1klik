@@ -3,6 +3,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useTheme } from '../context/ThemeContext';
+import { useScreenerStyles } from '../theme/screenerStyles';
 import { strategyAPI } from '../services/api';
 
 interface Strategy {
@@ -13,6 +15,8 @@ interface Strategy {
 
 export default function ScreenerScreen() {
   const router = useRouter();
+  const { isDarkMode, theme } = useTheme();
+  const styles = useScreenerStyles(isDarkMode);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +93,7 @@ export default function ScreenerScreen() {
           <Ionicons 
             name="git-branch-outline" 
             size={20} 
-            color={isSelected ? "#0f172a" : "#ffffff"} 
+            color={isSelected ? theme.background : theme.textPrimary} 
           />
         </View>
         <Text 
@@ -155,7 +159,7 @@ export default function ScreenerScreen() {
       {/* Custom Navigation Header */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#0f172a" />
+          <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Screener</Text>
         <View style={{ width: 40 }} />
@@ -177,12 +181,12 @@ export default function ScreenerScreen() {
           <View style={styles.carouselContainer}>
             {loading ? (
               <View style={styles.centerLoading}>
-                <ActivityIndicator size="small" color="#0f172a" />
+                <ActivityIndicator size="small" color={theme.textPrimary} />
                 <Text style={styles.loadingText}>Loading Strategies...</Text>
               </View>
             ) : error ? (
               <View style={styles.centerLoading}>
-                <Ionicons name="alert-circle-outline" size={24} color="#f43f5e" />
+                <Ionicons name="alert-circle-outline" size={24} color={theme.danger} />
                 <Text style={styles.errorText}>{error}</Text>
               </View>
             ) : (
@@ -216,24 +220,24 @@ export default function ScreenerScreen() {
 
           {scanLoading ? (
             <View style={styles.resultsLoading}>
-              <ActivityIndicator size="large" color="#0f172a" />
+              <ActivityIndicator size="large" color={theme.textPrimary} />
               <Text style={styles.resultsStateText}>Scanning market for setups...</Text>
             </View>
           ) : scanError ? (
             <View style={styles.resultsPlaceholder}>
-              <Ionicons name="alert-circle-outline" size={36} color="#f43f5e" />
+              <Ionicons name="alert-circle-outline" size={36} color={theme.danger} />
               <Text style={styles.resultsErrorText}>{scanError}</Text>
             </View>
           ) : !selectedStrategy ? (
             <View style={styles.resultsPlaceholder}>
-              <Ionicons name="trending-up-outline" size={40} color="#94a3b8" />
+              <Ionicons name="trending-up-outline" size={40} color={theme.iconMuted} />
               <Text style={styles.resultsPlaceholderText}>
                 Select a strategy card above to scan the live market.
               </Text>
             </View>
           ) : scanResults.length === 0 ? (
             <View style={styles.resultsPlaceholder}>
-              <Ionicons name="filter-outline" size={40} color="#94a3b8" />
+              <Ionicons name="filter-outline" size={40} color={theme.iconMuted} />
               <Text style={styles.resultsPlaceholderText}>
                 No stocks currently matching this scan criteria.
               </Text>
@@ -253,280 +257,4 @@ export default function ScreenerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0f172a',
-    letterSpacing: -0.2,
-  },
-  customHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    backgroundColor: '#ffffff',
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 50,
-    backgroundColor: '#f1f5f9',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#0f172a',
-    letterSpacing: -0.5,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  introContainer: {
-    marginVertical: 15,
-  },
-  subtext: {
-    fontSize: 14,
-    color: '#64748b',
-    fontWeight: '500',
-    lineHeight: 20,
-  },
-  topSection: {
-    paddingBottom: 5,
-  },
-  carouselContainer: {
-    height: 140,
-    justifyContent: 'center',
-  },
-  centerLoading: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 120,
-    gap: 8,
-  },
-  loadingText: {
-    fontSize: 12,
-    color: '#64748b',
-    fontWeight: '500',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#e2e8f0',
-    marginVertical: 12,
-  },
-  resultsSection: {
-    flex: 1,
-    marginTop: 10,
-  },
-  resultsTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#0f172a',
-    letterSpacing: -0.2,
-    marginBottom: 12,
-  },
-  resultsLoading: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 40,
-  },
-  resultsStateText: {
-    fontSize: 14,
-    color: '#64748b',
-    fontWeight: '600',
-  },
-  resultsPlaceholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 50,
-    paddingHorizontal: 30,
-    gap: 12,
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  resultsPlaceholderText: {
-    fontSize: 13,
-    color: '#94a3b8',
-    fontWeight: '600',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  resultsErrorText: {
-    fontSize: 13,
-    color: '#f43f5e',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  resultsList: {
-    gap: 10,
-    paddingBottom: 20,
-  },
-  stockResultCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.01,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  stockLeft: {
-    flex: 1,
-    paddingRight: 12,
-    gap: 4,
-  },
-  stockSymbol: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0f172a',
-    letterSpacing: -0.1,
-  },
-  stockCompany: {
-    fontSize: 12,
-    color: '#64748b',
-    fontWeight: '500',
-  },
-  marginBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(79, 70, 229, 0.08)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginTop: 4,
-  },
-  marginBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#4f46e5',
-    letterSpacing: 0.5,
-  },
-  stockRight: {
-    alignItems: 'flex-end',
-    gap: 4,
-  },
-  stockPrice: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0f172a',
-  },
-  stockChange: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  listContainer: {
-    paddingRight: 20,
-    paddingVertical: 10,
-    gap: 12,
-  },
-  strategyCard: {
-    backgroundColor: '#0f172a',
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    width: 170,
-    height: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  selectedStrategyCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#0f172a',
-    borderWidth: 2,
-    shadowColor: '#0f172a',
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
-  },
-  iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selectedIconCircle: {
-    backgroundColor: '#0f172a',
-  },
-  strategyName: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#ffffff',
-    letterSpacing: -0.1,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  selectedStrategyName: {
-    color: '#0f172a',
-  },
-  centerContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 50,
-    gap: 16,
-  },
-  stateText: {
-    color: '#64748b',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  errorText: {
-    color: '#f43f5e',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  retryButton: {
-    backgroundColor: '#0f172a',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 14,
-  },
-  retryText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    gap: 10,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#94a3b8',
-    fontWeight: '600',
-  },
-});
+

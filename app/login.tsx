@@ -2,14 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useLoginStyles } from '../theme/loginStyles';
 import { authAPI, googleAPI } from '../services/api';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth() as any;
+  const { isDarkMode, theme } = useTheme();
+  const styles = useLoginStyles(isDarkMode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,7 +84,7 @@ export default function LoginScreen() {
       {/* Custom Header (Matches Screener Screen Layout!) */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#0f172a" />
+          <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Sign In</Text>
         <View style={{ width: 40 }} />
@@ -110,7 +114,7 @@ export default function LoginScreen() {
             <View style={styles.formCard}>
               {error ? (
                 <View style={styles.errorAlert}>
-                  <Ionicons name="alert-circle-outline" size={20} color="#f43f5e" />
+                  <Ionicons name="alert-circle-outline" size={20} color={theme.danger} />
                   <Text style={styles.errorText}>{error}</Text>
                 </View>
               ) : null}
@@ -123,7 +127,7 @@ export default function LoginScreen() {
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator size="small" color="#0f172a" />
+                  <ActivityIndicator size="small" color={theme.textPrimary} />
                 ) : (
                   <View style={styles.googleButtonContent}>
                     <View style={styles.googleIconCircle}>
@@ -144,147 +148,3 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  customHeader: {
-    height: 60,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f1f5f9',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingBottom: 40,
-  },
-  container: {
-    paddingHorizontal: 24,
-    paddingTop: 10,
-  },
-  titleSection: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  brandIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: '#0f172a',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  brandName: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#0f172a',
-    marginBottom: 8,
-  },
-  brandTagline: {
-    fontSize: 14,
-    color: '#64748b',
-    textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 10,
-  },
-  formCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    alignItems: 'center',
-  },
-  errorAlert: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(244, 63, 94, 0.08)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 20,
-    gap: 8,
-    width: '100%',
-  },
-  errorText: {
-    color: '#f43f5e',
-    fontSize: 13,
-    fontWeight: '600',
-    flex: 1,
-  },
-  googleButton: {
-    backgroundColor: '#ffffff',
-    height: 54,
-    borderRadius: 16,
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#cbd5e1',
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
-    marginTop: 8,
-  },
-  googleButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  googleIconCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  googleButtonText: {
-    color: '#0f172a',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.2,
-  },
-  termsText: {
-    fontSize: 11,
-    color: '#94a3b8',
-    textAlign: 'center',
-    lineHeight: 16,
-    marginTop: 24,
-    paddingHorizontal: 8,
-  },
-});
