@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { lightColors, darkColors, Colors } from '../theme/colors';
+import { useAuth } from './AuthContext';
+import { userPreferenceAPI } from '../services/api';
 
 type ThemeContextType = {
   isDarkMode: boolean;
@@ -15,28 +17,48 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
   const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
+  const { user } = useAuth() as any;
 
+  // 1. Sync theme from database when user object changes
   useEffect(() => {
-    const loadTheme = async () => {
-      try {
-        const savedTheme = await AsyncStorage.getItem(THEME_KEY);
-        if (savedTheme !== null) {
-          setIsDarkMode(savedTheme === 'dark');
-        } else {
-          setIsDarkMode(systemColorScheme === 'dark');
+    if (user && user.theme) {
+      setIsDarkMode(user.theme === 'DARK');
+    }
+  }, [user?.theme]);
+
+  // 2. Load theme locally if there is no user logged in
+  useEffect(() => {
+    if (!user) {
+      const loadTheme = async () => {
+        try {
+          const savedTheme = await AsyncStorage.getItem(THEME_KEY);
+          if (savedTheme !== null) {
+            setIsDarkMode(savedTheme === 'dark');
+          } else {
+            setIsDarkMode(systemColorScheme === 'dark');
+          }
+        } catch (e) {
+          console.error('Failed to load theme preference', e);
         }
-      } catch (e) {
-        console.error('Failed to load theme preference', e);
-      }
-    };
-    loadTheme();
-  }, [systemColorScheme]);
+      };
+      loadTheme();
+    }
+  }, [user, systemColorScheme]);
 
   const toggleTheme = async (value?: boolean) => {
     try {
       const newValue = typeof value === 'boolean' ? value : !isDarkMode;
       setIsDarkMode(newValue);
+      
+      // Save locally
       await AsyncStorage.setItem(THEME_KEY, newValue ? 'dark' : 'light');
+      
+      // Sync to backend if user is logged in
+      if (user) {
+        const themeValue = newValue ? 'DARK' : 'LIGHT';
+        console.log(`Syncing theme change to server: ${themeValue}`);
+        await userPreferenceAPI.updateTheme(themeValue);
+      }
     } catch (e) {
       console.error('Failed to save theme preference', e);
     }

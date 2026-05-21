@@ -1,18 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Text, TouchableOpacity, View, Switch, Modal } from 'react-native';
+import { ActivityIndicator, Image, Modal, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useIndexStyles } from '../theme/globalStyles';
 import { angelOneApi } from '../services/api';
+import { useIndexStyles } from '../theme/globalStyles';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user, appLoading, login, logout } = useAuth() as any;
   const { isDarkMode, toggleTheme, theme } = useTheme();
-  console.log('HomeScreen re-rendering. isDarkMode:', isDarkMode);
   const styles = useIndexStyles(isDarkMode);
   const [marketData, setMarketData] = useState<any>(null);
   const [cardLoading, setCardLoading] = useState(true);
