@@ -1,17 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, Switch, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useAppDimensions } from '../context/DimensionsContext';
 import { marginAPI, strategyOrderAPI, zerodhaAPI } from '../services/api';
 import { useZerodhaStyles } from '../theme/zerodhaStyles';
 import { CustomAlert } from '../context/AlertContext';
 
 export default function ZerodhaDashboard() {
   const router = useRouter();
+  const { width, height } = useAppDimensions();
   const { user, appLoading, logout } = useAuth() as any;
   const { isDarkMode, theme } = useTheme();
   const styles = useZerodhaStyles(isDarkMode);
@@ -1103,94 +1105,99 @@ export default function ZerodhaDashboard() {
         animationType="slide"
         onRequestClose={() => setEditingOrder(null)}
       >
-        <View style={styles.modalOverlay as any}>
-          <View style={styles.editModalContainer as any}>
-            <View style={styles.editModalHeader as any}>
-              <Text style={styles.editModalTitle as any}>Modify Order</Text>
-              <TouchableOpacity onPress={() => setEditingOrder(null)} style={styles.editModalCloseBtn as any}>
-                <Ionicons name="close" size={20} color={theme.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={[styles.historyTypeBadge, isMtf ? styles.historyBuyBadge : { backgroundColor: theme.infoBackground }]}>
-                <Text style={[styles.historyTypeText, isMtf ? styles.historyBuyText : { color: theme.infoText }]}>
-                  {isMtf ? 'MTF BUY' : 'AUTO-TRADE'}
-                </Text>
-              </View>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: theme.textPrimary }}>{editingOrder.symbol}</Text>
-            </View>
-
-            <View style={styles.formInputGroup}>
-              <Text style={styles.formInputLabel}>QUANTITY</Text>
-              <View style={styles.formInputWrapper}>
-                <Ionicons name="layers-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
-                <TextInput
-                  style={styles.formTextInput}
-                  value={editQty}
-                  onChangeText={setEditQty}
-                  keyboardType="number-pad"
-                  placeholder="Enter Shares quantity"
-                  placeholderTextColor={theme.placeholder}
-                />
-                <TouchableOpacity
-                  onPress={() => {
-                    const val = parseInt(editQty) || 0;
-                    if (val > 1) setEditQty((val - 1).toString());
-                  }}
-                  style={{ padding: 6 }}
-                >
-                  <Ionicons name="remove-circle-outline" size={22} color={theme.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    const val = parseInt(editQty) || 0;
-                    setEditQty((val + 1).toString());
-                  }}
-                  style={{ padding: 6 }}
-                >
-                  <Ionicons name="add-circle-outline" size={22} color={theme.primary} />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.modalOverlay as any}>
+            <View style={styles.editModalContainer as any}>
+              <View style={styles.editModalHeader as any}>
+                <Text style={styles.editModalTitle as any}>Modify Order</Text>
+                <TouchableOpacity onPress={() => setEditingOrder(null)} style={styles.editModalCloseBtn as any}>
+                  <Ionicons name="close" size={20} color={theme.textSecondary} />
                 </TouchableOpacity>
               </View>
-            </View>
 
-            {isMtf && (
-              <View style={styles.formInputGroup}>
-                <Text style={styles.formInputLabel}>TARGET DATE</Text>
-                <TouchableOpacity
-                  style={styles.formInputWrapper}
-                  onPress={() => setShowEditDatePicker(true)}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
-                  <Text 
-                    style={{ flex: 1, color: editTargetDate ? theme.textPrimary : theme.iconMuted, fontSize: 13, fontWeight: '600' }}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                  >
-                    {editTargetDate ? formatDateString(editTargetDate) : 'Select Target Date'}
+              <View style={{ marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={[styles.historyTypeBadge, isMtf ? styles.historyBuyBadge : { backgroundColor: theme.infoBackground }]}>
+                  <Text style={[styles.historyTypeText, isMtf ? styles.historyBuyText : { color: theme.infoText }]}>
+                    {isMtf ? 'MTF BUY' : 'AUTO-TRADE'}
                   </Text>
-                  <Ionicons name="chevron-down" size={16} color={theme.iconMuted} />
+                </View>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: theme.textPrimary }}>{editingOrder.symbol}</Text>
+              </View>
+
+              <View style={styles.formInputGroup}>
+                <Text style={styles.formInputLabel}>QUANTITY</Text>
+                <View style={styles.formInputWrapper}>
+                  <Ionicons name="layers-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
+                  <TextInput
+                    style={styles.formTextInput}
+                    value={editQty}
+                    onChangeText={setEditQty}
+                    keyboardType="number-pad"
+                    placeholder="Enter Shares quantity"
+                    placeholderTextColor={theme.placeholder}
+                  />
+                  <TouchableOpacity
+                    onPress={() => {
+                      const val = parseInt(editQty) || 0;
+                      if (val > 1) setEditQty((val - 1).toString());
+                    }}
+                    style={{ padding: 6 }}
+                  >
+                    <Ionicons name="remove-circle-outline" size={22} color={theme.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const val = parseInt(editQty) || 0;
+                      setEditQty((val + 1).toString());
+                    }}
+                    style={{ padding: 6 }}
+                  >
+                    <Ionicons name="add-circle-outline" size={22} color={theme.primary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {isMtf && (
+                <View style={styles.formInputGroup}>
+                  <Text style={styles.formInputLabel}>TARGET DATE</Text>
+                  <TouchableOpacity
+                    style={styles.formInputWrapper}
+                    onPress={() => setShowEditDatePicker(true)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
+                    <Text 
+                      style={{ flex: 1, color: editTargetDate ? theme.textPrimary : theme.iconMuted, fontSize: 13, fontWeight: '600' }}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                    >
+                      {editTargetDate ? formatDateString(editTargetDate) : 'Select Target Date'}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color={theme.iconMuted} />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+                <TouchableOpacity
+                  style={[styles.calendarCloseBtn, { flex: 1, backgroundColor: theme.borderLight, borderWidth: 0 }] as any}
+                  onPress={() => setEditingOrder(null)}
+                >
+                  <Text style={[styles.calendarCloseBtnText, { color: theme.textSecondary }] as any}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.calendarCloseBtn, { flex: 1, backgroundColor: theme.primary, borderWidth: 0 }] as any}
+                  onPress={handleSaveChanges}
+                >
+                  <Text style={[styles.calendarCloseBtnText, { color: '#ffffff' }] as any}>Save Changes</Text>
                 </TouchableOpacity>
               </View>
-            )}
-
-            <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
-              <TouchableOpacity
-                style={[styles.calendarCloseBtn, { flex: 1, backgroundColor: theme.borderLight, borderWidth: 0 }] as any}
-                onPress={() => setEditingOrder(null)}
-              >
-                <Text style={[styles.calendarCloseBtnText, { color: theme.textSecondary }] as any}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.calendarCloseBtn, { flex: 1, backgroundColor: theme.primary, borderWidth: 0 }] as any}
-                onPress={handleSaveChanges}
-              >
-                <Text style={[styles.calendarCloseBtnText, { color: '#ffffff' }] as any}>Save Changes</Text>
-              </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
 
         {isMtf && (
           <Modal
@@ -1227,208 +1234,215 @@ export default function ZerodhaDashboard() {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView
-        style={styles.container}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
       >
-        {/* Connection Status Card */}
-        <View style={styles.connectionCard}>
-          <View style={styles.connectionHeader}>
-            <View style={styles.brandContainer}>
-              <View style={styles.kiteLogoPlaceholder}>
-                <Text style={styles.kiteLogoText}>K</Text>
-              </View>
-              <View style={{ flexShrink: 1, paddingRight: 8 }}>
-                <Text style={styles.connectionTitle}>Kite Connect API</Text>
-                {zerodhaLoading ? (
-                  <ActivityIndicator size="small" color="#ffffff" style={{ marginTop: 6, alignSelf: 'flex-start' }} />
-                ) : zerodhaError ? (
-                  <Text style={[styles.connectionSubtitle, { color: theme.danger }]} numberOfLines={1}>
-                    {zerodhaError}
-                  </Text>
-                ) : (
-                  <View style={{ marginTop: 2 }}>
-                    <Text style={styles.connectionSubtitle} numberOfLines={1}>
-                      Account: {typeof zerodhaUser === 'string' ? 'Active Session' : (zerodhaUser?.userName || zerodhaUser?.name || 'Active')}
+        <ScrollView
+          style={styles.container}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 40 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Connection Status Card */}
+          <View style={styles.connectionCard}>
+            <View style={styles.connectionHeader}>
+              <View style={styles.brandContainer}>
+                <View style={styles.kiteLogoPlaceholder}>
+                  <Text style={styles.kiteLogoText}>K</Text>
+                </View>
+                <View style={{ flexShrink: 1, paddingRight: 8 }}>
+                  <Text style={styles.connectionTitle}>Kite Connect API</Text>
+                  {zerodhaLoading ? (
+                    <ActivityIndicator size="small" color="#ffffff" style={{ marginTop: 6, alignSelf: 'flex-start' }} />
+                  ) : zerodhaError ? (
+                    <Text style={[styles.connectionSubtitle, { color: theme.danger }]} numberOfLines={1}>
+                      {zerodhaError}
                     </Text>
-                  </View>
-                )}
+                  ) : (
+                    <View style={{ marginTop: 2 }}>
+                      <Text style={styles.connectionSubtitle} numberOfLines={1}>
+                        Account: {typeof zerodhaUser === 'string' ? 'Active Session' : (zerodhaUser?.userName || zerodhaUser?.name || 'Active')}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={zerodhaError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
+                  <View style={zerodhaError ? styles.inactiveDot : styles.activeDot} />
+                  <Text style={zerodhaError ? styles.inactiveStatusText : styles.activeStatusText}>
+                    {zerodhaLoading ? 'LOADING' : zerodhaError ? 'INACTIVE' : 'CONNECTED'}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.blackCardConfigBtn as any}
+                  onPress={() => {
+                    setIs404Error(true);
+                    setIsTokenExpired(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="settings-outline" size={16} color="#ffffff" />
+                </TouchableOpacity>
               </View>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={zerodhaError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
-                <View style={zerodhaError ? styles.inactiveDot : styles.activeDot} />
-                <Text style={zerodhaError ? styles.inactiveStatusText : styles.activeStatusText}>
-                  {zerodhaLoading ? 'LOADING' : zerodhaError ? 'INACTIVE' : 'CONNECTED'}
-                </Text>
+          </View>
+
+          {is404Error ? (
+            <View style={styles.formCard}>
+              <View style={styles.formHeaderContainer}>
+                <View style={styles.actionIconCircle}>
+                  <Ionicons name="link-outline" size={22} color={theme.primary} />
+                </View>
+                <View style={styles.actionTextContainer}>
+                  <Text style={styles.formTitle}>Link Your Zerodha Account</Text>
+                  <Text style={styles.formSubtitle}>
+                    Please configure your Kite Connect API credentials to sync your live portfolio, funds, and place orders.
+                  </Text>
+                </View>
               </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>KITE API KEY *</Text>
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="key-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Enter your Kite API Key"
+                    placeholderTextColor={theme.placeholder}
+                    value={apiKey}
+                    onChangeText={(text) => {
+                      setApiKey(text);
+                      if (formError) setFormError(null);
+                    }}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>KITE API SECRET *</Text>
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Enter your Kite API Secret"
+                    placeholderTextColor={theme.placeholder}
+                    value={apiSecret}
+                    onChangeText={(text) => {
+                      setApiSecret(text);
+                      if (formError) setFormError(null);
+                    }}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    secureTextEntry
+                  />
+                </View>
+              </View>
+
+              {formError && (
+                <View style={styles.errorContainer}>
+                  <Ionicons name="alert-circle-outline" size={16} color={theme.danger} />
+                  <Text style={styles.errorText}>{formError}</Text>
+                </View>
+              )}
+
               <TouchableOpacity
-                style={styles.blackCardConfigBtn as any}
+                style={[styles.submitButton, savingConfig && styles.disabledButton]}
+                onPress={handleSaveConfig}
+                disabled={savingConfig}
+                activeOpacity={0.8}
+              >
+                {savingConfig ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <>
+                    <Ionicons name="checkmark-circle-outline" size={20} color="#ffffff" />
+                    <Text style={styles.submitButtonText}>Save API Config</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : isTokenExpired ? (
+            <View style={styles.connectCard}>
+              <View style={styles.connectHeaderContainer}>
+                <View style={styles.warningIconCircle}>
+                  <Ionicons name="warning-outline" size={24} color={theme.warningText} />
+                </View>
+                <View style={styles.actionTextContainer}>
+                  <Text style={styles.connectTitle}>Kite Session Expired</Text>
+                  <Text style={styles.connectSubtitle}>
+                    Your Kite Connect credentials are saved, but your active connection session has expired or is inactive.
+                  </Text>
+                </View>
+              </View>
+
+              {apiKey ? (
+                <View style={styles.apiKeyBadge}>
+                  <Ionicons name="key-outline" size={14} color={theme.textSecondary} />
+                  <Text style={styles.apiKeyBadgeText}>Active API Key: {apiKey}</Text>
+                </View>
+              ) : null}
+
+              <TouchableOpacity
+                style={styles.connectButton}
+                onPress={handleConnectKite}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="flash-outline" size={18} color="#ffffff" />
+                <Text style={styles.connectButtonText}>Connect to Kite</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.reconfigureButton}
                 onPress={() => {
                   setIs404Error(true);
                   setIsTokenExpired(false);
                 }}
                 activeOpacity={0.7}
               >
-                <Ionicons name="settings-outline" size={16} color="#ffffff" />
+                <Ionicons name="options-outline" size={16} color={theme.textSecondary} />
+                <Text style={styles.reconfigureButtonText}>Reconfigure API Keys</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          ) : (
+            <>
 
-        {is404Error ? (
-          <View style={styles.formCard}>
-            <View style={styles.formHeaderContainer}>
-              <View style={styles.actionIconCircle}>
-                <Ionicons name="link-outline" size={22} color={theme.primary} />
+              {/* Custom Premium Segmented Tab Bar */}
+              <View style={styles.tabContainer as any}>
+                {[
+                  { id: 'execute', label: 'EXECUTE', icon: 'flash' },
+                  { id: 'strategy', label: 'STRATEGY', icon: 'analytics' },
+                  { id: 'history', label: 'HISTORY', icon: 'receipt' },
+                ].map((tab) => (
+                  <TouchableOpacity
+                    key={tab.id}
+                    style={[styles.tabButton, activeTab === tab.id && styles.activeTabButton] as any}
+                    onPress={() => handleTabChange(tab.id as any)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name={activeTab === tab.id ? (tab.icon as any) : (`${tab.icon}-outline` as any)}
+                      size={16}
+                      color={activeTab === tab.id ? theme.primary : theme.textSecondary}
+                    />
+                    <Text style={[styles.tabButtonLabel, activeTab === tab.id && styles.activeTabButtonLabel] as any}>
+                      {tab.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-              <View style={styles.actionTextContainer}>
-                <Text style={styles.formTitle}>Link Your Zerodha Account</Text>
-                <Text style={styles.formSubtitle}>
-                  Please configure your Kite Connect API credentials to sync your live portfolio, funds, and place orders.
-                </Text>
-              </View>
-            </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>KITE API KEY *</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="key-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Enter your Kite API Key"
-                  placeholderTextColor={theme.placeholder}
-                  value={apiKey}
-                  onChangeText={(text) => {
-                    setApiKey(text);
-                    if (formError) setFormError(null);
-                  }}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-            </View>
+              {/* Tab Views Render */}
+              {renderTabContent()}
+            </>
+          )}
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>KITE API SECRET *</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Enter your Kite API Secret"
-                  placeholderTextColor={theme.placeholder}
-                  value={apiSecret}
-                  onChangeText={(text) => {
-                    setApiSecret(text);
-                    if (formError) setFormError(null);
-                  }}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  secureTextEntry
-                />
-              </View>
-            </View>
-
-            {formError && (
-              <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle-outline" size={16} color={theme.danger} />
-                <Text style={styles.errorText}>{formError}</Text>
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={[styles.submitButton, savingConfig && styles.disabledButton]}
-              onPress={handleSaveConfig}
-              disabled={savingConfig}
-              activeOpacity={0.8}
-            >
-              {savingConfig ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <Ionicons name="checkmark-circle-outline" size={20} color="#ffffff" />
-                  <Text style={styles.submitButtonText}>Save API Config</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        ) : isTokenExpired ? (
-          <View style={styles.connectCard}>
-            <View style={styles.connectHeaderContainer}>
-              <View style={styles.warningIconCircle}>
-                <Ionicons name="warning-outline" size={24} color={theme.warningText} />
-              </View>
-              <View style={styles.actionTextContainer}>
-                <Text style={styles.connectTitle}>Kite Session Expired</Text>
-                <Text style={styles.connectSubtitle}>
-                  Your Kite Connect credentials are saved, but your active connection session has expired or is inactive.
-                </Text>
-              </View>
-            </View>
-
-            {apiKey ? (
-              <View style={styles.apiKeyBadge}>
-                <Ionicons name="key-outline" size={14} color={theme.textSecondary} />
-                <Text style={styles.apiKeyBadgeText}>Active API Key: {apiKey}</Text>
-              </View>
-            ) : null}
-
-            <TouchableOpacity
-              style={styles.connectButton}
-              onPress={handleConnectKite}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="flash-outline" size={18} color="#ffffff" />
-              <Text style={styles.connectButtonText}>Connect to Kite</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.reconfigureButton}
-              onPress={() => {
-                setIs404Error(true);
-                setIsTokenExpired(false);
-              }}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="options-outline" size={16} color={theme.textSecondary} />
-              <Text style={styles.reconfigureButtonText}>Reconfigure API Keys</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <>
-
-            {/* Custom Premium Segmented Tab Bar */}
-            <View style={styles.tabContainer as any}>
-              {[
-                { id: 'execute', label: 'EXECUTE', icon: 'flash' },
-                { id: 'strategy', label: 'STRATEGY', icon: 'analytics' },
-                { id: 'history', label: 'HISTORY', icon: 'receipt' },
-              ].map((tab) => (
-                <TouchableOpacity
-                  key={tab.id}
-                  style={[styles.tabButton, activeTab === tab.id && styles.activeTabButton] as any}
-                  onPress={() => handleTabChange(tab.id as any)}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons
-                    name={activeTab === tab.id ? (tab.icon as any) : (`${tab.icon}-outline` as any)}
-                    size={16}
-                    color={activeTab === tab.id ? theme.primary : theme.textSecondary}
-                  />
-                  <Text style={[styles.tabButtonLabel, activeTab === tab.id && styles.activeTabButtonLabel] as any}>
-                    {tab.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Tab Views Render */}
-            {renderTabContent()}
-          </>
-        )}
-
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Premium Custom Date Picker Modal */}
       <Modal

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   DeviceEventEmitter,
   Animated,
-  Dimensions,
   Platform,
   StatusBar,
   ScrollView
@@ -74,7 +73,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Notification Animation
   const notificationY = useRef(new Animated.Value(-200)).current;
-  const autoDismissTimeout = useRef<NodeJS.Timeout | null>(null);
+  const autoDismissTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Register listeners
   useEffect(() => {
@@ -167,8 +166,12 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       let borderStyle = {};
 
       if (btn.style === 'cancel') {
-        btnBg = theme.borderLight;
+        btnBg = isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)';
         textCol = theme.textSecondary;
+        borderStyle = {
+          borderWidth: 1.5,
+          borderColor: theme.border,
+        };
       } else if (btn.style === 'destructive') {
         btnBg = theme.danger;
         textCol = '#ffffff';
@@ -211,7 +214,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         onRequestClose={handleAlertDismiss}
       >
         <TouchableOpacity
-          style={styles.modalOverlay}
+          style={[styles.modalOverlay, { backgroundColor: theme.overlay }]}
           activeOpacity={1}
           onPress={handleAlertDismiss}
         >
@@ -220,7 +223,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               styles.alertCard, 
               { 
                 backgroundColor: theme.card,
-                borderColor: theme.borderLight
+                borderColor: theme.border
               }
             ]}
             onStartShouldSetResponder={() => true}
@@ -264,7 +267,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               styles.notificationCard,
               { 
                 backgroundColor: theme.card,
-                borderColor: theme.borderLight,
+                borderColor: theme.border,
                 shadowColor: isDarkMode ? '#000000' : theme.textPrimary
               }
             ]}

@@ -6,12 +6,14 @@ import { CustomAlert } from '../context/AlertContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useAppDimensions } from '../context/DimensionsContext';
 import { useSettingsStyles } from '../theme/settingsStyles';
 import { userPreferenceAPI, notificationAPI } from '../services/api';
 import { checkNotificationPermission, requestUserPermission, getFCMToken } from '../services/notificationService';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { width, height } = useAppDimensions();
   const { user, refreshUserData } = useAuth() as any;
   const { isDarkMode, theme } = useTheme();
   const styles = useSettingsStyles(isDarkMode);
@@ -165,8 +167,9 @@ export default function SettingsScreen() {
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContainer}

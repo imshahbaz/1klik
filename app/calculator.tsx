@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
+import { useAppDimensions } from '../context/DimensionsContext';
 import { marginAPI } from '../services/api';
 import { useCalculatorStyles } from '../theme/calculatorStyles';
 
@@ -14,6 +15,7 @@ interface MarginData {
 
 export default function CalculatorScreen() {
   const router = useRouter();
+  const { width, height } = useAppDimensions();
   const { isDarkMode, theme } = useTheme();
   const styles = useCalculatorStyles(isDarkMode);
 
@@ -269,8 +271,9 @@ export default function CalculatorScreen() {
       )}
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
