@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, TouchableOpacity, Linking, DeviceEventEmitter, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { Modal, View, Text, TouchableOpacity, Linking, DeviceEventEmitter, StyleSheet, Image, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AlertProvider } from '../context/AlertContext';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 import { DimensionsProvider } from '../context/DimensionsContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { isFirebaseInitialized } from '../services/notificationService';
 import { appUpdateInfo } from '../services/api';
+
+// Prevent native splash screen from hiding automatically
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Register background message handler
 if (isFirebaseInitialized()) {
@@ -27,8 +31,38 @@ if (isFirebaseInitialized()) {
 
 function AppContent() {
   const { isDarkMode, theme, themeLoaded } = useTheme();
+  const { appLoading, bootProgress } = useAuth() as any;
   const [updateNeeded, setUpdateNeeded] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
+
+  const [splashVisible, setSplashVisible] = useState(true);
+  const splashOpacity = useRef(new Animated.Value(1)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Hide the native splash screen immediately when our custom JS component mounts
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: bootProgress,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [bootProgress]);
+
+  useEffect(() => {
+    if (!appLoading && themeLoaded) {
+      Animated.timing(splashOpacity, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start(() => {
+        setSplashVisible(false);
+      });
+    }
+  }, [appLoading, themeLoaded]);
 
   useEffect(() => {
     if (appUpdateInfo.updateNeeded) {
@@ -105,6 +139,48 @@ function AppContent() {
           </View>
         </View>
       </Modal>
+
+      {/* Custom Splash Screen with Progress Bar */}
+      {splashVisible && (
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: isDarkMode ? '#000000' : '#ffffff',
+              opacity: splashOpacity,
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 99999,
+            },
+          ]}
+        >
+          <Image
+            source={require('../assets/images/splash-icon.png')}
+            style={{ width: 200, height: 200, resizeMode: 'contain' }}
+          />
+          <View
+            style={{
+              width: 200,
+              height: 4,
+              backgroundColor: isDarkMode ? '#1e293b' : '#e2e8f0',
+              borderRadius: 2,
+              marginTop: 24,
+              overflow: 'hidden',
+            }}
+          >
+            <Animated.View
+              style={{
+                height: '100%',
+                backgroundColor: theme.primary || '#3b82f6',
+                width: progressAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0%', '100%'],
+                }),
+              }}
+            />
+          </View>
+        </Animated.View>
+      )}
     </NavigationThemeProvider>
   );
 }

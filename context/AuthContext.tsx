@@ -32,6 +32,7 @@ interface AuthContextType {
     configLoading: boolean;
     appConfig: AppConfig;
     setAuthLoading: React.Dispatch<React.SetStateAction<boolean>>;
+    bootProgress: number;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -50,6 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [appLoading, setAppLoading] = useState(true);
     const [authLoading, setAuthLoading] = useState(false);
     const [configLoading, setConfigLoading] = useState(true);
+    const [bootProgress, setBootProgress] = useState(0);
 
     const fetchGlobalConfig = async (forceRefresh = false) => {
         try {
@@ -94,11 +96,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const initApp = async () => {
             try {
+                setBootProgress(0.1);
                 await initializeBaseUrl();
+                setBootProgress(0.4);
             } catch (err) {
                 console.error("FCM Debug: Base URL initialization failed:", err);
+                setBootProgress(0.4);
             } finally {
-                Promise.all([fetchGlobalConfig(), refreshUserData()]);
+                let completed = 0;
+                const checkDone = () => {
+                    completed += 1;
+                    if (completed === 1) {
+                        setBootProgress(0.7);
+                    } else if (completed === 2) {
+                        setBootProgress(1.0);
+                    }
+                };
+                fetchGlobalConfig().finally(checkDone);
+                refreshUserData().finally(checkDone);
             }
         };
 
@@ -221,7 +236,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             refreshUserData,
             configLoading,
             appConfig,
-            setAuthLoading
+            setAuthLoading,
+            bootProgress
         }}>
             {children}
         </AuthContext.Provider>
