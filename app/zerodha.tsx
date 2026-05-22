@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { CustomAlert } from '../context/AlertContext';
@@ -60,12 +60,6 @@ export default function ZerodhaDashboard() {
   const [pickerDate, setPickerDate] = useState(new Date());
   const [executingTrade, setExecutingTrade] = useState(false);
 
-  // Strategy Deploy Toggles State
-  const [activeStrategies, setActiveStrategies] = useState<Record<string, boolean>>({
-    'ma_cross': true,
-    'rsi_reversion': false,
-    'supertrend': false,
-  });
 
   // Premium MTF History & Strategy History States
   const [mtfOrders, setMtfOrders] = useState<any[]>([]);
@@ -78,6 +72,17 @@ export default function ZerodhaDashboard() {
   const [editTargetDate, setEditTargetDate] = useState<Date | null>(null);
   const [showEditDatePicker, setShowEditDatePicker] = useState(false);
   const [editingMtfOrderId, setEditingMtfOrderId] = useState<string | null>(null);
+
+  // Strategy Order Form State
+  const [strategyFormData, setStrategyFormData] = useState({
+    strategyName: '',
+    amount: '',
+    date: '',
+  });
+  const [editingStrategyOrderId, setEditingStrategyOrderId] = useState<string | null>(null);
+  const [submittingStrategy, setSubmittingStrategy] = useState(false);
+  const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
+  const [datePickerTarget, setDatePickerTarget] = useState<'execute' | 'strategy'>('execute');
 
   const parseTargetDate = (dateStr: string) => {
     try {
@@ -168,14 +173,16 @@ export default function ZerodhaDashboard() {
         const stratArray = Array.isArray(rawData) ? rawData : (Array.isArray(rawData?.data) ? rawData.data : []);
         console.log('Processed Strategy orders array:', stratArray);
         const formatted = stratArray.map((order: any, idx: number) => ({
-          id: order.id || `s-api-${idx}`,
-          symbol: order.symbol,
-          qty: order.quantity || order.qty || 10,
-          price: order.price || 2845.20,
+          id: order.id || order._id || `s-api-${idx}`,
+          symbol: order.symbol || 'AUTO',
+          qty: order.quantity || order.qty || 1,
+          price: order.price || 0,
           time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: order.status || 'COMPLETED',
           reason: order.reason || undefined,
-          strategyName: order.strategyName || 'Algorithmic Order',
+          strategyName: order.strategyName || 'RSI15MIN',
+          amount: order.amount || 0,
+          date: order.date || '',
         }));
         setStrategyOrders(formatted);
       } else {
@@ -493,35 +500,180 @@ export default function ZerodhaDashboard() {
             <Text style={styles.tabCardTitle}>Deployed Trading Algorithms</Text>
             <Text style={styles.tabCardSubtitle}>Auto-execute trades based on quantitative indicators and rules.</Text>
 
-            {/* Strategy Items */}
-            {[
-              { id: 'ma_cross', title: 'EMA Momentum Crossover', desc: 'EMA 9 crossovers above/below EMA 21 triggers high-speed trades.', icon: 'pulse-outline' },
-              { id: 'rsi_reversion', title: 'RSI Mean Reversion', desc: 'Overbought (RSI > 70) and oversold (RSI < 30) asset sweeps.', icon: 'trending-down-outline' },
-              { id: 'supertrend', title: 'Supertrend Trend Rider', desc: 'Fast-paced ATR volatility channels following directional trend shifts.', icon: 'analytics-outline' }
-            ].map((strat) => (
-              <View key={strat.id} style={styles.strategyItem}>
-                <View style={styles.strategyLeft}>
-                  <View style={styles.stratIconCircle}>
-                    <Ionicons name={strat.icon as any} size={20} color={theme.primary} />
-                  </View>
-                  <View style={{ flex: 1, paddingRight: 8 }}>
-                    <Text style={styles.strategyName}>{strat.title}</Text>
-                    <Text style={styles.strategyDesc}>{strat.desc}</Text>
-                  </View>
+            {/* Strategy Form */}
+            <View style={{ marginTop: 16 }}>
+              {/* Strategy Name */}
+              <View style={styles.formInputGroup as any}>
+                <Text style={styles.formInputLabel as any}>STRATEGY NAME</Text>
+                <View style={styles.formInputWrapper as any}>
+                  <Ionicons name="git-branch-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon as any} />
+                  {Platform.OS === 'web' ? (
+                    <select
+                      value={strategyFormData.strategyName}
+                      onChange={(e: any) => setStrategyFormData({ ...strategyFormData, strategyName: e.target.value })}
+                      style={{
+                        flex: 1,
+                        backgroundColor: 'transparent',
+                        color: theme.textPrimary,
+                        borderWidth: 0,
+                        outlineStyle: 'none',
+                        fontSize: 14,
+                        fontWeight: '600',
+                        height: '100%',
+                        cursor: 'pointer',
+                      } as any}
+                    >
+                      <option value="" style={{ color: theme.placeholder }}>Select Strategy</option>
+                      <option value="RSI15MIN" className="bg-background text-foreground font-black">RSI15MIN</option>
+                      <option value="MACD15MIN" className="bg-background text-foreground font-black">MACD15MIN</option>
+                    </select>
+                  ) : (
+                    <TouchableOpacity
+                      style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+                      onPress={() => setShowStrategyDropdown(!showStrategyDropdown)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[
+                        { fontSize: 14, fontWeight: '600' },
+                        strategyFormData.strategyName ? { color: theme.textPrimary } : { color: theme.placeholder }
+                      ] as any}>
+                        {strategyFormData.strategyName || "Select Strategy"}
+                      </Text>
+                      <Ionicons name={showStrategyDropdown ? "chevron-up" : "chevron-down"} size={16} color={theme.textSecondary} />
+                    </TouchableOpacity>
+                  )}
                 </View>
-                <Switch
-                  value={activeStrategies[strat.id]}
-                  onValueChange={(val) => {
-                    setActiveStrategies({
-                      ...activeStrategies,
-                      [strat.id]: val
-                    });
-                  }}
-                  thumbColor={activeStrategies[strat.id] ? theme.primary : theme.iconMuted}
-                  trackColor={{ false: theme.border, true: theme.primaryBackground }}
-                />
+
+                {Platform.OS !== 'web' && showStrategyDropdown && (
+                  <View style={styles.verticalDropdownContainer as any}>
+                    {['RSI15MIN', 'MACD15MIN'].map((strat) => (
+                      <TouchableOpacity
+                        key={strat}
+                        style={styles.suggestionRow as any}
+                        onPress={() => {
+                          setStrategyFormData({ ...strategyFormData, strategyName: strat });
+                          setShowStrategyDropdown(false);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.suggestionRowSymbol as any}>{strat}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
               </View>
-            ))}
+
+              {/* Date */}
+              <View style={styles.formInputGroup as any}>
+                <Text style={styles.formInputLabel as any}>DATE</Text>
+                <TouchableOpacity
+                  style={styles.formInputWrapper as any}
+                  onPress={() => {
+                    setDatePickerTarget('strategy');
+                    setPickerDate(strategyFormData.date ? new Date(strategyFormData.date) : new Date());
+                    setShowDatePicker(true);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="calendar-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon as any} />
+                  <Text style={[
+                    styles.datePickerText as any,
+                    !strategyFormData.date && { color: theme.placeholder }
+                  ] as any} numberOfLines={1} adjustsFontSizeToFit>
+                    {strategyFormData.date ? formatDateString(new Date(strategyFormData.date)) : "Select Date"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Amount */}
+              <View style={styles.formInputGroup as any}>
+                <Text style={styles.formInputLabel as any}>AMOUNT (₹)</Text>
+                <View style={styles.formInputWrapper as any}>
+                  <Ionicons name="card-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon as any} />
+                  <TextInput
+                    style={styles.formTextInput as any}
+                    value={strategyFormData.amount}
+                    onChangeText={(val) => setStrategyFormData({ ...strategyFormData, amount: val })}
+                    keyboardType="numeric"
+                    placeholder="Enter Amount (e.g. 5000)"
+                    placeholderTextColor={theme.placeholder}
+                  />
+                </View>
+              </View>
+
+              {/* Submit Buttons */}
+              {editingStrategyOrderId ? (
+                <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+                  <TouchableOpacity
+                    style={[
+                      styles.executeActionBtn,
+                      styles.executeBuyBtn,
+                      { flex: 1, backgroundColor: theme.borderLight, borderWidth: 0 }
+                    ] as any}
+                    onPress={() => {
+                      setEditingStrategyOrderId(null);
+                      setStrategyFormData({
+                        strategyName: '',
+                        amount: '',
+                        date: '',
+                      });
+                    }}
+                    disabled={submittingStrategy}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.executeActionBtnText, { color: theme.textSecondary }] as any}>
+                      CANCEL EDIT
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.executeActionBtn,
+                      styles.executeBuyBtn,
+                      { flex: 1 },
+                      submittingStrategy && styles.disabledButton
+                    ] as any}
+                    onPress={handleSaveStrategyOrder}
+                    disabled={submittingStrategy}
+                    activeOpacity={0.8}
+                  >
+                    {submittingStrategy ? (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                      <>
+                        <Ionicons name="checkmark-circle-outline" size={18} color="#ffffff" />
+                        <Text style={styles.executeActionBtnText}>
+                          UPDATE ORDER
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={[
+                    styles.executeActionBtn,
+                    styles.executeBuyBtn,
+                    submittingStrategy && styles.disabledButton,
+                    { marginTop: 12 }
+                  ] as any}
+                  onPress={handleSaveStrategyOrder}
+                  disabled={submittingStrategy}
+                  activeOpacity={0.8}
+                >
+                  {submittingStrategy ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <>
+                      <Ionicons name="flash-outline" size={18} color="#ffffff" />
+                      <Text style={styles.executeActionBtnText}>
+                        PLACE ORDER
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         ); case 'history':
         return (
@@ -660,15 +812,23 @@ export default function ZerodhaDashboard() {
                             AUTO-TRADE
                           </Text>
                         </View>
-                        <Text style={styles.historySymbolText}>{log.symbol}</Text>
-                        <Text style={styles.historyQtyText}>{log.qty} Shares</Text>
+                        <Text style={styles.historySymbolText}>{log.strategyName}</Text>
+                        <Text style={styles.historyQtyText}>₹{log.amount}</Text>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                         <TouchableOpacity
                           onPress={() => {
-                            setEditingOrder(log);
-                            setEditQty(log.qty.toString());
-                            setEditTargetDate(null);
+                            setStrategyFormData({
+                              strategyName: log.strategyName || '',
+                              amount: log.amount ? log.amount.toString() : '',
+                              date: log.date || '',
+                            });
+                            setEditingStrategyOrderId(log.id);
+                            setActiveTab('strategy');
+                            CustomAlert.alert(
+                              'Loaded to Strategy Tab',
+                              `Strategy order details loaded into form.`
+                            );
                           }}
                           style={{ padding: 4 }}
                           activeOpacity={0.7}
@@ -701,8 +861,8 @@ export default function ZerodhaDashboard() {
                     </View>
 
                     <View style={styles.historyFooter}>
-                      <Text style={[styles.historyPriceText, { color: theme.infoText }] as any}>
-                        {log.strategyName}
+                      <Text style={[styles.historyPriceText, { color: theme.textSecondary }] as any}>
+                        Date: {log.date}
                       </Text>
                     </View>
                     {log.reason ? (
@@ -946,6 +1106,91 @@ export default function ZerodhaDashboard() {
         }
       ]
     );
+  };
+
+  const handleSaveStrategyOrder = async () => {
+    if (!strategyFormData.strategyName) {
+      CustomAlert.alert('Validation Error', 'Please select a Strategy Name.');
+      return;
+    }
+    const amountVal = parseFloat(strategyFormData.amount);
+    if (isNaN(amountVal) || amountVal <= 0) {
+      CustomAlert.alert('Validation Error', 'Amount must be greater than 0.');
+      return;
+    }
+    if (!strategyFormData.date) {
+      CustomAlert.alert('Validation Error', 'Please select a date.');
+      return;
+    }
+
+    const selectedDate = new Date(strategyFormData.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    if (selectedDate < today) {
+      CustomAlert.alert('Validation Error', 'Date must be today or a future date.');
+      return;
+    }
+
+    try {
+      setSubmittingStrategy(true);
+      const payload = {
+        strategyName: strategyFormData.strategyName,
+        amount: amountVal,
+        date: strategyFormData.date,
+      };
+
+      if (editingStrategyOrderId) {
+        console.log('Updating strategy order:', editingStrategyOrderId, payload);
+        const res = await strategyOrderAPI.updateOrder(editingStrategyOrderId, payload);
+        console.log('Update strategy order API response:', res.data);
+
+        setStrategyOrders(prev => prev.map(o => o.id === editingStrategyOrderId ? {
+          ...o,
+          strategyName: payload.strategyName,
+          amount: payload.amount,
+          date: payload.date,
+          status: 'COMPLETED',
+        } : o));
+
+        CustomAlert.alert(
+          'Order Updated Successfully',
+          `Successfully updated strategy order for ${payload.strategyName} with amount ₹${payload.amount}.`
+        );
+        setEditingStrategyOrderId(null);
+      } else {
+        console.log('Placing strategy order:', payload);
+        const res = await strategyOrderAPI.placeOrder(payload);
+        console.log('Place strategy order API response:', res.data);
+
+        const newOrder = {
+          id: res.data?.data?.id || res.data?.id || `s-api-${Date.now()}`,
+          strategyName: payload.strategyName,
+          amount: payload.amount,
+          date: payload.date,
+          status: 'COMPLETED',
+          reason: undefined,
+        };
+        setStrategyOrders(prev => [newOrder, ...prev]);
+
+        CustomAlert.alert(
+          'Order Placed Successfully',
+          `Successfully registered strategy order for ${payload.strategyName} of amount ₹${payload.amount}.`
+        );
+      }
+
+      setStrategyFormData({
+        strategyName: '',
+        amount: '',
+        date: '',
+      });
+    } catch (err: any) {
+      console.error('Failed to save strategy order:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Network error occurred.';
+      CustomAlert.alert('Order Failed', `Could not save strategy order: ${errMsg}`);
+    } finally {
+      setSubmittingStrategy(false);
+    }
   };
 
   const renderEditCalendar = () => {
@@ -1499,9 +1744,13 @@ export default function ZerodhaDashboard() {
                   if (!dayDate) {
                     return <View key={`empty-${idx}`} style={styles.calendarDayCell as any} />;
                   }
-                  const isSelected = targetDate.getDate() === dayDate.getDate() &&
-                    targetDate.getMonth() === dayDate.getMonth() &&
-                    targetDate.getFullYear() === dayDate.getFullYear();
+                  const currentSelectedDate = datePickerTarget === 'execute'
+                    ? targetDate
+                    : (strategyFormData.date ? new Date(strategyFormData.date) : new Date());
+
+                  const isSelected = currentSelectedDate.getDate() === dayDate.getDate() &&
+                    currentSelectedDate.getMonth() === dayDate.getMonth() &&
+                    currentSelectedDate.getFullYear() === dayDate.getFullYear();
 
                   const dayDateAtMidnight = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
                   const isPastDate = dayDateAtMidnight < today;
@@ -1515,7 +1764,14 @@ export default function ZerodhaDashboard() {
                         isPastDate && styles.pastDayCell
                       ] as any}
                       onPress={isPastDate ? undefined : () => {
-                        setTargetDate(dayDate);
+                        if (datePickerTarget === 'execute') {
+                          setTargetDate(dayDate);
+                        } else {
+                          setStrategyFormData(prev => ({
+                            ...prev,
+                            date: formatIsoDate(dayDate)
+                          }));
+                        }
                         setShowDatePicker(false);
                       }}
                       disabled={isPastDate}
