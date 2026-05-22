@@ -1,4 +1,4 @@
-import { Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { Text, View, TouchableOpacity, FlatList, ActivityIndicator, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useCallback } from 'react';
@@ -19,6 +19,8 @@ export default function ScreenerScreen() {
   const insets = useSafeAreaInsets();
   const { isDarkMode, theme } = useTheme();
   const styles = useScreenerStyles(isDarkMode);
+  
+  // Strategies list states
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,12 +31,14 @@ export default function ScreenerScreen() {
   const [scanLoading, setScanLoading] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
 
+  // Dropdown visibility state
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+
   const fetchStrategies = async () => {
     try {
       setLoading(true);
       setError(null);
       const res = await strategyAPI.getStrategies();
-      
       const payload = res.data?.data || res.data;
       if (Array.isArray(payload)) {
         setStrategies(payload);
@@ -57,6 +61,7 @@ export default function ScreenerScreen() {
 
   const handleStrategyPress = async (strategyName: string) => {
     setSelectedStrategy(strategyName);
+    setDropdownVisible(false); // close dropdown modal
     setScanLoading(true);
     setScanError(null);
     setScanResults([]);
@@ -77,42 +82,54 @@ export default function ScreenerScreen() {
     }
   };
 
-  const renderStrategyItem = ({ item }: { item: Strategy }) => {
-    const isSelected = selectedStrategy === item.name;
-    return (
-      <TouchableOpacity 
-        style={[
-          styles.strategyCard,
-          isSelected && styles.selectedStrategyCard
-        ]}
-        activeOpacity={0.85}
-        onPress={() => handleStrategyPress(item.name)}
-      >
-        <View style={[
-          styles.iconCircle,
-          isSelected && styles.selectedIconCircle
-        ]}>
-          <Ionicons 
-            name="git-branch-outline" 
-            size={20} 
-            color={isSelected ? theme.background : theme.textPrimary} 
-          />
-        </View>
-        <Text 
-          style={[
-            styles.strategyName,
-            isSelected && styles.selectedStrategyName
-          ]} 
-          numberOfLines={2}
-        >
-          {item.name}
-        </Text>
-      </TouchableOpacity>
-    );
+  const handleRefreshActiveScan = async () => {
+    if (!selectedStrategy) {
+      fetchStrategies();
+      return;
+    }
+    
+    setScanLoading(true);
+    setScanError(null);
+    try {
+      const res = await strategyAPI.fetchWithMargin(selectedStrategy);
+      const payload = res.data?.data || res.data;
+      if (Array.isArray(payload)) {
+        setScanResults(payload);
+      } else {
+        setScanError('No data found for this strategy');
+      }
+    } catch (err: any) {
+      console.error('Failed to refresh scanner results:', err);
+      setScanError('Connection issue. Please try again.');
+    } finally {
+      setScanLoading(false);
+    }
+  };
+
+  // Helper to determine strategy visual details
+  const getStrategyMetadata = (name: string) => {
+    const lowerName = name.toLowerCase();
+    let iconName: keyof typeof Ionicons.glyphMap = "bar-chart-outline";
+    let badgeText = "SCAN";
+
+    if (lowerName.includes('rsi')) {
+      iconName = "analytics-outline";
+      badgeText = "RSI";
+    } else if (lowerName.includes('macd')) {
+      iconName = "git-compare-outline";
+      badgeText = "MACD";
+    }
+
+    if (lowerName.includes('15')) {
+      badgeText += " 15M";
+    } else if (lowerName.includes('5')) {
+      badgeText += " 5M";
+    }
+
+    return { iconName, badgeText };
   };
 
   const renderStockResultItem = ({ item }: { item: any }) => {
-    // Support robust matching for flexible backend payloads
     const symbol = item.symbol || item.nsecode || item.nseCode || item.stockName || item.name || 'N/A';
     const companyName = item.name || item.companyName || item.stockDescription || '';
     
@@ -121,12 +138,6 @@ export default function ScreenerScreen() {
     const priceText = typeof rawPrice === 'number' 
       ? `₹${rawPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
       : rawPrice ? `₹${rawPrice}` : '—';
-
-    // Parse change percent
-    const rawChange = item.changePercent || item.percentChange || item.change || 0;
-    const changeVal = typeof rawChange === 'number' ? rawChange : parseFloat(rawChange) || 0;
-    const isPositive = changeVal >= 0;
-    const changeText = isPositive ? `+${changeVal.toFixed(2)}%` : `${changeVal.toFixed(2)}%`;
 
     // Parse margin value
     const rawMargin = item.margin || item.leverage || item.marginAllowed || '';
@@ -141,107 +152,173 @@ export default function ScreenerScreen() {
     return (
       <View style={styles.stockResultCard}>
         <View style={styles.stockLeft}>
-          <Text style={styles.stockSymbol} numberOfLines={1}>{symbol}</Text>
+          <View style={styles.stockHeader}>
+            <Text style={styles.stockSymbol} numberOfLines={1}>{symbol}</Text>
+            {hasMargin ? (
+              <View style={styles.marginBadgeSmall}>
+                <Text style={styles.marginBadgeSmallText}>{marginStr.toUpperCase()}</Text>
+              </View>
+            ) : null}
+          </View>
           {companyName ? <Text style={styles.stockCompany} numberOfLines={1}>{companyName}</Text> : null}
-          {hasMargin ? (
-            <View style={styles.marginBadge}>
-              <Text style={styles.marginBadgeText}>{marginStr.toUpperCase()} MARGIN</Text>
-            </View>
-          ) : null}
         </View>
         <View style={styles.stockRight}>
-          <Text style={styles.stockPrice}>{priceText}</Text>
-          <Text style={[styles.stockChange, { color: isPositive ? theme.success : theme.danger }]}>
-            {changeText}
-          </Text>
+          <View style={styles.stockPriceContainer}>
+            <Text style={styles.stockPrice}>{priceText}</Text>
+          </View>
         </View>
       </View>
     );
   };
 
+  const renderStockSkeletons = () => (
+    <View style={styles.skeletonRow}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <View key={i} style={styles.skeletonCard}>
+          <View style={styles.stockLeft}>
+            <View style={styles.skeletonTextSymbol} />
+            <View style={styles.skeletonTextDesc} />
+          </View>
+          <View style={styles.stockRight}>
+            <View style={styles.stockPriceContainer}>
+              <View style={styles.skeletonPrice} />
+            </View>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+
+  // Retrieve active metadata for trigger display
+  const activeMetadata = selectedStrategy ? getStrategyMetadata(selectedStrategy) : null;
+
   return (
     <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
-      {/* Custom Navigation Header */}
+      {/* Premium Header */}
       <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
+          <Ionicons name="arrow-back" size={22} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Screener</Text>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity 
+          style={styles.headerActionBtn} 
+          onPress={handleRefreshActiveScan}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="refresh-outline" size={20} color={theme.textPrimary} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.container}>
-        {/* Top Section: Subtitle & Horizontal Carousel */}
+        {/* Intro */}
         <View style={styles.topSection}>
           <View style={styles.introContainer}>
             <Text style={styles.subtext}>
-              Monitor and review algorithmic scanning equations for high-probability setups.
+              Monitor real-time setups matching algorithmic scanners.
             </Text>
           </View>
 
+          {/* Strategy Carousel Header */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Strategies</Text>
+            <Text style={styles.sectionTitle}>Select Strategy</Text>
           </View>
 
-          <View style={styles.carouselContainer}>
-            {loading ? (
-              <View style={styles.centerLoading}>
-                <ActivityIndicator size="small" color={theme.textPrimary} />
-                <Text style={styles.loadingText}>Loading Strategies...</Text>
+          {/* Dropdown Select Box Trigger */}
+          {loading ? (
+            <View style={styles.dropdownTrigger}>
+              <View style={styles.dropdownLeft}>
+                <ActivityIndicator size="small" color={theme.primary} />
+                <Text style={styles.dropdownPlaceholder}>Loading strategies...</Text>
               </View>
-            ) : error ? (
-              <View style={styles.centerLoading}>
-                <Ionicons name="alert-circle-outline" size={24} color={theme.danger} />
-                <Text style={styles.errorText}>{error}</Text>
+              <Ionicons name="chevron-down" size={18} color={theme.iconMuted} />
+            </View>
+          ) : error ? (
+            <TouchableOpacity 
+              style={[styles.dropdownTrigger, { borderColor: theme.danger }]} 
+              onPress={fetchStrategies}
+              activeOpacity={0.8}
+            >
+              <View style={styles.dropdownLeft}>
+                <Ionicons name="alert-circle" size={20} color={theme.danger} />
+                <Text style={[styles.dropdownPlaceholder, { color: theme.danger }]}>Failed to load. Tap to retry.</Text>
               </View>
-            ) : (
-              <FlatList
-                data={strategies}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item, index) => item.name + index}
-                renderItem={renderStrategyItem}
-                contentContainerStyle={styles.listContainer}
-                decelerationRate="fast"
-                ListEmptyComponent={
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>No strategies found.</Text>
-                  </View>
-                }
+              <Ionicons name="refresh" size={16} color={theme.danger} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity 
+              style={[
+                styles.dropdownTrigger,
+                selectedStrategy && styles.selectedDropdownTrigger
+              ]}
+              onPress={() => {
+                setDropdownVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <View style={styles.dropdownLeft}>
+                {selectedStrategy && activeMetadata ? (
+                  <>
+                    <View style={[styles.iconCircleSmall, styles.selectedIconCircleSmall]}>
+                      <Ionicons name={activeMetadata.iconName} size={14} color="#ffffff" />
+                    </View>
+                    <Text style={styles.selectedDropdownTriggerText} numberOfLines={1}>
+                      {selectedStrategy}
+                    </Text>
+                    <Text style={[styles.dropdownTriggerInterval, styles.selectedDropdownTriggerInterval]}>
+                      {activeMetadata.badgeText}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <View style={styles.iconCircleSmall}>
+                      <Ionicons name="funnel-outline" size={14} color={theme.textSecondary} />
+                    </View>
+                    <Text style={styles.dropdownPlaceholder}>
+                      Select a scanning strategy...
+                    </Text>
+                  </>
+                )}
+              </View>
+              <Ionicons 
+                name="chevron-down" 
+                size={18} 
+                color={selectedStrategy ? theme.primary : theme.iconMuted} 
               />
-            )}
-          </View>
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Slate Divider */}
+        {/* Divider */}
         <View style={styles.divider} />
 
-        {/* Bottom Section: Scan Results List */}
+        {/* Scan Results Area */}
         <View style={styles.resultsSection}>
-          <Text style={styles.resultsTitle}>
-            {selectedStrategy ? `Scan Results: ${selectedStrategy}` : 'Scan Results'}
-          </Text>
+          <View style={styles.resultsHeaderRow}>
+            <Text style={styles.resultsTitle}>
+              {selectedStrategy ? `Scan results: ${selectedStrategy}` : 'Scan Results'}
+            </Text>
+          </View>
 
           {scanLoading ? (
-            <View style={styles.resultsLoading}>
-              <ActivityIndicator size="large" color={theme.textPrimary} />
-              <Text style={styles.resultsStateText}>Scanning market for setups...</Text>
-            </View>
+            renderStockSkeletons()
           ) : scanError ? (
             <View style={styles.resultsPlaceholder}>
               <Ionicons name="alert-circle-outline" size={36} color={theme.danger} />
               <Text style={styles.resultsErrorText}>{scanError}</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={() => handleStrategyPress(selectedStrategy || '')} activeOpacity={0.8}>
+                <Text style={styles.retryText}>Retry Scan</Text>
+              </TouchableOpacity>
             </View>
           ) : !selectedStrategy ? (
             <View style={styles.resultsPlaceholder}>
-              <Ionicons name="trending-up-outline" size={40} color={theme.iconMuted} />
+              <Ionicons name="radio-outline" size={44} color={theme.primary} />
               <Text style={styles.resultsPlaceholderText}>
-                Select a strategy card above to scan the live market.
+                Choose a scanning strategy from the dropdown selector above to query the live market.
               </Text>
             </View>
           ) : scanResults.length === 0 ? (
             <View style={styles.resultsPlaceholder}>
-              <Ionicons name="filter-outline" size={40} color={theme.iconMuted} />
+              <Ionicons name="filter-outline" size={36} color={theme.iconMuted} />
               <Text style={styles.resultsPlaceholderText}>
                 No stocks currently matching this scan criteria.
               </Text>
@@ -258,7 +335,85 @@ export default function ScreenerScreen() {
           )}
         </View>
       </View>
+
+      {/* Dropdown Menu Modal */}
+      <Modal
+        visible={dropdownVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setDropdownVisible(false)}
+      >
+        <TouchableOpacity 
+          style={styles.dropdownOverlay}
+          activeOpacity={1}
+          onPress={() => setDropdownVisible(false)}
+        >
+          <View 
+            style={styles.dropdownMenuCard}
+            onStartShouldSetResponder={() => true}
+          >
+            <View style={styles.dropdownMenuHeader}>
+              <Text style={styles.dropdownMenuTitle}>Select Strategy</Text>
+              <TouchableOpacity 
+                style={styles.dropdownCloseBtn}
+                onPress={() => setDropdownVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={18} color={theme.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.dropdownOptionsList}>
+              {strategies.map((item, index) => {
+                const isSelected = selectedStrategy === item.name;
+                const metadata = getStrategyMetadata(item.name);
+                return (
+                  <TouchableOpacity
+                    key={item.name + index}
+                    style={[
+                      styles.dropdownOptionRow,
+                      isSelected && styles.selectedDropdownOptionRow
+                    ]}
+                    activeOpacity={0.7}
+                    onPress={() => handleStrategyPress(item.name)}
+                  >
+                    <View style={styles.optionLeft}>
+                      <View style={[
+                        styles.iconCircleSmall,
+                        isSelected && styles.selectedIconCircleSmall
+                      ]}>
+                        <Ionicons 
+                          name={metadata.iconName} 
+                          size={14} 
+                          color={isSelected ? '#ffffff' : theme.textSecondary} 
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[
+                          styles.optionNameText,
+                          isSelected && styles.selectedOptionNameText
+                        ]} numberOfLines={1}>
+                          {item.name}
+                        </Text>
+                        <Text style={[
+                          styles.optionIntervalText,
+                          isSelected && styles.selectedOptionIntervalText
+                        ]}>
+                          {metadata.badgeText}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={16} color={theme.primary} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
-
