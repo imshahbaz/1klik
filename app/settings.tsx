@@ -1,16 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View, Switch, AppState, Linking } from 'react-native';
+import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { CustomAlert } from '../context/AlertContext';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useSettingsStyles } from '../theme/settingsStyles';
-import { userPreferenceAPI, notificationAPI } from '../services/api';
-import { checkNotificationPermission, requestUserPermission, getFCMToken } from '../services/notificationService';
+import { notificationAPI, userPreferenceAPI } from '../services/api';
+import { checkNotificationPermission, getFCMToken, requestUserPermission } from '../services/notificationService';
 import { getSafeBottomPadding } from '../theme/safeArea';
+import { useSettingsStyles } from '../theme/settingsStyles';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -60,7 +60,6 @@ export default function SettingsScreen() {
           const token = await getFCMToken();
           if (token) {
             await notificationAPI.saveToken(token);
-            console.log('Settings: FCM token saved successfully to backend');
           }
         } catch (tokenErr) {
           console.error('Settings: Failed to save FCM token:', tokenErr);

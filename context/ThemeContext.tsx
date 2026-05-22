@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { lightColors, darkColors, Colors } from '../theme/colors';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useColorScheme } from 'react-native';
 import { userPreferenceAPI } from '../services/api';
+import { Colors, darkColors, lightColors } from '../theme/colors';
+import { useAuth } from './AuthContext';
 
 type ThemeContextType = {
   isDarkMode: boolean;
@@ -49,14 +49,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const newValue = typeof value === 'boolean' ? value : !isDarkMode;
       setIsDarkMode(newValue);
-      
+
       // Save locally
       await AsyncStorage.setItem(THEME_KEY, newValue ? 'dark' : 'light');
-      
+
       // Sync to backend if user is logged in
       if (user) {
         const themeValue = newValue ? 'DARK' : 'LIGHT';
-        console.log(`Syncing theme change to server: ${themeValue}`);
         await userPreferenceAPI.updateTheme(themeValue);
       }
     } catch (e) {

@@ -5,11 +5,11 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
+import { CustomAlert } from '../context/AlertContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useLoginStyles } from '../theme/loginStyles';
 import { authAPI, googleAPI } from '../services/api';
-import { CustomAlert } from '../context/AlertContext';
+import { useLoginStyles } from '../theme/loginStyles';
 import { getSafeBottomPadding } from '../theme/safeArea';
 
 export default function LoginScreen() {
@@ -25,8 +25,6 @@ export default function LoginScreen() {
     // Retrieve the Google Client ID configured in your .env file
     const clientID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
 
-    console.log("Configuring native-only Google Sign-In with Web Client ID:", clientID);
-
     GoogleSignin.configure({
       webClientId: clientID,
       offlineAccess: false,
@@ -38,8 +36,6 @@ export default function LoginScreen() {
       setLoading(true);
       setError(null);
 
-      // 1. Authenticate with Google natively on the device
-      console.log("Triggering native Google SDK account picker...");
       await GoogleSignin.hasPlayServices();
 
       const signInResponse = await GoogleSignin.signIn();
@@ -48,8 +44,6 @@ export default function LoginScreen() {
       if (!idToken) {
         throw new Error('Failed to retrieve ID Token from Google SDK.');
       }
-
-      console.log("Native ID Token obtained successfully! Sending to Spring Boot backend...");
 
       // 2. Validate the native token with your Spring Boot backend validation endpoint
       await googleAPI.googleTokenValidation(idToken);

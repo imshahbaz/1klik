@@ -121,7 +121,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const handleExpiry = async () => {
             try {
-                console.log("Session expired. Signing out from native Google SDK...");
                 await GoogleSignin.signOut();
             } catch (googleErr) {
                 console.log("Failed or no active native Google session to sign out of during expiry:", googleErr);

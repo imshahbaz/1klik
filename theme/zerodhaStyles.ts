@@ -1,6 +1,6 @@
-import { StyleSheet, Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
-import { Colors, lightColors, darkColors } from './colors';
+import { Colors, darkColors, lightColors } from './colors';
 
 const createStyles = (theme: Colors) => ScaledSheet.create({
   safeArea: {

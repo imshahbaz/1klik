@@ -143,7 +143,6 @@ export default function ZerodhaDashboard() {
 
     try {
       setLoadingHistory(true);
-      console.log('Fetching history logs for user:', userId);
 
       const [mtfRes, stratRes] = await Promise.allSettled([
         zerodhaAPI.getUserOrders(userId),
@@ -153,7 +152,6 @@ export default function ZerodhaDashboard() {
       if (mtfRes.status === 'fulfilled') {
         const rawData = mtfRes.value.data;
         const ordersArray = Array.isArray(rawData) ? rawData : (Array.isArray(rawData?.data) ? rawData.data : []);
-        console.log('Processed MTF orders array:', ordersArray);
         const formatted = ordersArray.map((order: any, idx: number) => ({
           id: order.id || `m-api-${idx}`,
           symbol: order.symbol,
@@ -172,7 +170,6 @@ export default function ZerodhaDashboard() {
       if (stratRes.status === 'fulfilled') {
         const rawData = stratRes.value.data;
         const stratArray = Array.isArray(rawData) ? rawData : (Array.isArray(rawData?.data) ? rawData.data : []);
-        console.log('Processed Strategy orders array:', stratArray);
         const formatted = stratArray.map((order: any, idx: number) => ({
           id: order.id || order._id || `s-api-${idx}`,
           symbol: order.symbol || 'AUTO',
@@ -227,9 +224,7 @@ export default function ZerodhaDashboard() {
       setExecutingTrade(true);
 
       if (editingMtfOrderId) {
-        console.log('Sending MTF order update payload:', editingMtfOrderId, payload);
         const response = await zerodhaAPI.updateOrder(editingMtfOrderId, payload);
-        console.log('MTF order update API response:', response.data);
 
         setMtfOrders(prev => prev.map(o => o.id === editingMtfOrderId ? {
           ...o,
@@ -246,9 +241,7 @@ export default function ZerodhaDashboard() {
         );
         setEditingMtfOrderId(null);
       } else {
-        console.log('Sending MTF order payload to API:', payload);
         const response = await zerodhaAPI.placeMTFOrder(payload);
-        console.log('MTF order API response:', response.data);
 
         const newOrder = {
           id: (mtfOrders.length + 1).toString(),
@@ -907,9 +900,7 @@ export default function ZerodhaDashboard() {
       }
     } catch (err: any) {
       console.error("Failed to fetch Zerodha profile details:", err);
-      console.log("Zerodha API Error Response:", JSON.stringify(err.response?.data || err.message, null, 2));
       if (err.response?.status === 401) {
-        console.log("Unauthorized session detected on Zerodha Dashboard. Logging out...");
         await logout();
       } else if (err.response?.status === 404) {
         setZerodhaError("No linked Zerodha account found.");
@@ -932,13 +923,11 @@ export default function ZerodhaDashboard() {
   };
 
   const handleNavigationChange = async (navState: any) => {
-    console.log("WebView Navigation State Change:", navState.url);
     // Look out for request_token in the redirected URL parameter
     if (navState.url.includes('request_token=')) {
       const tokenMatch = navState.url.match(/[?&]request_token=([^&]+)/);
       if (tokenMatch && tokenMatch[1]) {
         const requestToken = tokenMatch[1];
-        console.log("Interacted and retrieved request_token:", requestToken);
 
         // Immediately dismiss the webview
         setShowWebView(false);
@@ -948,9 +937,7 @@ export default function ZerodhaDashboard() {
           setZerodhaError(null);
           setIsTokenExpired(false);
 
-          console.log("Authenticating session with backend...");
           const res = await zerodhaAPI.login(requestToken, user?.id || user?.userId || '');
-          console.log("Zerodha authentication response:", res.data);
 
           CustomAlert.alert(
             "Connection Successful",
@@ -977,12 +964,10 @@ export default function ZerodhaDashboard() {
     try {
       setSavingConfig(true);
       setFormError(null);
-      console.log("Saving Zerodha API credentials...");
       const res = await zerodhaAPI.saveConfig({
         apiKey: apiKey.trim(),
         apiSecret: apiSecret.trim(),
       });
-      console.log("Config saved response:", res.data);
       CustomAlert.alert(
         "Configuration Saved",
         "Your Zerodha Kite API credentials have been successfully updated. We will now attempt to load your profile.",
@@ -1064,7 +1049,6 @@ export default function ZerodhaDashboard() {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('Deleting MTF order:', orderId);
               const res = await zerodhaAPI.deleteOrder(orderId);
               if (res.data?.success !== false) {
                 setMtfOrders(prev => prev.filter(o => o.id !== orderId));
@@ -1092,7 +1076,6 @@ export default function ZerodhaDashboard() {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('Deleting Strategy order:', orderId);
               const res = await strategyOrderAPI.deleteOrder(orderId);
               if (res.data?.success !== false) {
                 setStrategyOrders(prev => prev.filter(o => o.id !== orderId));
@@ -1142,9 +1125,7 @@ export default function ZerodhaDashboard() {
       };
 
       if (editingStrategyOrderId) {
-        console.log('Updating strategy order:', editingStrategyOrderId, payload);
         const res = await strategyOrderAPI.updateOrder(editingStrategyOrderId, payload);
-        console.log('Update strategy order API response:', res.data);
 
         setStrategyOrders(prev => prev.map(o => o.id === editingStrategyOrderId ? {
           ...o,
@@ -1160,9 +1141,7 @@ export default function ZerodhaDashboard() {
         );
         setEditingStrategyOrderId(null);
       } else {
-        console.log('Placing strategy order:', payload);
         const res = await strategyOrderAPI.placeOrder(payload);
-        console.log('Place strategy order API response:', res.data);
 
         const newOrder = {
           id: res.data?.data?.id || res.data?.id || `s-api-${Date.now()}`,
@@ -1296,7 +1275,7 @@ export default function ZerodhaDashboard() {
             quantity: qtyNum,
             date: dateStr,
           };
-          console.log('Updating MTF order:', editingOrder.id, payload);
+
           await zerodhaAPI.updateOrder(editingOrder.id, payload);
 
           setMtfOrders(prev => prev.map(o => o.id === editingOrder.id ? {
@@ -1312,7 +1291,7 @@ export default function ZerodhaDashboard() {
             quantity: qtyNum,
             strategyName: editingOrder.strategyName,
           };
-          console.log('Updating Strategy order:', editingOrder.id, payload);
+
           await strategyOrderAPI.updateOrder(editingOrder.id, payload);
 
           setStrategyOrders(prev => prev.map(o => o.id === editingOrder.id ? {
@@ -1364,90 +1343,90 @@ export default function ZerodhaDashboard() {
               showsVerticalScrollIndicator={false}
             >
               <View style={styles.editModalContainer as any}>
-              <View style={styles.editModalHeader as any}>
-                <Text style={styles.editModalTitle as any}>Modify Order</Text>
-                <TouchableOpacity onPress={() => setEditingOrder(null)} style={styles.editModalCloseBtn as any}>
-                  <Ionicons name="close" size={20} color={theme.textSecondary} />
-                </TouchableOpacity>
-              </View>
-
-              <View style={{ marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={[styles.historyTypeBadge, isMtf ? styles.historyBuyBadge : { backgroundColor: theme.infoBackground }]}>
-                  <Text style={[styles.historyTypeText, isMtf ? styles.historyBuyText : { color: theme.infoText }]}>
-                    {isMtf ? 'MTF BUY' : 'AUTO-TRADE'}
-                  </Text>
-                </View>
-                <Text style={{ fontSize: 16, fontWeight: '700', color: theme.textPrimary }}>{editingOrder.symbol}</Text>
-              </View>
-
-              <View style={styles.formInputGroup}>
-                <Text style={styles.formInputLabel}>QUANTITY</Text>
-                <View style={styles.formInputWrapper}>
-                  <Ionicons name="layers-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
-                  <TextInput
-                    style={styles.formTextInput}
-                    value={editQty}
-                    onChangeText={setEditQty}
-                    keyboardType="number-pad"
-                    placeholder="Enter Shares quantity"
-                    placeholderTextColor={theme.placeholder}
-                  />
-                  <TouchableOpacity
-                    onPress={() => {
-                      const val = parseInt(editQty) || 0;
-                      if (val > 1) setEditQty((val - 1).toString());
-                    }}
-                    style={{ padding: 6 }}
-                  >
-                    <Ionicons name="remove-circle-outline" size={22} color={theme.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      const val = parseInt(editQty) || 0;
-                      setEditQty((val + 1).toString());
-                    }}
-                    style={{ padding: 6 }}
-                  >
-                    <Ionicons name="add-circle-outline" size={22} color={theme.primary} />
+                <View style={styles.editModalHeader as any}>
+                  <Text style={styles.editModalTitle as any}>Modify Order</Text>
+                  <TouchableOpacity onPress={() => setEditingOrder(null)} style={styles.editModalCloseBtn as any}>
+                    <Ionicons name="close" size={20} color={theme.textSecondary} />
                   </TouchableOpacity>
                 </View>
-              </View>
 
-              {isMtf && (
-                <View style={styles.formInputGroup}>
-                  <Text style={styles.formInputLabel}>TARGET DATE</Text>
-                  <TouchableOpacity
-                    style={styles.formInputWrapper}
-                    onPress={() => setShowEditDatePicker(true)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
-                    <Text
-                      style={{ flex: 1, color: editTargetDate ? theme.textPrimary : theme.iconMuted, fontSize: 13, fontWeight: '600' }}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                    >
-                      {editTargetDate ? formatDateString(editTargetDate) : 'Select Target Date'}
+                <View style={{ marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={[styles.historyTypeBadge, isMtf ? styles.historyBuyBadge : { backgroundColor: theme.infoBackground }]}>
+                    <Text style={[styles.historyTypeText, isMtf ? styles.historyBuyText : { color: theme.infoText }]}>
+                      {isMtf ? 'MTF BUY' : 'AUTO-TRADE'}
                     </Text>
-                    <Ionicons name="chevron-down" size={16} color={theme.iconMuted} />
+                  </View>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: theme.textPrimary }}>{editingOrder.symbol}</Text>
+                </View>
+
+                <View style={styles.formInputGroup}>
+                  <Text style={styles.formInputLabel}>QUANTITY</Text>
+                  <View style={styles.formInputWrapper}>
+                    <Ionicons name="layers-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
+                    <TextInput
+                      style={styles.formTextInput}
+                      value={editQty}
+                      onChangeText={setEditQty}
+                      keyboardType="number-pad"
+                      placeholder="Enter Shares quantity"
+                      placeholderTextColor={theme.placeholder}
+                    />
+                    <TouchableOpacity
+                      onPress={() => {
+                        const val = parseInt(editQty) || 0;
+                        if (val > 1) setEditQty((val - 1).toString());
+                      }}
+                      style={{ padding: 6 }}
+                    >
+                      <Ionicons name="remove-circle-outline" size={22} color={theme.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        const val = parseInt(editQty) || 0;
+                        setEditQty((val + 1).toString());
+                      }}
+                      style={{ padding: 6 }}
+                    >
+                      <Ionicons name="add-circle-outline" size={22} color={theme.primary} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {isMtf && (
+                  <View style={styles.formInputGroup}>
+                    <Text style={styles.formInputLabel}>TARGET DATE</Text>
+                    <TouchableOpacity
+                      style={styles.formInputWrapper}
+                      onPress={() => setShowEditDatePicker(true)}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
+                      <Text
+                        style={{ flex: 1, color: editTargetDate ? theme.textPrimary : theme.iconMuted, fontSize: 13, fontWeight: '600' }}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                      >
+                        {editTargetDate ? formatDateString(editTargetDate) : 'Select Target Date'}
+                      </Text>
+                      <Ionicons name="chevron-down" size={16} color={theme.iconMuted} />
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+                  <TouchableOpacity
+                    style={[styles.calendarCloseBtn, { flex: 1, backgroundColor: theme.borderLight, borderWidth: 0 }] as any}
+                    onPress={() => setEditingOrder(null)}
+                  >
+                    <Text style={[styles.calendarCloseBtnText, { color: theme.textSecondary }] as any}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.calendarCloseBtn, { flex: 1, backgroundColor: theme.primary, borderWidth: 0 }] as any}
+                    onPress={handleSaveChanges}
+                  >
+                    <Text style={[styles.calendarCloseBtnText, { color: '#ffffff' }] as any}>Save Changes</Text>
                   </TouchableOpacity>
                 </View>
-              )}
-
-              <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
-                <TouchableOpacity
-                  style={[styles.calendarCloseBtn, { flex: 1, backgroundColor: theme.borderLight, borderWidth: 0 }] as any}
-                  onPress={() => setEditingOrder(null)}
-                >
-                  <Text style={[styles.calendarCloseBtnText, { color: theme.textSecondary }] as any}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.calendarCloseBtn, { flex: 1, backgroundColor: theme.primary, borderWidth: 0 }] as any}
-                  onPress={handleSaveChanges}
-                >
-                  <Text style={[styles.calendarCloseBtnText, { color: '#ffffff' }] as any}>Save Changes</Text>
-                </TouchableOpacity>
-              </View>
               </View>
             </KeyboardAwareScrollView>
           </View>
