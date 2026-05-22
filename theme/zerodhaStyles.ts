@@ -809,6 +809,15 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     shadowRadius: 20,
     elevation: 5,
   },
+  modalKeyboardScroll: {
+    width: '100%',
+  },
+  editModalScrollContent: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: '24@vs',
+  },
   editModalHeader: {
     flexDirection: 'row',
     alignItems: 'center',

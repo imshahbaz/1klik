@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { useTheme } from '../context/ThemeContext';
 import { marginAPI } from '../services/api';
 import { useCalculatorStyles } from '../theme/calculatorStyles';
@@ -273,13 +274,13 @@ export default function CalculatorScreen() {
         style={styles.keyboardFrame}
         keyboardVerticalOffset={insets.top + 60}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={[
             styles.scrollContainer,
             view === 'results' ? styles.resultsScrollContainer : null,
           ]}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          extraKeyboardSpace={72}
           showsVerticalScrollIndicator={false}
         >
           <View style={[
@@ -663,7 +664,7 @@ export default function CalculatorScreen() {
               )
             )}
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
 
       {/* Date Picker Modal */}
@@ -786,4 +787,3 @@ export default function CalculatorScreen() {
     </View>
   );
 }
-

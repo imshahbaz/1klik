@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
+import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { CustomAlert } from '../context/AlertContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -1355,7 +1356,14 @@ export default function ZerodhaDashboard() {
           keyboardVerticalOffset={insets.top + 60}
         >
           <View style={styles.modalOverlay as any}>
-            <View style={styles.editModalContainer as any}>
+            <KeyboardAwareScrollView
+              style={styles.modalKeyboardScroll as any}
+              contentContainerStyle={styles.editModalScrollContent as any}
+              keyboardShouldPersistTaps="handled"
+              extraKeyboardSpace={72}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.editModalContainer as any}>
               <View style={styles.editModalHeader as any}>
                 <Text style={styles.editModalTitle as any}>Modify Order</Text>
                 <TouchableOpacity onPress={() => setEditingOrder(null)} style={styles.editModalCloseBtn as any}>
@@ -1440,7 +1448,8 @@ export default function ZerodhaDashboard() {
                   <Text style={[styles.calendarCloseBtnText, { color: '#ffffff' }] as any}>Save Changes</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+              </View>
+            </KeyboardAwareScrollView>
           </View>
         </KeyboardAvoidingView>
 
@@ -1485,12 +1494,12 @@ export default function ZerodhaDashboard() {
         style={styles.keyboardFrame}
         keyboardVerticalOffset={insets.top + 60}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           style={styles.container}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContentContainer}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          extraKeyboardSpace={72}
         >
           {/* Connection Status Card */}
           <View style={styles.connectionCard}>
@@ -1689,7 +1698,7 @@ export default function ZerodhaDashboard() {
             ) : null
           )}
 
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
 
       {/* Premium Custom Date Picker Modal */}

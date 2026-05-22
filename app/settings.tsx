@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View, Switch, AppState, Linking } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View, Switch, AppState, Linking } from 'react-native';
+import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { CustomAlert } from '../context/AlertContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -172,10 +173,10 @@ export default function SettingsScreen() {
         style={styles.keyboardFrame}
         keyboardVerticalOffset={insets.top + 60}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          extraKeyboardSpace={64}
         >
           <View style={styles.container}>
             {/* Header Description */}
@@ -310,7 +311,7 @@ export default function SettingsScreen() {
             </View>
 
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
     </View>
   );
