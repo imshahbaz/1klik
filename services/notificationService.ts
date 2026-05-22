@@ -1,16 +1,16 @@
 import { getApps } from '@react-native-firebase/app';
 import {
-  getMessaging,
-  requestPermission,
-  getToken,
-  onTokenRefresh,
-  onMessage,
-  registerDeviceForRemoteMessages,
-  isDeviceRegisteredForRemoteMessages,
   AuthorizationStatus,
+  getMessaging,
+  getToken,
   hasPermission,
+  isDeviceRegisteredForRemoteMessages,
+  onMessage,
+  onTokenRefresh,
+  registerDeviceForRemoteMessages,
+  requestPermission,
 } from '@react-native-firebase/messaging';
-import { Platform, PermissionsAndroid, DeviceEventEmitter } from 'react-native';
+import { DeviceEventEmitter, PermissionsAndroid, Platform } from 'react-native';
 
 
 /**
@@ -37,20 +37,17 @@ export async function requestUserPermission(): Promise<boolean> {
   try {
     // Request Android 13+ POST_NOTIFICATIONS permission
     if (Platform.OS === 'android') {
-      const apiLevel = typeof Platform.Version === 'number' 
-        ? Platform.Version 
+      const apiLevel = typeof Platform.Version === 'number'
+        ? Platform.Version
         : parseInt(String(Platform.Version), 10);
-      
+
       if (apiLevel >= 33) {
-        console.log('FCM Debug: Requesting Android POST_NOTIFICATIONS permission...');
         const granted = await PermissionsAndroid.request(
           'android.permission.POST_NOTIFICATIONS' as any
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('FCM Debug: Android POST_NOTIFICATIONS permission denied');
           return false;
         }
-        console.log('FCM Debug: Android POST_NOTIFICATIONS permission granted');
       }
       return true;
     }
@@ -60,8 +57,7 @@ export async function requestUserPermission(): Promise<boolean> {
     const enabled =
       authStatus === AuthorizationStatus.AUTHORIZED ||
       authStatus === AuthorizationStatus.PROVISIONAL;
-    
-    console.log('Authorization status:', authStatus);
+
     return enabled;
   } catch (error) {
     console.error('Error requesting permission:', error);
@@ -74,7 +70,6 @@ export async function requestUserPermission(): Promise<boolean> {
  */
 export async function getFCMToken(): Promise<string | null> {
   if (!isFirebaseInitialized()) {
-    console.log('Firebase is not initialized. Skipping FCM token retrieval.');
     return null;
   }
   try {
@@ -86,7 +81,6 @@ export async function getFCMToken(): Promise<string | null> {
       }
     }
     const token = await getToken(messagingInstance);
-    console.log('FCM Token retrieved:', token);
     return token;
   } catch (error) {
     console.error('Error getting FCM Token:', error);
@@ -99,15 +93,14 @@ export async function getFCMToken(): Promise<string | null> {
  * Returns an unsubscribe function.
  */
 export function registerTokenRefresh(onRefresh: (token: string) => void): () => void {
-  if (!isFirebaseInitialized()) return () => {};
+  if (!isFirebaseInitialized()) return () => { };
   try {
     return onTokenRefresh(getMessaging(), (token) => {
-      console.log('FCM Token refreshed:', token);
       onRefresh(token);
     });
   } catch (error) {
     console.error('Error registering token refresh:', error);
-    return () => {};
+    return () => { };
   }
 }
 
@@ -117,20 +110,20 @@ export function registerTokenRefresh(onRefresh: (token: string) => void): () => 
  * Returns an unsubscribe function.
  */
 export function setupForegroundListener(): () => void {
-  if (!isFirebaseInitialized()) return () => {};
+  if (!isFirebaseInitialized()) return () => { };
   try {
     return onMessage(getMessaging(), async (remoteMessage) => {
       console.log('A new FCM message arrived in the foreground!', JSON.stringify(remoteMessage));
-      
+
       // Get title and body from either notification object or custom data fields sent from backend
       const title = String(remoteMessage.notification?.title || remoteMessage.data?.title || 'Notification');
       const body = String(remoteMessage.notification?.body || remoteMessage.data?.body || '');
-      
+
       DeviceEventEmitter.emit('show-custom-notification', { title, body, data: remoteMessage.data });
     });
   } catch (error) {
     console.error('Error setting up foreground listener:', error);
-    return () => {};
+    return () => { };
   }
 }
 
@@ -141,10 +134,10 @@ export async function checkNotificationPermission(): Promise<boolean> {
   if (!isFirebaseInitialized()) return false;
   try {
     if (Platform.OS === 'android') {
-      const apiLevel = typeof Platform.Version === 'number' 
-        ? Platform.Version 
+      const apiLevel = typeof Platform.Version === 'number'
+        ? Platform.Version
         : parseInt(String(Platform.Version), 10);
-      
+
       if (apiLevel >= 33) {
         const hasAndroidPermission = await PermissionsAndroid.check(
           'android.permission.POST_NOTIFICATIONS' as any

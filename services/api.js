@@ -12,7 +12,6 @@ const api = axios.create({
 export const initializeBaseUrl = async () => {
   try {
     await AsyncStorage.removeItem('@backend_base_url');
-    console.log('API: Cleared cached baseURL from AsyncStorage');
   } catch (err) {
     console.warn('API: Failed to clear cached baseURL from AsyncStorage:', err);
   }
@@ -22,7 +21,6 @@ export const initializeBaseUrl = async () => {
     const freshUrl = response.data?.backend_url;
     if (freshUrl) {
       api.defaults.baseURL = freshUrl;
-      console.log('API: Dynamically resolved baseURL from Gist:', freshUrl);
       return freshUrl;
     }
   } catch (err) {
