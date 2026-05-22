@@ -1481,36 +1481,32 @@ export default function ZerodhaDashboard() {
           extraKeyboardSpace={72}
         >
           {/* Connection Status Card */}
-          <View style={styles.connectionCard}>
-            <View style={styles.connectionHeader}>
-              <View style={styles.brandContainer}>
-                <View style={styles.kiteLogoPlaceholder}>
-                  <Text style={styles.kiteLogoText}>K</Text>
-                </View>
-                <View style={{ flexShrink: 1, paddingRight: 8 }}>
-                  <Text style={styles.connectionTitle}>Kite Connect API</Text>
-                  {zerodhaLoading ? (
-                    <ActivityIndicator size="small" color="#ffffff" style={{ marginTop: 6, alignSelf: 'flex-start' }} />
-                  ) : zerodhaError ? (
-                    <Text style={[styles.connectionSubtitle, { color: theme.danger }]} numberOfLines={1}>
-                      {zerodhaError}
-                    </Text>
-                  ) : (
-                    <View style={{ marginTop: 2 }}>
-                      <Text style={styles.connectionSubtitle} numberOfLines={1}>
-                        Account: {typeof zerodhaUser === 'string' ? 'Active Session' : (zerodhaUser?.userName || zerodhaUser?.name || 'Active')}
+          <View style={[styles.connectionCard, { borderLeftColor: zerodhaLoading ? theme.primary : zerodhaError ? theme.danger : theme.success }]}>
+            <View style={{ gap: 0 }}>
+              {/* Top Row: Brand Info and Settings Button */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View style={[styles.brandContainer, { marginRight: 0 }]}>
+                  <View style={styles.kiteLogoPlaceholder}>
+                    <Ionicons name="link-outline" size={18} color={theme.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    {zerodhaLoading ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <ActivityIndicator size="small" color={theme.primary} />
+                        <Text style={styles.connectionTitle}>Connecting...</Text>
+                      </View>
+                    ) : zerodhaError ? (
+                      <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
+                        Connection Inactive
                       </Text>
-                    </View>
-                  )}
+                    ) : (
+                      <Text style={styles.connectionTitle} numberOfLines={1}>
+                        {typeof zerodhaUser === 'string' ? 'Active Session' : (zerodhaUser?.userName || zerodhaUser?.name || 'Active Session')}
+                      </Text>
+                    )}
+                  </View>
                 </View>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={zerodhaError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
-                  <View style={zerodhaError ? styles.inactiveDot : styles.activeDot} />
-                  <Text style={zerodhaError ? styles.inactiveStatusText : styles.activeStatusText}>
-                    {zerodhaLoading ? 'LOADING' : zerodhaError ? 'INACTIVE' : 'CONNECTED'}
-                  </Text>
-                </View>
+
                 <TouchableOpacity
                   style={styles.blackCardConfigBtn as any}
                   onPress={() => {
@@ -1519,8 +1515,22 @@ export default function ZerodhaDashboard() {
                   }}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="settings-outline" size={16} color="#ffffff" />
+                  <Ionicons name="settings-outline" size={16} color={theme.textSecondary} />
                 </TouchableOpacity>
+              </View>
+
+              {/* Bottom Row: Subtitle and Status Badge */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.borderLight, paddingTop: 8 }}>
+                <Text style={[styles.connectionSubtitle, { marginTop: 0, flex: 1, marginRight: 12 }]} numberOfLines={2}>
+                  {zerodhaError ? zerodhaError : 'Secured Zerodha Connection'}
+                </Text>
+
+                <View style={zerodhaError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
+                  <View style={zerodhaError ? styles.inactiveDot : styles.activeDot} />
+                  <Text style={zerodhaError ? styles.inactiveStatusText : styles.activeStatusText}>
+                    {zerodhaLoading ? 'LOADING' : zerodhaError ? 'INACTIVE' : 'CONNECTED'}
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
