@@ -9,6 +9,7 @@ type ThemeContextType = {
   isDarkMode: boolean;
   theme: Colors;
   toggleTheme: (value?: boolean) => void;
+  themeLoaded: boolean;
 };
 
 const THEME_KEY = '@app_theme_mode';
@@ -17,33 +18,35 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
   const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
-  const { user } = useAuth() as any;
+  const [themeLoaded, setThemeLoaded] = useState(false);
+  const { user, appLoading } = useAuth() as any;
 
-  // 1. Sync theme from database when user object changes
   useEffect(() => {
-    if (user && user.theme) {
-      setIsDarkMode(user.theme === 'DARK');
-    }
-  }, [user?.theme]);
-
-  // 2. Load theme locally if there is no user logged in
-  useEffect(() => {
-    if (!user) {
-      const loadTheme = async () => {
-        try {
-          const savedTheme = await AsyncStorage.getItem(THEME_KEY);
-          if (savedTheme !== null) {
-            setIsDarkMode(savedTheme === 'dark');
-          } else {
-            setIsDarkMode(systemColorScheme === 'dark');
+    if (!appLoading) {
+      const initTheme = async () => {
+        if (user && user.theme) {
+          setIsDarkMode(user.theme === 'DARK');
+          setThemeLoaded(true);
+        } else if (!user) {
+          try {
+            const savedTheme = await AsyncStorage.getItem(THEME_KEY);
+            if (savedTheme !== null) {
+              setIsDarkMode(savedTheme === 'dark');
+            } else {
+              setIsDarkMode(systemColorScheme === 'dark');
+            }
+          } catch (e) {
+            console.error('Failed to load theme preference', e);
+          } finally {
+            setThemeLoaded(true);
           }
-        } catch (e) {
-          console.error('Failed to load theme preference', e);
+        } else {
+          setThemeLoaded(true);
         }
       };
-      loadTheme();
+      initTheme();
     }
-  }, [user, systemColorScheme]);
+  }, [user, appLoading, systemColorScheme]);
 
   const toggleTheme = async (value?: boolean) => {
     try {
@@ -66,7 +69,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const theme = isDarkMode ? darkColors : lightColors;
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDarkMode, theme, toggleTheme, themeLoaded }}>
       {children}
     </ThemeContext.Provider>
   );

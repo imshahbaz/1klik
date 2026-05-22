@@ -26,7 +26,7 @@ if (isFirebaseInitialized()) {
 
 
 function AppContent() {
-  const { isDarkMode, theme } = useTheme();
+  const { isDarkMode, theme, themeLoaded } = useTheme();
   const [updateNeeded, setUpdateNeeded] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
 
@@ -71,7 +71,7 @@ function AppContent() {
 
       {/* Unremovable App Update Modal */}
       <Modal
-        visible={updateNeeded}
+        visible={updateNeeded && themeLoaded}
         transparent={true}
         animationType="fade"
         onRequestClose={() => {}}
