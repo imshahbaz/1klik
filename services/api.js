@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import Constants from 'expo-constants';
 import { DeviceEventEmitter } from 'react-native';
 
 const APP_KEY = process.env.EXPO_PUBLIC_TRUECALLER_APP_KEY;
@@ -9,6 +10,24 @@ const api = axios.create({
   withCredentials: true,
 });
 
+export let appUpdateInfo = {
+  updateNeeded: false,
+  downloadUrl: ''
+};
+
+const compareVersions = (v1, v2) => {
+  if (!v1 || !v2) return 0;
+  const parts1 = String(v1).split('.').map(Number);
+  const parts2 = String(v2).split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    const p1 = isNaN(parts1[i]) ? 0 : parts1[i];
+    const p2 = isNaN(parts2[i]) ? 0 : parts2[i];
+    if (p1 < p2) return -1;
+    if (p1 > p2) return 1;
+  }
+  return 0;
+};
+
 export const initializeBaseUrl = async () => {
   try {
     await AsyncStorage.removeItem('@backend_base_url');
@@ -17,8 +36,33 @@ export const initializeBaseUrl = async () => {
   }
 
   try {
-    const response = await axios.get('https://gist.githubusercontent.com/imshahbaz/38a85817cd970cbac322998b1d817cb9/raw/urls.json', { timeout: 5000 });
+    const response = await axios.get(`https://gist.githubusercontent.com/imshahbaz/38a85817cd970cbac322998b1d817cb9/raw/urls.json?t=${Date.now()}`, {
+      timeout: 5000,
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    });
     const freshUrl = response.data?.backend_url;
+    const minVersion = response.data?.min_version;
+    const downloadUrl = response.data?.download_url;
+
+    if (minVersion) {
+      const currentVersion = Constants.expoConfig?.version;
+      console.log(currentVersion, 'currentVersion');
+      console.log(minVersion, 'minVersion');
+      if (compareVersions(currentVersion, minVersion) < 0) {
+        appUpdateInfo.updateNeeded = true;
+        appUpdateInfo.downloadUrl = downloadUrl || '';
+        DeviceEventEmitter.emit('app-update-required', appUpdateInfo);
+      } else {
+        appUpdateInfo.updateNeeded = false;
+        appUpdateInfo.downloadUrl = '';
+        DeviceEventEmitter.emit('app-update-required', appUpdateInfo);
+      }
+    }
+
     if (freshUrl) {
       api.defaults.baseURL = freshUrl;
       return freshUrl;
