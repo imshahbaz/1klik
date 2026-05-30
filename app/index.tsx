@@ -1,17 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Modal, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { angelOneApi } from '../services/api';
 import { useIndexStyles } from '../theme/globalStyles';
+import { useAdaptiveLayout } from '../theme/layout';
 import { getSafeBottomPadding } from '../theme/safeArea';
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const layout = useAdaptiveLayout(insets);
   const { user, appLoading, logout } = useAuth() as any;
   const { isDarkMode, toggleTheme, theme } = useTheme();
   const styles = useIndexStyles(isDarkMode);
@@ -101,7 +104,12 @@ export default function HomeScreen() {
     <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.homeScrollContent}
+        contentContainerStyle={[
+          styles.homeScrollContent,
+          layout.centeredContent,
+          { paddingHorizontal: layout.horizontalPadding },
+        ]}
+        contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
       >
         {/* Header Section */}
@@ -118,6 +126,8 @@ export default function HomeScreen() {
             {user?.profile ? (
               <Image
                 source={{ uri: user.profile }}
+                contentFit="cover"
+                transition={120}
                 style={styles.headerAvatar}
               />
             ) : (
@@ -282,6 +292,8 @@ export default function HomeScreen() {
                     {user.profile ? (
                       <Image
                         source={{ uri: user.profile }}
+                        contentFit="cover"
+                        transition={120}
                         style={styles.drawerAvatar}
                       />
                     ) : (

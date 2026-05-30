@@ -6,7 +6,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
 import { useScreenerStyles } from '../theme/screenerStyles';
 import { strategyAPI } from '../services/api';
-import { getSafeBottomPadding } from '../theme/safeArea';
+import { useAdaptiveLayout } from '../theme/layout';
 
 interface Strategy {
   name: string;
@@ -17,6 +17,7 @@ interface Strategy {
 export default function ScreenerScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const layout = useAdaptiveLayout(insets);
   const { isDarkMode, theme } = useTheme();
   const styles = useScreenerStyles(isDarkMode);
   
@@ -193,7 +194,7 @@ export default function ScreenerScreen() {
   const activeMetadata = selectedStrategy ? getStrategyMetadata(selectedStrategy) : null;
 
   return (
-    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
+    <View style={[styles.safeArea, layout.screenPadding]}>
       {/* Premium Header */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
@@ -209,7 +210,11 @@ export default function ScreenerScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.container}>
+      <View style={[
+        styles.container,
+        layout.centeredContent,
+        { paddingHorizontal: layout.horizontalPadding },
+      ]}>
         {/* Intro */}
         <View style={styles.topSection}>
           <View style={styles.introContainer}>
@@ -329,6 +334,11 @@ export default function ScreenerScreen() {
               keyExtractor={(item, index) => (item.symbol || item.nsecode || item.name || index.toString()) + index}
               renderItem={renderStockResultItem}
               contentContainerStyle={styles.resultsList}
+              contentInsetAdjustmentBehavior="automatic"
+              initialNumToRender={12}
+              maxToRenderPerBatch={12}
+              windowSize={7}
+              removeClippedSubviews
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             />

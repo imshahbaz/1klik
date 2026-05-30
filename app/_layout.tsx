@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, TouchableOpacity, Linking, DeviceEventEmitter, StyleSheet, Image, Animated } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, Linking, DeviceEventEmitter, StyleSheet, Animated } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
@@ -50,7 +51,7 @@ function AppContent() {
       duration: 300,
       useNativeDriver: false,
     }).start();
-  }, [bootProgress]);
+  }, [bootProgress, progressAnim]);
 
   useEffect(() => {
     if (!appLoading && themeLoaded) {
@@ -62,7 +63,7 @@ function AppContent() {
         setSplashVisible(false);
       });
     }
-  }, [appLoading, themeLoaded]);
+  }, [appLoading, splashOpacity, themeLoaded]);
 
   useEffect(() => {
     if (appUpdateInfo.updateNeeded) {
@@ -156,7 +157,8 @@ function AppContent() {
         >
           <Image
             source={require('../assets/images/splash-icon.png')}
-            style={{ width: 200, height: 200, resizeMode: 'contain' }}
+            contentFit="contain"
+            style={{ width: 200, height: 200 }}
           />
           <View
             style={{
@@ -269,5 +271,4 @@ const modalStyles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 });
-
 

@@ -45,7 +45,6 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: '16@ms',
   },
   topSection: {
     flexShrink: 0,
@@ -129,11 +128,15 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   selectedDropdownTriggerText: {
     fontWeight: '800',
     color: theme.primary,
+    flexShrink: 1,
+    minWidth: 0,
   },
   dropdownPlaceholder: {
     fontSize: '13@ms',
     fontWeight: '500',
     color: theme.placeholder,
+    flexShrink: 1,
+    minWidth: 0,
   },
   dropdownTriggerInterval: {
     fontSize: '9@ms',
@@ -249,6 +252,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontWeight: '800',
     color: theme.textPrimary,
     letterSpacing: -0.2,
+    flex: 1,
+    minWidth: 0,
   },
   resultsPlaceholder: {
     flex: 1,
@@ -346,6 +351,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '14@ms',
     fontWeight: '800',
     color: theme.textPrimary,
+    flexShrink: 1,
   },
 
   // Skeletons

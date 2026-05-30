@@ -60,7 +60,6 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: '20@ms',
     paddingTop: '15@ms',
   },
   scrollContentContainer: {

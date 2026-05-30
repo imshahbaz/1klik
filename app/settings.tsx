@@ -9,12 +9,13 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { notificationAPI, userPreferenceAPI } from '../services/api';
 import { checkNotificationPermission, getFCMToken, requestUserPermission } from '../services/notificationService';
-import { getSafeBottomPadding } from '../theme/safeArea';
+import { useAdaptiveLayout } from '../theme/layout';
 import { useSettingsStyles } from '../theme/settingsStyles';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const layout = useAdaptiveLayout(insets);
   const { user, refreshUserData } = useAuth() as any;
   const { isDarkMode, theme } = useTheme();
   const styles = useSettingsStyles(isDarkMode);
@@ -156,7 +157,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
+    <View style={[styles.safeArea, layout.screenPadding]}>
       {/* Custom Header (Matches other app screens!) */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -173,11 +174,15 @@ export default function SettingsScreen() {
         keyboardVerticalOffset={insets.top + 60}
       >
         <KeyboardAwareScrollView
-          contentContainerStyle={styles.scrollContainer}
+          contentContainerStyle={[
+            styles.scrollContainer,
+            { paddingHorizontal: layout.horizontalPadding },
+          ]}
+          contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
           extraKeyboardSpace={64}
         >
-          <View style={styles.container}>
+          <View style={[styles.container, layout.centeredContent]}>
             {/* Header Description */}
             <Text style={styles.sectionTitle}>Account Customization</Text>
             <Text style={styles.sectionSubtitle}>

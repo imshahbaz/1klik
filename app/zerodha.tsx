@@ -9,12 +9,14 @@ import { CustomAlert } from '../context/AlertContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { marginAPI, strategyOrderAPI, zerodhaAPI } from '../services/api';
+import { useAdaptiveLayout } from '../theme/layout';
 import { getSafeBottomPadding } from '../theme/safeArea';
 import { useZerodhaStyles } from '../theme/zerodhaStyles';
 
 export default function ZerodhaDashboard() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const layout = useAdaptiveLayout(insets);
   const { user, appLoading, logout } = useAuth() as any;
   const { isDarkMode, theme } = useTheme();
   const styles = useZerodhaStyles(isDarkMode);
@@ -224,7 +226,7 @@ export default function ZerodhaDashboard() {
       setExecutingTrade(true);
 
       if (editingMtfOrderId) {
-        const response = await zerodhaAPI.updateOrder(editingMtfOrderId, payload);
+        await zerodhaAPI.updateOrder(editingMtfOrderId, payload);
 
         setMtfOrders(prev => prev.map(o => o.id === editingMtfOrderId ? {
           ...o,
@@ -937,7 +939,7 @@ export default function ZerodhaDashboard() {
           setZerodhaError(null);
           setIsTokenExpired(false);
 
-          const res = await zerodhaAPI.login(requestToken, user?.id || user?.userId || '');
+          await zerodhaAPI.login(requestToken, user?.id || user?.userId || '');
 
           CustomAlert.alert(
             "Connection Successful",
@@ -964,7 +966,7 @@ export default function ZerodhaDashboard() {
     try {
       setSavingConfig(true);
       setFormError(null);
-      const res = await zerodhaAPI.saveConfig({
+      await zerodhaAPI.saveConfig({
         apiKey: apiKey.trim(),
         apiSecret: apiSecret.trim(),
       });
@@ -1125,7 +1127,7 @@ export default function ZerodhaDashboard() {
       };
 
       if (editingStrategyOrderId) {
-        const res = await strategyOrderAPI.updateOrder(editingStrategyOrderId, payload);
+        await strategyOrderAPI.updateOrder(editingStrategyOrderId, payload);
 
         setStrategyOrders(prev => prev.map(o => o.id === editingStrategyOrderId ? {
           ...o,
@@ -1451,7 +1453,7 @@ export default function ZerodhaDashboard() {
   };
 
   return (
-    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
+    <View style={[styles.safeArea, layout.screenPadding]}>
       {/* Custom Secure Navigation Header */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -1476,7 +1478,12 @@ export default function ZerodhaDashboard() {
         <KeyboardAwareScrollView
           style={styles.container}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContentContainer}
+          contentContainerStyle={[
+            styles.scrollContentContainer,
+            layout.centeredContent,
+            { paddingHorizontal: layout.horizontalPadding },
+          ]}
+          contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
           extraKeyboardSpace={72}
         >

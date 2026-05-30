@@ -9,12 +9,13 @@ import { CustomAlert } from '../context/AlertContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { authAPI, googleAPI } from '../services/api';
+import { useAdaptiveLayout } from '../theme/layout';
 import { useLoginStyles } from '../theme/loginStyles';
-import { getSafeBottomPadding } from '../theme/safeArea';
 
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const layout = useAdaptiveLayout(insets);
   const { login } = useAuth() as any;
   const { isDarkMode, theme } = useTheme();
   const styles = useLoginStyles(isDarkMode);
@@ -77,7 +78,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
+    <View style={[styles.safeArea, layout.screenPadding]}>
       {/* Custom Header (Matches Screener Screen Layout!) */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -94,10 +95,14 @@ export default function LoginScreen() {
         keyboardVerticalOffset={insets.top + 60}
       >
         <KeyboardAwareScrollView
-          contentContainerStyle={styles.scrollContainer}
+          contentContainerStyle={[
+            styles.scrollContainer,
+            { paddingHorizontal: layout.horizontalPadding },
+          ]}
+          contentInsetAdjustmentBehavior="automatic"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.container}>
+          <View style={[styles.container, layout.centeredContent]}>
             {/* Title Brand Section */}
             <View style={styles.titleSection}>
               <View style={styles.brandIconCircle}>

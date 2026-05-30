@@ -41,7 +41,6 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   container: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: '20@ms',
     paddingTop: '8@ms',
   },
   titleSection: {

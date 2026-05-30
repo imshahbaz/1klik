@@ -7,7 +7,7 @@ import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { useTheme } from '../context/ThemeContext';
 import { marginAPI } from '../services/api';
 import { useCalculatorStyles } from '../theme/calculatorStyles';
-import { getSafeBottomPadding } from '../theme/safeArea';
+import { useAdaptiveLayout } from '../theme/layout';
 
 interface MarginData {
   symbol: string;
@@ -17,6 +17,7 @@ interface MarginData {
 export default function CalculatorScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const layout = useAdaptiveLayout(insets);
   const { isDarkMode, theme } = useTheme();
   const styles = useCalculatorStyles(isDarkMode);
 
@@ -235,7 +236,7 @@ export default function CalculatorScreen() {
   };
 
   return (
-    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
+    <View style={[styles.safeArea, layout.screenPadding]}>
       {/* Custom Header */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => {
@@ -277,14 +278,17 @@ export default function CalculatorScreen() {
         <KeyboardAwareScrollView
           contentContainerStyle={[
             styles.scrollContainer,
+            { paddingHorizontal: layout.horizontalPadding },
             view === 'results' ? styles.resultsScrollContainer : null,
           ]}
+          contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
           extraKeyboardSpace={72}
           showsVerticalScrollIndicator={false}
         >
           <View style={[
             styles.container,
+            layout.centeredContent,
             view === 'results' ? styles.resultsContentContainer : null,
           ]}>
             {view === 'form' ? (

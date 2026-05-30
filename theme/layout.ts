@@ -1,0 +1,36 @@
+import { useMemo } from 'react';
+import { useWindowDimensions } from 'react-native';
+import { EdgeInsets } from 'react-native-safe-area-context';
+import { getSafeBottomPadding } from './safeArea';
+
+const COMPACT_WIDTH = 360;
+const TABLET_WIDTH = 768;
+const MAX_CONTENT_WIDTH = 720;
+
+export function useAdaptiveLayout(insets?: EdgeInsets) {
+  const { width, height } = useWindowDimensions();
+
+  return useMemo(() => {
+    const isCompact = width < COMPACT_WIDTH;
+    const isTablet = width >= TABLET_WIDTH;
+    const horizontalPadding = isCompact ? 14 : isTablet ? 32 : 20;
+
+    return {
+      width,
+      height,
+      isCompact,
+      isTablet,
+      horizontalPadding,
+      contentMaxWidth: MAX_CONTENT_WIDTH,
+      centeredContent: {
+        width: '100%' as const,
+        maxWidth: MAX_CONTENT_WIDTH,
+        alignSelf: 'center' as const,
+      },
+      screenPadding: {
+        paddingTop: insets?.top ?? 0,
+        paddingBottom: getSafeBottomPadding(insets?.bottom ?? 0),
+      },
+    };
+  }, [height, insets?.bottom, insets?.top, width]);
+}
