@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "1klik",
+    "scheme": "oneklik",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -31,6 +31,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-font",
       [
         "expo-splash-screen",
         {
