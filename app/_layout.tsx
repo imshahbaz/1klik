@@ -1,23 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, TouchableOpacity, Linking, DeviceEventEmitter, StyleSheet, Animated } from 'react-native';
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
+import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, DeviceEventEmitter, Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AlertProvider } from '../context/AlertContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { DimensionsProvider } from '../context/DimensionsContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
-import { isFirebaseInitialized } from '../services/notificationService';
 import { appUpdateInfo } from '../services/api';
+import { isFirebaseInitialized } from '../services/notificationService';
 
 // Prevent native splash screen from hiding automatically
-SplashScreen.preventAutoHideAsync().catch(() => {});
+SplashScreen.preventAutoHideAsync().catch(() => { });
 
 // Register background message handler
 if (isFirebaseInitialized()) {
@@ -42,7 +42,7 @@ function AppContent() {
 
   useEffect(() => {
     // Hide the native splash screen immediately when our custom JS component mounts
-    SplashScreen.hideAsync().catch(() => {});
+    SplashScreen.hideAsync().catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -109,7 +109,7 @@ function AppContent() {
         visible={updateNeeded && themeLoaded}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => {}}
+        onRequestClose={() => { }}
       >
         <View style={modalStyles.overlay}>
           <View style={[modalStyles.card, { backgroundColor: theme.card, borderColor: theme.borderLight }]}>
@@ -125,7 +125,7 @@ function AppContent() {
             <TouchableOpacity
               style={[modalStyles.button, { backgroundColor: theme.primary, shadowColor: theme.primary }]}
               onPress={async () => {
-                const targetUrl = downloadUrl || 'https://shahbaz-trades.onrender.com';
+                const targetUrl = downloadUrl;
                 try {
                   await Linking.openURL(targetUrl);
                 } catch (err) {
@@ -147,7 +147,7 @@ function AppContent() {
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: isDarkMode ? '#000000' : '#ffffff',
+              backgroundColor: '#000000',
               opacity: splashOpacity,
               justifyContent: 'center',
               alignItems: 'center',
