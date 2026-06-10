@@ -12,6 +12,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AlertProvider } from '../context/AlertContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { DimensionsProvider } from '../context/DimensionsContext';
+import NetInfo from '@react-native-community/netinfo';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { appUpdateInfo } from '../services/api';
 import { isFirebaseInitialized } from '../services/notificationService';
@@ -35,6 +36,7 @@ function AppContent() {
   const { appLoading, bootProgress } = useAuth() as any;
   const [updateNeeded, setUpdateNeeded] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
+  const [isConnected, setIsConnected] = useState<boolean | null>(true);
 
   const [splashVisible, setSplashVisible] = useState(true);
   const splashOpacity = useRef(new Animated.Value(1)).current;
@@ -46,6 +48,13 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     Animated.timing(progressAnim, {
       toValue: bootProgress,
       duration: 300,
@@ -54,7 +63,7 @@ function AppContent() {
   }, [bootProgress, progressAnim]);
 
   useEffect(() => {
-    if (!appLoading && themeLoaded) {
+    if (!appLoading && themeLoaded && isConnected !== false) {
       Animated.timing(splashOpacity, {
         toValue: 0,
         duration: 400,
@@ -62,8 +71,10 @@ function AppContent() {
       }).start(() => {
         setSplashVisible(false);
       });
+    } else if (isConnected === false && splashVisible === false) {
+      // Re-show splash if internet disconnects? Optional, but let's just stick to the modal.
     }
-  }, [appLoading, splashOpacity, themeLoaded]);
+  }, [appLoading, splashOpacity, themeLoaded, isConnected, splashVisible]);
 
   useEffect(() => {
     if (appUpdateInfo.updateNeeded) {
@@ -101,8 +112,31 @@ function AppContent() {
         <Stack.Screen name="zerodha" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
         <Stack.Screen name="calculator" options={{ headerShown: false }} />
+        <Stack.Screen name="chartPage" options={{ headerShown: false }} />
       </Stack>
       <StyledStatusBar />
+
+      {/* No Internet Connection Modal */}
+      <Modal
+        visible={isConnected === false && themeLoaded}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => { }}
+      >
+        <View style={modalStyles.overlay}>
+          <View style={[modalStyles.card, { backgroundColor: theme.card, borderColor: theme.borderLight }]}>
+            <View style={[modalStyles.iconCircle, { backgroundColor: theme.primaryBackground || 'rgba(59, 130, 246, 0.1)' }]}>
+              <Ionicons name="wifi-outline" size={32} color={theme.primary || '#3b82f6'} />
+            </View>
+            <Text style={[modalStyles.title, { color: theme.textPrimary }]}>
+              No Internet Connection
+            </Text>
+            <Text style={[modalStyles.subtitle, { color: theme.textSecondary }]}>
+              Please turn on your mobile data or connect to Wi-Fi to use 1Klik.
+            </Text>
+          </View>
+        </View>
+      </Modal>
 
       {/* Unremovable App Update Modal */}
       <Modal
@@ -192,19 +226,23 @@ function StyledStatusBar() {
   return <StatusBar style={isDarkMode ? "light" : "dark"} />;
 }
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <ThemeProvider>
-          <DimensionsProvider>
-            <AlertProvider>
-              <AppContent />
-            </AlertProvider>
-          </DimensionsProvider>
-        </ThemeProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <DimensionsProvider>
+              <AlertProvider>
+                <AppContent />
+              </AlertProvider>
+            </DimensionsProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

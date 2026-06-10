@@ -151,7 +151,15 @@ export default function ScreenerScreen() {
                       marginStr.toLowerCase() !== '1x';
 
     return (
-      <View style={styles.stockResultCard}>
+      <TouchableOpacity 
+        style={styles.stockResultCard}
+        activeOpacity={0.7}
+        onPress={() => {
+          if (symbol !== 'N/A') {
+            router.push(`/chartPage?symbol=${encodeURIComponent(symbol)}`);
+          }
+        }}
+      >
         <View style={styles.stockLeft}>
           <View style={styles.stockHeader}>
             <Text style={styles.stockSymbol} numberOfLines={1}>{symbol}</Text>
@@ -168,7 +176,7 @@ export default function ScreenerScreen() {
             <Text style={styles.stockPrice}>{priceText}</Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
