@@ -218,54 +218,37 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        {/* Quick Actions Header */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 12 }}>
-          <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: '800' }}>Quick Actions</Text>
+        {/* Quick Actions Section */}
+        <View style={{ backgroundColor: theme.card, borderRadius: 24, padding: 20, marginTop: 20, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 4 }}>
+          {/* Quick Actions Header */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: '800' }}>Quick Actions</Text>
+          </View>
+
+          {/* Quick Actions Grid */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/screener')} activeOpacity={0.7}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(59, 130, 246, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                <Ionicons name="filter" size={30} color={theme.primary || '#3b82f6'} />
+              </View>
+              <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: '600', textAlign: 'center' }}>Screener</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/zerodha')} activeOpacity={0.7}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(16, 185, 129, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                <Ionicons name="pulse" size={30} color={theme.success || '#10b981'} />
+              </View>
+              <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: '600', textAlign: 'center' }}>Trade</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/calculator')} activeOpacity={0.7}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(245, 158, 11, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                <Ionicons name="calculator" size={30} color="#f59e0b" />
+              </View>
+              <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: '600', textAlign: 'center' }}>Calculator</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        {/* Quick Actions Carousel */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 16, paddingRight: 20 }}
-          style={{ marginHorizontal: -layout.horizontalPadding, paddingHorizontal: layout.horizontalPadding }}
-        >
-          <TouchableOpacity
-            style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, width: 140, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4 }}
-            activeOpacity={0.8}
-            onPress={() => router.push('/screener')}
-          >
-            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(59, 130, 246, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
-              <Ionicons name="filter" size={22} color={theme.primary || '#3b82f6'} />
-            </View>
-            <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 4 }}>Screener</Text>
-            <Text style={{ color: theme.textSecondary, fontSize: 12 }}>Live market scans</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, width: 140, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4 }}
-            activeOpacity={0.8}
-            onPress={() => router.push('/zerodha')}
-          >
-            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(16, 185, 129, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
-              <Ionicons name="pulse" size={22} color={theme.success || '#10b981'} />
-            </View>
-            <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 4 }}>Trade</Text>
-            <Text style={{ color: theme.textSecondary, fontSize: 12 }}>Auto algorithms</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, width: 140, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4 }}
-            activeOpacity={0.8}
-            onPress={() => router.push('/calculator')}
-          >
-            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(245, 158, 11, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
-              <Ionicons name="calculator" size={22} color="#f59e0b" />
-            </View>
-            <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 4 }}>Calculator</Text>
-            <Text style={{ color: theme.textSecondary, fontSize: 12 }}>MTF Leverage</Text>
-          </TouchableOpacity>
-        </ScrollView>
       </ScrollView>
 
       {/* Side Menu Drawer overlay (Matching Screener Screen Layout!) */}

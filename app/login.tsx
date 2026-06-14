@@ -84,7 +84,7 @@ export default function LoginScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
-        <View style={{flex: 1}} />
+        <View style={{ flex: 1 }} />
         <View style={{ width: 40 }} />
       </View>
 
@@ -109,9 +109,6 @@ export default function LoginScreen() {
                 <Ionicons name="flash-outline" size={32} color="#ffffff" />
               </View>
               <Text style={styles.brandName}>1Klik Trading</Text>
-              <Text style={styles.brandTagline}>
-                Securely sign in using your Google account to unlock advanced scanners, custom logic equations, and real-time market action alerts.
-              </Text>
             </View>
 
             {/* Login Options Card */}
@@ -141,10 +138,6 @@ export default function LoginScreen() {
                   </View>
                 )}
               </TouchableOpacity>
-
-              <Text style={styles.termsText}>
-                Requires native Google Play Services. Authentication runs securely through the on-device native Google Sign-In SDK.
-              </Text>
             </View>
           </View>
         </KeyboardAwareScrollView>
