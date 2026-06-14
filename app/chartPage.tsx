@@ -80,9 +80,7 @@ export default function ChartScreen() {
           <Ionicons name="arrow-back" size={20} color={theme.textPrimary} />
         </TouchableOpacity>
 
-        <View style={styles.headerTitleContainer}>
-          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>{symbol}</Text>
-        </View>
+        <View style={{flex: 1}} />
 
         <View style={{ width: 40 }} />
       </View>

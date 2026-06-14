@@ -250,7 +250,7 @@ export default function CalculatorScreen() {
         }}>
           <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>MTF Trade Calculator</Text>
+        <View style={{flex: 1}} />
         <View style={{ width: 40 }} />
       </View>
 

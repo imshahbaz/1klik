@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
-import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
-import { CustomAlert } from '../context/AlertContext';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { marginAPI, strategyOrderAPI, zerodhaAPI } from '../services/api';
-import { useAdaptiveLayout } from '../theme/layout';
-import { getSafeBottomPadding } from '../theme/safeArea';
-import { useZerodhaStyles } from '../theme/zerodhaStyles';
+import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
+import { CustomAlert } from '../../context/AlertContext';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { marginAPI, strategyOrderAPI, zerodhaAPI } from '../../services/api';
+import { useAdaptiveLayout } from '../../theme/layout';
+import { getSafeBottomPadding } from '../../theme/safeArea';
+import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 
 export default function ZerodhaDashboard() {
   const router = useRouter();
@@ -1571,13 +1571,7 @@ export default function ZerodhaDashboard() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Zerodha Dashboard</Text>
-          <View style={styles.securedBadge}>
-            <Ionicons name="shield-checkmark" size={12} color={theme.success} />
-            <Text style={styles.securedText}>SECURE</Text>
-          </View>
-        </View>
+        <View style={{flex: 1}} />
         <View style={{ width: 40 }} />
       </View>
 

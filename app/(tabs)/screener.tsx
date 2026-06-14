@@ -3,10 +3,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useTheme } from '../context/ThemeContext';
-import { useScreenerStyles } from '../theme/screenerStyles';
-import { strategyAPI } from '../services/api';
-import { useAdaptiveLayout } from '../theme/layout';
+import { useTheme } from '../../context/ThemeContext';
+import { useScreenerStyles } from '../../theme/screenerStyles';
+import { strategyAPI } from '../../services/api';
+import { useAdaptiveLayout } from '../../theme/layout';
 
 interface Strategy {
   name: string;
@@ -208,7 +208,7 @@ export default function ScreenerScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={22} color={theme.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Screener</Text>
+        <View style={{flex: 1}} />
         <TouchableOpacity 
           style={styles.headerActionBtn} 
           onPress={handleRefreshActiveScan}

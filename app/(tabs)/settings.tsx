@@ -3,14 +3,14 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
-import { CustomAlert } from '../context/AlertContext';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { notificationAPI, userPreferenceAPI } from '../services/api';
-import { checkNotificationPermission, getFCMToken, requestUserPermission } from '../services/notificationService';
-import { useAdaptiveLayout } from '../theme/layout';
-import { useSettingsStyles } from '../theme/settingsStyles';
+import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
+import { CustomAlert } from '../../context/AlertContext';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { notificationAPI, userPreferenceAPI } from '../../services/api';
+import { checkNotificationPermission, getFCMToken, requestUserPermission } from '../../services/notificationService';
+import { useAdaptiveLayout } from '../../theme/layout';
+import { useSettingsStyles } from '../../theme/settingsStyles';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -163,7 +163,7 @@ export default function SettingsScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <View style={{flex: 1}} />
         <View style={{ width: 40 }} />
       </View>
 

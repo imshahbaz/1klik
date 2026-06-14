@@ -4,12 +4,12 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { angelOneApi } from '../services/api';
-import { useIndexStyles } from '../theme/globalStyles';
-import { useAdaptiveLayout } from '../theme/layout';
-import { getSafeBottomPadding } from '../theme/safeArea';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { angelOneApi } from '../../services/api';
+import { useIndexStyles } from '../../theme/globalStyles';
+import { useAdaptiveLayout } from '../../theme/layout';
+import { getSafeBottomPadding } from '../../theme/safeArea';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -218,44 +218,54 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        {/* Screener Button */}
-        <TouchableOpacity
-          style={styles.screenerButton}
-          activeOpacity={0.8}
-          onPress={() => router.push('/screener')}
-        >
-          <View style={styles.screenerContent}>
-            <Ionicons name="filter-outline" size={20} color={theme.textPrimary} />
-            <Text style={styles.screenerButtonText}>Screener</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={theme.iconMuted} />
-        </TouchableOpacity>
+        {/* Quick Actions Header */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 12 }}>
+          <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: '800' }}>Quick Actions</Text>
+        </View>
 
-        {/* Zerodha Dashboard Button/Card */}
-        <TouchableOpacity
-          style={styles.zerodhaButton}
-          activeOpacity={0.8}
-          onPress={() => router.push('/zerodha')}
+        {/* Quick Actions Carousel */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 16, paddingRight: 20 }}
+          style={{ marginHorizontal: -layout.horizontalPadding, paddingHorizontal: layout.horizontalPadding }}
         >
-          <View style={styles.zerodhaContent}>
-            <Ionicons name="pulse-outline" size={20} color={theme.textPrimary} />
-            <Text style={styles.zerodhaButtonText}>Zerodha Dashboard</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={theme.iconMuted} />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, width: 140, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4 }}
+            activeOpacity={0.8}
+            onPress={() => router.push('/screener')}
+          >
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(59, 130, 246, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
+              <Ionicons name="filter" size={22} color={theme.primary || '#3b82f6'} />
+            </View>
+            <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 4 }}>Screener</Text>
+            <Text style={{ color: theme.textSecondary, fontSize: 12 }}>Live market scans</Text>
+          </TouchableOpacity>
 
-        {/* Calculator Button/Card */}
-        <TouchableOpacity
-          style={styles.calculatorButton}
-          activeOpacity={0.8}
-          onPress={() => router.push('/calculator')}
-        >
-          <View style={styles.calculatorContent}>
-            <Ionicons name="calculator-outline" size={20} color={theme.textPrimary} />
-            <Text style={styles.calculatorButtonText}>Calculator</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={theme.iconMuted} />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, width: 140, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4 }}
+            activeOpacity={0.8}
+            onPress={() => router.push('/zerodha')}
+          >
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(16, 185, 129, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
+              <Ionicons name="pulse" size={22} color={theme.success || '#10b981'} />
+            </View>
+            <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 4 }}>Trade</Text>
+            <Text style={{ color: theme.textSecondary, fontSize: 12 }}>Auto algorithms</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, width: 140, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4 }}
+            activeOpacity={0.8}
+            onPress={() => router.push('/calculator')}
+          >
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(245, 158, 11, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
+              <Ionicons name="calculator" size={22} color="#f59e0b" />
+            </View>
+            <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 4 }}>Calculator</Text>
+            <Text style={{ color: theme.textSecondary, fontSize: 12 }}>MTF Leverage</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </ScrollView>
 
       {/* Side Menu Drawer overlay (Matching Screener Screen Layout!) */}
