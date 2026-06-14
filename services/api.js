@@ -183,6 +183,7 @@ export const zerodhaAPI = {
   updateOrder: (id, orderData) => api.put(`/api/order/${id}`, orderData),
   deleteOrder: (id) => api.delete(`/api/order/${id}`),
   saveConfig: (configData) => api.post('/api/zerodha/config', configData),
+  autoConnect: () => api.post('/api/session-manager/zerodha-auto-connect')
 }
 export const strategyOrderAPI = {
   placeOrder: (orderData) => api.post('/api/strategy-order', orderData),

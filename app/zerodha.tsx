@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
@@ -31,6 +31,20 @@ export default function ZerodhaDashboard() {
   const [apiSecret, setApiSecret] = useState('');
   const [savingConfig, setSavingConfig] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [enableAutoLogin, setEnableAutoLogin] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [password, setPassword] = useState('');
+  const [totpSecret, setTotpSecret] = useState('');
+
+  const [autoConnectLoading, setAutoConnectLoading] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasFetchedProfile = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearTimeout(pollingRef.current);
+    };
+  }, []);
 
   // Margin Limits Data State
   const [marginsData, setMarginsData] = useState<any>(null);
@@ -875,14 +889,18 @@ export default function ZerodhaDashboard() {
 
   const fetchZerodhaProfile = async () => {
     try {
+      console.log("[Zerodha] Calling API: getMe (initial fetch)");
       setZerodhaLoading(true);
       setZerodhaError(null);
       setIs404Error(false);
       setIsTokenExpired(false);
       const res = await zerodhaAPI.getMe();
+      console.log("[Zerodha] Response getMe (initial fetch):", res.status, res.data);
       const payload = res.data;
       if (payload && payload.success === true) {
         setZerodhaUser(payload.data);
+        setZerodhaLoading(false);
+
         try {
           const marginsRes = await marginAPI.getAllMargins();
           if (marginsRes.data && marginsRes.data.success === true) {
@@ -899,29 +917,102 @@ export default function ZerodhaDashboard() {
         if (payload && typeof payload.data === 'string') {
           setApiKey(payload.data);
         }
+        setZerodhaLoading(false);
       }
     } catch (err: any) {
-      console.error("Failed to fetch Zerodha profile details:", err);
-      if (err.response?.status === 401) {
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail || err.response?.data?.message || '';
+      console.error("[Zerodha] Error getMe (initial fetch):", status, err.response?.data || err.message);
+
+      if (status === 401) {
         await logout();
-      } else if (err.response?.status === 404) {
+      } else if (status === 404) {
         setZerodhaError("No linked Zerodha account found.");
         setIs404Error(true);
+      } else if (status === 409 && typeof detail === 'string' && detail.includes('E002')) {
+        setZerodhaError("Auto-login in progress...");
+        setIsTokenExpired(true);
+        setAutoConnectLoading(true);
+        pollGetMe();
+      } else if (status === 409) {
+        setZerodhaError(detail || "Kite Connect session conflict.");
+        setIsTokenExpired(true);
       } else {
         setZerodhaError("Kite Connect session is disconnected.");
+        setIsTokenExpired(true);
       }
-    } finally {
       setZerodhaLoading(false);
     }
   };
 
-  const handleConnectKite = () => {
+  const pollGetMe = async () => {
+    try {
+      console.log("[Zerodha] Calling API: getMe (polling)");
+      const res = await zerodhaAPI.getMe();
+      console.log("[Zerodha] Response getMe (polling):", res.status, res.data);
+      if (res.data?.success) {
+        if (pollingRef.current) clearTimeout(pollingRef.current);
+        setAutoConnectLoading(false);
+        fetchZerodhaProfile();
+      } else {
+        if (pollingRef.current) clearTimeout(pollingRef.current);
+        setAutoConnectLoading(false);
+        setShowWebView(true);
+      }
+    } catch (err: any) {
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail || err.response?.data?.message || '';
+      console.error("[Zerodha] Error getMe (polling):", status, err.response?.data || err.message);
+      if (status === 409 && typeof detail === 'string' && detail.includes('E002')) {
+        pollingRef.current = setTimeout(pollGetMe, 30000);
+      } else {
+        if (pollingRef.current) clearTimeout(pollingRef.current);
+        setAutoConnectLoading(false);
+        if (status === 409) {
+          CustomAlert.alert("Auto-Login Failed", detail || "Conflict occurred during login.");
+        }
+        setShowWebView(true);
+      }
+    }
+  };
+
+  const handleConnectKite = async () => {
     const finalApiKey = apiKey || process.env.EXPO_PUBLIC_ZERODHA_API_KEY;
     if (!finalApiKey) {
       CustomAlert.alert("Missing API Key", "No saved API Key found. Please save your API config first.");
       return;
     }
-    setShowWebView(true);
+
+    try {
+      console.log("[Zerodha] Calling API: autoConnect");
+      setAutoConnectLoading(true);
+      const res = await zerodhaAPI.autoConnect();
+      console.log("[Zerodha] Response autoConnect:", res.status, res.data);
+      if (res.data && res.data.success === false) {
+        setAutoConnectLoading(false);
+        setShowWebView(true);
+        return;
+      }
+      if (res.status === 200 || res.status === 409) {
+        pollGetMe();
+      } else {
+        setAutoConnectLoading(false);
+        setShowWebView(true);
+      }
+    } catch (err: any) {
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail || err.response?.data?.message || '';
+      console.error("[Zerodha] Error autoConnect:", status, err.response?.data || err.message);
+      if (status === 409 && typeof detail === 'string' && detail.includes('Request already exists')) {
+        pollGetMe();
+      } else {
+        setAutoConnectLoading(false);
+        if (status === 409) {
+          CustomAlert.alert("Auto-Login Failed", detail || "Conflict occurred during login.");
+        }
+        setShowWebView(true);
+      }
+    }
   };
 
   const handleNavigationChange = async (navState: any) => {
@@ -963,12 +1054,22 @@ export default function ZerodhaDashboard() {
       setFormError("Both API Key and API Secret are required.");
       return;
     }
+    if (enableAutoLogin) {
+      if (!userName.trim() || !password.trim() || !totpSecret.trim()) {
+        setFormError("User Name, Password, and TOTP Secret are required when Auto Login is enabled.");
+        return;
+      }
+    }
     try {
       setSavingConfig(true);
       setFormError(null);
       await zerodhaAPI.saveConfig({
         apiKey: apiKey.trim(),
         apiSecret: apiSecret.trim(),
+        enableAutoLogin,
+        userName: userName.trim(),
+        password: password.trim(),
+        totpSecret: totpSecret.trim(),
       });
       CustomAlert.alert(
         "Configuration Saved",
@@ -988,12 +1089,13 @@ export default function ZerodhaDashboard() {
     if (!appLoading) {
       if (!user) {
         router.replace('/login');
-      } else {
+      } else if (!hasFetchedProfile.current) {
+        hasFetchedProfile.current = true;
         fetchZerodhaProfile();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, appLoading]);
+  }, [user?.id, appLoading]);
 
   if (appLoading) {
     return (
@@ -1026,10 +1128,20 @@ export default function ZerodhaDashboard() {
           <View style={{ width: 40 }} />
         </View>
         <WebView
-          source={{ uri: `https://kite.zerodha.com/connect/login?api_key=${finalApiKey}&v=3` }}
+          source={{ uri: `https://kite.zerodha.com/connect/login?v=3&api_key=${finalApiKey}` }}
           onNavigationStateChange={handleNavigationChange}
           style={{ flex: 1 }}
           startInLoadingState={true}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          onError={(syntheticEvent) => {
+            const { nativeEvent } = syntheticEvent;
+            console.error('WebView error: ', nativeEvent);
+          }}
+          onHttpError={(syntheticEvent) => {
+            const { nativeEvent } = syntheticEvent;
+            console.error('WebView HTTP error: ', nativeEvent);
+          }}
           renderLoading={() => (
             <View style={styles.webViewLoaderContainer}>
               <ActivityIndicator size="large" color={theme.primary} />
@@ -1595,6 +1707,82 @@ export default function ZerodhaDashboard() {
                 </View>
               </View>
 
+              <View style={[styles.inputGroup, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="power-outline" size={18} color={theme.textSecondary} />
+                  <Text style={[styles.inputLabel, { marginBottom: 0 }]}>ENABLE AUTOLOGIN</Text>
+                </View>
+                <Switch
+                  value={enableAutoLogin}
+                  onValueChange={setEnableAutoLogin}
+                  trackColor={{ false: theme.borderLight, true: theme.primary }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              {enableAutoLogin && (
+                <>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>USER NAME *</Text>
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="person-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="Enter your Zerodha User Name"
+                        placeholderTextColor={theme.placeholder}
+                        value={userName}
+                        onChangeText={(text) => {
+                          setUserName(text);
+                          if (formError) setFormError(null);
+                        }}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>PASSWORD *</Text>
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="Enter your Password"
+                        placeholderTextColor={theme.placeholder}
+                        value={password}
+                        onChangeText={(text) => {
+                          setPassword(text);
+                          if (formError) setFormError(null);
+                        }}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        secureTextEntry
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>TOTP SECRET *</Text>
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="keypad-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="Enter your TOTP Secret"
+                        placeholderTextColor={theme.placeholder}
+                        value={totpSecret}
+                        onChangeText={(text) => {
+                          setTotpSecret(text);
+                          if (formError) setFormError(null);
+                        }}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        secureTextEntry
+                      />
+                    </View>
+                  </View>
+                </>
+              )}
+
               {formError && (
                 <View style={styles.errorContainer}>
                   <Ionicons name="alert-circle-outline" size={16} color={theme.danger} />
@@ -1643,9 +1831,19 @@ export default function ZerodhaDashboard() {
                 style={styles.connectButton}
                 onPress={handleConnectKite}
                 activeOpacity={0.8}
+                disabled={autoConnectLoading}
               >
-                <Ionicons name="flash-outline" size={18} color="#ffffff" />
-                <Text style={styles.connectButtonText}>Connect to Kite</Text>
+                {autoConnectLoading ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <ActivityIndicator size="small" color="#ffffff" />
+                    <Text style={styles.connectButtonText}>Auto-connecting...</Text>
+                  </View>
+                ) : (
+                  <>
+                    <Ionicons name="flash-outline" size={18} color="#ffffff" />
+                    <Text style={styles.connectButtonText}>Connect to Kite</Text>
+                  </>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
