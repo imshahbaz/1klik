@@ -107,7 +107,7 @@ export default function HomeScreen() {
         contentContainerStyle={[
           styles.homeScrollContent,
           layout.centeredContent,
-          { paddingHorizontal: layout.horizontalPadding },
+          { paddingHorizontal: layout.horizontalPadding, paddingBottom: layout.tabBarHeight + 24 },
         ]}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}

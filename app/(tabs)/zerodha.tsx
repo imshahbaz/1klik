@@ -690,8 +690,7 @@ export default function ZerodhaDashboard() {
           <View style={styles.tabCard}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.tabCardTitle}>Order Execution Logs</Text>
-                <Text style={styles.tabCardSubtitle}>Historical audit trail of all actions placed via secure API terminal.</Text>
+                <Text style={styles.tabCardTitle}>Order History</Text>
               </View>
               {loadingHistory && <ActivityIndicator size="small" color={theme.primary} style={{ marginLeft: 8 }} />}
             </View>
@@ -1580,7 +1579,7 @@ export default function ZerodhaDashboard() {
           contentContainerStyle={[
             styles.scrollContentContainer,
             layout.centeredContent,
-            { paddingHorizontal: layout.horizontalPadding },
+            { paddingHorizontal: layout.horizontalPadding, paddingBottom: layout.tabBarHeight + 24 },
           ]}
           contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"

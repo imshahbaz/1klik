@@ -169,7 +169,7 @@ export default function SettingsScreen() {
         <KeyboardAwareScrollView
           contentContainerStyle={[
             styles.scrollContainer,
-            { paddingHorizontal: layout.horizontalPadding },
+            { paddingHorizontal: layout.horizontalPadding, paddingBottom: layout.tabBarHeight + 24 },
           ]}
           contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"

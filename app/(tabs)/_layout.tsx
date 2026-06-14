@@ -24,6 +24,10 @@ export default function TabLayout() {
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.iconMuted,
         tabBarStyle: {
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
           backgroundColor: theme.card,
           borderTopColor: theme.borderLight,
           height: 70 + (insets.bottom > 0 ? insets.bottom : 24),

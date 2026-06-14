@@ -325,7 +325,7 @@ export default function ScreenerScreen() {
               data={scanResults}
               keyExtractor={(item, index) => (item.symbol || item.nsecode || item.name || index.toString()) + index}
               renderItem={renderStockResultItem}
-              contentContainerStyle={styles.resultsList}
+              contentContainerStyle={[styles.resultsList, { paddingBottom: layout.tabBarHeight + 24 }]}
               contentInsetAdjustmentBehavior="automatic"
               initialNumToRender={12}
               maxToRenderPerBatch={12}

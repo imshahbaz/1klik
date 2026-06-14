@@ -22,6 +22,7 @@ export function useAdaptiveLayout(insets?: EdgeInsets) {
       isTablet,
       horizontalPadding,
       contentMaxWidth: MAX_CONTENT_WIDTH,
+      tabBarHeight: 70 + getSafeBottomPadding(insets?.bottom ?? 0),
       centeredContent: {
         width: '100%' as const,
         maxWidth: MAX_CONTENT_WIDTH,
@@ -29,7 +30,7 @@ export function useAdaptiveLayout(insets?: EdgeInsets) {
       },
       screenPadding: {
         paddingTop: insets?.top ?? 0,
-        paddingBottom: getSafeBottomPadding(insets?.bottom ?? 0),
+        paddingBottom: 0, // Removed so content goes all the way down behind tab bar
       },
     };
   }, [height, insets?.bottom, insets?.top, width]);
