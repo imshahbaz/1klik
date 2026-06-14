@@ -1,12 +1,12 @@
-import { Text, View, TouchableOpacity, FlatList, ActivityIndicator, Modal } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useCallback } from 'react';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, FlatList, Modal, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
-import { useScreenerStyles } from '../../theme/screenerStyles';
 import { strategyAPI } from '../../services/api';
 import { useAdaptiveLayout } from '../../theme/layout';
+import { useScreenerStyles } from '../../theme/screenerStyles';
 
 interface Strategy {
   name: string;
@@ -20,7 +20,7 @@ export default function ScreenerScreen() {
   const layout = useAdaptiveLayout(insets);
   const { isDarkMode, theme } = useTheme();
   const styles = useScreenerStyles(isDarkMode);
-  
+
   // Strategies list states
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +88,7 @@ export default function ScreenerScreen() {
       fetchStrategies();
       return;
     }
-    
+
     setScanLoading(true);
     setScanError(null);
     try {
@@ -133,25 +133,25 @@ export default function ScreenerScreen() {
   const renderStockResultItem = ({ item }: { item: any }) => {
     const symbol = item.symbol || item.nsecode || item.nseCode || item.stockName || item.name || 'N/A';
     const companyName = item.name || item.companyName || item.stockDescription || '';
-    
+
     // Parse price safely
     const rawPrice = item.ltp || item.close || item.lastPrice || item.price;
-    const priceText = typeof rawPrice === 'number' 
-      ? `₹${rawPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+    const priceText = typeof rawPrice === 'number'
+      ? `₹${rawPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       : rawPrice ? `₹${rawPrice}` : '—';
 
     // Parse margin value
     const rawMargin = item.margin || item.leverage || item.marginAllowed || '';
     const marginStr = rawMargin.toString().trim();
-    const hasMargin = marginStr && 
-                      marginStr !== '0' && 
-                      marginStr !== '0%' && 
-                      marginStr !== '0.0%' && 
-                      marginStr !== '0.0' && 
-                      marginStr.toLowerCase() !== '1x';
+    const hasMargin = marginStr &&
+      marginStr !== '0' &&
+      marginStr !== '0%' &&
+      marginStr !== '0.0%' &&
+      marginStr !== '0.0' &&
+      marginStr.toLowerCase() !== '1x';
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.stockResultCard}
         activeOpacity={0.7}
         onPress={() => {
@@ -203,20 +203,7 @@ export default function ScreenerScreen() {
 
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>
-      {/* Premium Header */}
-      <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={22} color={theme.textPrimary} />
-        </TouchableOpacity>
-        <View style={{flex: 1}} />
-        <TouchableOpacity 
-          style={styles.headerActionBtn} 
-          onPress={handleRefreshActiveScan}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="refresh-outline" size={20} color={theme.textPrimary} />
-        </TouchableOpacity>
-      </View>
+
 
       <View style={[
         styles.container,
@@ -226,9 +213,6 @@ export default function ScreenerScreen() {
         {/* Intro */}
         <View style={styles.topSection}>
           <View style={styles.introContainer}>
-            <Text style={styles.subtext}>
-              Monitor real-time setups matching algorithmic scanners.
-            </Text>
           </View>
 
           {/* Strategy Carousel Header */}
@@ -246,8 +230,8 @@ export default function ScreenerScreen() {
               <Ionicons name="chevron-down" size={18} color={theme.iconMuted} />
             </View>
           ) : error ? (
-            <TouchableOpacity 
-              style={[styles.dropdownTrigger, { borderColor: theme.danger }]} 
+            <TouchableOpacity
+              style={[styles.dropdownTrigger, { borderColor: theme.danger }]}
               onPress={fetchStrategies}
               activeOpacity={0.8}
             >
@@ -258,7 +242,7 @@ export default function ScreenerScreen() {
               <Ionicons name="refresh" size={16} color={theme.danger} />
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[
                 styles.dropdownTrigger,
                 selectedStrategy && styles.selectedDropdownTrigger
@@ -292,10 +276,10 @@ export default function ScreenerScreen() {
                   </>
                 )}
               </View>
-              <Ionicons 
-                name="chevron-down" 
-                size={18} 
-                color={selectedStrategy ? theme.primary : theme.iconMuted} 
+              <Ionicons
+                name="chevron-down"
+                size={18}
+                color={selectedStrategy ? theme.primary : theme.iconMuted}
               />
             </TouchableOpacity>
           )}
@@ -361,18 +345,18 @@ export default function ScreenerScreen() {
         animationType="fade"
         onRequestClose={() => setDropdownVisible(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.dropdownOverlay}
           activeOpacity={1}
           onPress={() => setDropdownVisible(false)}
         >
-          <View 
+          <View
             style={styles.dropdownMenuCard}
             onStartShouldSetResponder={() => true}
           >
             <View style={styles.dropdownMenuHeader}>
               <Text style={styles.dropdownMenuTitle}>Select Strategy</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.dropdownCloseBtn}
                 onPress={() => setDropdownVisible(false)}
                 activeOpacity={0.7}
@@ -400,10 +384,10 @@ export default function ScreenerScreen() {
                         styles.iconCircleSmall,
                         isSelected && styles.selectedIconCircleSmall
                       ]}>
-                        <Ionicons 
-                          name={metadata.iconName} 
-                          size={14} 
-                          color={isSelected ? '#ffffff' : theme.textSecondary} 
+                        <Ionicons
+                          name={metadata.iconName}
+                          size={14}
+                          color={isSelected ? '#ffffff' : theme.textSecondary}
                         />
                       </View>
                       <View style={{ flex: 1 }}>

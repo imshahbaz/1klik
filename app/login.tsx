@@ -79,14 +79,7 @@ export default function LoginScreen() {
 
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>
-      {/* Custom Header (Matches Screener Screen Layout!) */}
-      <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }} />
-        <View style={{ width: 40 }} />
-      </View>
+
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

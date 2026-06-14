@@ -237,22 +237,7 @@ export default function CalculatorScreen() {
 
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>
-      {/* Custom Header */}
-      <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => {
-          if (view === 'results') {
-            setView('form');
-          } else if (activeStep === 2) {
-            setActiveStep(1);
-          } else {
-            router.back();
-          }
-        }}>
-          <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
-        </TouchableOpacity>
-        <View style={{flex: 1}} />
-        <View style={{ width: 40 }} />
-      </View>
+
 
       {/* Steps Indicator / Result Header */}
       {view === 'form' && (

@@ -71,19 +71,7 @@ export default function ChartScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: theme.background }]}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={[styles.backBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
-        >
-          <Ionicons name="arrow-back" size={20} color={theme.textPrimary} />
-        </TouchableOpacity>
 
-        <View style={{flex: 1}} />
-
-        <View style={{ width: 40 }} />
-      </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
         {/* Chart Section */}
