@@ -11,7 +11,7 @@ import { useAdaptiveLayout } from '../theme/layout';
 
 interface MarginData {
   symbol: string;
-  margin: string | number; // Leverage factor (e.g., 4 or "4")
+  requiredMargin: string | number;
 }
 
 export default function CalculatorScreen() {
@@ -317,7 +317,7 @@ export default function CalculatorScreen() {
                               style={styles.suggestionRow}
                               onPress={() => {
                                 setSelectedSymbol(marginItem.symbol);
-                                setSelectedLeverage(String(marginItem.margin));
+                                setSelectedLeverage(String(marginItem.requiredMargin));
                                 setSearchQuery(''); // Close recommendations on tap
                                 setShowDropdown(false);
                               }}
@@ -328,9 +328,9 @@ export default function CalculatorScreen() {
                                 <Text style={styles.suggestionRowSymbol} numberOfLines={1} adjustsFontSizeToFit>{marginItem.symbol}</Text>
                               </View>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                {marginItem.margin ? (
+                                {marginItem.requiredMargin ? (
                                   <Text style={styles.suggestionRowBadge}>
-                                    {marginItem.margin}x
+                                    {marginItem.requiredMargin}x
                                   </Text>
                                 ) : null}
                                 <Ionicons name="chevron-forward" size={14} color={theme.iconMuted} />

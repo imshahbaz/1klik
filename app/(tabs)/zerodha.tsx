@@ -379,9 +379,9 @@ export default function ZerodhaDashboard() {
                         <Text style={styles.suggestionRowSymbol as any}>{marginItem.symbol}</Text>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        {marginItem.margin || marginItem.leverage ? (
+                        {marginItem.requiredMargin || marginItem.leverage ? (
                           <Text style={styles.suggestionRowBadge as any}>
-                            {marginItem.margin || marginItem.leverage}
+                            {marginItem.requiredMargin || marginItem.leverage}
                           </Text>
                         ) : null}
                         {marginItem.price || marginItem.ltp ? (

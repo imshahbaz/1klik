@@ -141,7 +141,7 @@ export default function ScreenerScreen() {
       : rawPrice ? `₹${rawPrice}` : '—';
 
     // Parse margin value
-    const rawMargin = item.margin || item.leverage || item.marginAllowed || '';
+    const rawMargin = item.requiredMargin || item.leverage || item.marginAllowed || '';
     const marginStr = rawMargin.toString().trim();
     const hasMargin = marginStr &&
       marginStr !== '0' &&
