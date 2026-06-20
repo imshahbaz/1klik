@@ -260,7 +260,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     minHeight: 220,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: '40@ms',
+    marginTop: '-160@ms',
     paddingHorizontal: '32@ms',
     gap: '12@ms',
   },
