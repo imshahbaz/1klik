@@ -42,9 +42,10 @@ export function KeyboardAwareScrollView({
     const keyboardTop = keyboardTopRef.current;
     if (!keyboardTop) return;
 
-    const focusedInput =
-      (TextInput as any).State?.currentlyFocusedInput?.() ||
-      (TextInput as any).State?.currentlyFocusedField?.();
+    const textInputState = (TextInput as any).State;
+    const focusedInput = textInputState?.currentlyFocusedInput
+      ? textInputState.currentlyFocusedInput()
+      : textInputState?.currentlyFocusedField?.();
 
     const inputNode = typeof focusedInput === 'number'
       ? focusedInput

@@ -185,6 +185,7 @@ export const zerodhaAPI = {
   saveConfig: (configData) => api.post('/api/zerodha/config', configData),
   autoConnect: () => api.post('/api/session-manager/zerodha-auto-connect')
 }
+
 export const strategyOrderAPI = {
   placeOrder: (orderData) => api.post('/api/strategy-order', orderData),
   getMyOrders: () => api.get('/api/strategy-order/my'),
@@ -209,6 +210,14 @@ export const mstockAPI = {
 
 export const angelOneApi = {
   getLtp: (token) => api.get(`/api/angelone/ltp?token=${token}`),
+}
+
+export const rupeezyAPI = {
+  login: (requestToken, userId) => api.post('/api/rupeezy/login',
+    { request_token: requestToken, user_id: userId },
+  ),
+  getMe: () => api.get('/api/rupeezy/me'),
+  saveConfig: (config) => api.post('/api/rupeezy/config', config),
 }
 
 export default api;

@@ -1,59 +1,47 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
 import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { marginAPI, strategyOrderAPI, zerodhaAPI } from '../../services/api';
 import { useAdaptiveLayout } from '../../theme/layout';
-import { getSafeBottomPadding } from '../../theme/safeArea';
 import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 
-export default function ZerodhaDashboard() {
+export default function TradeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
   const { user, appLoading, logout } = useAuth() as any;
   const { isDarkMode, theme } = useTheme();
   const styles = useZerodhaStyles(isDarkMode);
-  const [zerodhaUser, setZerodhaUser] = useState<any>(null);
-  const [zerodhaLoading, setZerodhaLoading] = useState(true);
-  const [zerodhaError, setZerodhaError] = useState<string | null>(null);
-
-  const [is404Error, setIs404Error] = useState(false);
-  const [isTokenExpired, setIsTokenExpired] = useState(false);
-  const [showWebView, setShowWebView] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [apiSecret, setApiSecret] = useState('');
-  const [savingConfig, setSavingConfig] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [enableAutoLogin, setEnableAutoLogin] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [password, setPassword] = useState('');
-  const [totpSecret, setTotpSecret] = useState('');
-
-  const [autoConnectLoading, setAutoConnectLoading] = useState(false);
-  const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasFetchedProfile = useRef(false);
 
   useEffect(() => {
-    return () => {
-      if (pollingRef.current) clearTimeout(pollingRef.current);
-    };
-  }, []);
+    if (!appLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, appLoading]);
 
-  // Margin Limits Data State
-  const [marginsData, setMarginsData] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [marginsData, setMarginsData] = useState<any[]>([]);
+
+  useEffect(() => {
+    marginAPI.getAllMargins().then(res => {
+      if (res.data?.success) {
+        setMarginsData(res.data.data);
+      } else {
+        setMarginsData(res.data);
+      }
+    }).catch(console.error);
+  }, []);
 
   // Filtered Margins helper
   const filteredMargins = Array.isArray(marginsData) ? marginsData
-    .filter(m => m && m.symbol && m.symbol.toLowerCase().includes(searchQuery.toLowerCase()))
-    .sort((a, b) => {
+    .filter((m: any) => m && m.symbol && m.symbol.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a: any, b: any) => {
       const q = searchQuery.toLowerCase();
       const sA = a.symbol.toLowerCase();
       const sB = b.symbol.toLowerCase();
@@ -76,6 +64,8 @@ export default function ZerodhaDashboard() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickerDate, setPickerDate] = useState(new Date());
   const [executingTrade, setExecutingTrade] = useState(false);
+  const [tradeBroker, setTradeBroker] = useState<'ZERODHA' | 'RUPEEZY'>('ZERODHA');
+  const [showExecuteBrokerDropdown, setShowExecuteBrokerDropdown] = useState(false);
 
 
   // Premium MTF History & Strategy History States
@@ -83,11 +73,7 @@ export default function ZerodhaDashboard() {
   const [strategyOrders, setStrategyOrders] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  // Premium Edit Order Modals States
-  const [editingOrder, setEditingOrder] = useState<any | null>(null);
-  const [editQty, setEditQty] = useState('');
-  const [editTargetDate, setEditTargetDate] = useState<Date | null>(null);
-  const [showEditDatePicker, setShowEditDatePicker] = useState(false);
+  // Edit Order State
   const [editingMtfOrderId, setEditingMtfOrderId] = useState<string | null>(null);
 
   // Strategy Order Form State
@@ -95,11 +81,13 @@ export default function ZerodhaDashboard() {
     strategyName: '',
     amount: '',
     date: '',
+    broker: 'ZERODHA' as 'ZERODHA' | 'RUPEEZY',
   });
   const [editingStrategyOrderId, setEditingStrategyOrderId] = useState<string | null>(null);
   const [submittingStrategy, setSubmittingStrategy] = useState(false);
   const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
   const [datePickerTarget, setDatePickerTarget] = useState<'execute' | 'strategy'>('execute');
+  const [showStrategyBrokerDropdown, setShowStrategyBrokerDropdown] = useState(false);
 
   const parseTargetDate = (dateStr: string) => {
     try {
@@ -234,6 +222,7 @@ export default function ZerodhaDashboard() {
       symbol: tradeSymbol.toUpperCase().trim(),
       quantity: parseInt(tradeQty),
       date: isoDateString,
+      broker: tradeBroker,
     };
 
     try {
@@ -280,6 +269,8 @@ export default function ZerodhaDashboard() {
 
       setTradeSymbol('');
       setSearchQuery('');
+      setTradeQty('10');
+      setTargetDate(new Date());
     } catch (err: any) {
       console.error('Failed to process MTF order:', err);
 
@@ -340,8 +331,69 @@ export default function ZerodhaDashboard() {
       case 'execute':
         return (
           <View style={styles.tabCard}>
-            <Text style={styles.tabCardTitle}>Kite Direct Execution</Text>
-            <Text style={styles.tabCardSubtitle}>Instant trade triggers sent directly to Zerodha terminal.</Text>
+            <Text style={styles.tabCardTitle}>Broker Direct Execution</Text>
+            <Text style={styles.tabCardSubtitle}>Instant trade triggers sent directly to your broker terminal.</Text>
+
+            {/* Broker Selection */}
+            <View style={styles.formInputGroup as any}>
+              <Text style={styles.formInputLabel as any}>BROKER</Text>
+              <View style={styles.formInputWrapper as any}>
+                <Ionicons name="business-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon as any} />
+                {Platform.OS === 'web' ? (
+                  <select
+                    value={tradeBroker}
+                    onChange={(e: any) => setTradeBroker(e.target.value as any)}
+                    style={{
+                      flex: 1,
+                      backgroundColor: 'transparent',
+                      color: theme.textPrimary,
+                      borderWidth: 0,
+                      outlineStyle: 'none',
+                      fontSize: 14,
+                      fontWeight: '600',
+                      height: '100%',
+                      cursor: 'pointer',
+                    } as any}
+                  >
+                    <option value="ZERODHA" className="bg-background text-foreground font-black">ZERODHA</option>
+                    <option value="RUPEEZY" className="bg-background text-foreground font-black">RUPEEZY</option>
+                  </select>
+                ) : (
+                  <TouchableOpacity
+                    style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+                    onPress={() => setShowExecuteBrokerDropdown(!showExecuteBrokerDropdown)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[
+                      { fontSize: 14, fontWeight: '600' },
+                      { color: theme.textPrimary }
+                    ] as any}>
+                      {tradeBroker}
+                    </Text>
+                    <Ionicons name={showExecuteBrokerDropdown ? "chevron-up" : "chevron-down"} size={16} color={theme.textSecondary} />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {Platform.OS !== 'web' && showExecuteBrokerDropdown && (
+                <View style={styles.verticalDropdownContainer as any}>
+                  {['ZERODHA', 'RUPEEZY'].map((brokerOption) => (
+                    <TouchableOpacity
+                      key={brokerOption}
+                      style={styles.suggestionRow as any}
+                      onPress={() => {
+                        setTradeBroker(brokerOption as any);
+                        setShowExecuteBrokerDropdown(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.suggestionRowSymbol as any}>{brokerOption}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
             {/* Trading Symbol */}
             <View style={styles.formInputGroup as any}>
               <Text style={styles.formInputLabel as any}>SYMBOL</Text>
@@ -397,44 +449,43 @@ export default function ZerodhaDashboard() {
               ) : null}
             </View>
 
-            {/* Qty & Target Date Row */}
-            <View style={styles.formInputRow}>
-              <View style={[styles.formInputGroup, { flex: 1 }]}>
-                <Text style={styles.formInputLabel}>QUANTITY</Text>
-                <View style={styles.formInputWrapper}>
-                  <Ionicons name="layers-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon} />
-                  <TextInput
-                    style={styles.formTextInput}
-                    value={tradeQty}
-                    onChangeText={setTradeQty}
-                    keyboardType="number-pad"
-                    placeholder="0"
-                    placeholderTextColor={theme.placeholder}
-                  />
-                </View>
+            {/* Quantity */}
+            <View style={styles.formInputGroup as any}>
+              <Text style={styles.formInputLabel}>QUANTITY</Text>
+              <View style={styles.formInputWrapper}>
+                <Ionicons name="layers-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon} />
+                <TextInput
+                  style={styles.formTextInput}
+                  value={tradeQty}
+                  onChangeText={setTradeQty}
+                  keyboardType="number-pad"
+                  placeholder="0"
+                  placeholderTextColor={theme.placeholder}
+                />
               </View>
+            </View>
 
-              <View style={[styles.formInputGroup, { flex: 1.2 }]}>
-                <Text style={styles.formInputLabel}>TARGET DATE</Text>
-                <TouchableOpacity
-                  style={styles.formInputWrapper}
-                  onPress={() => {
-                    setPickerDate(new Date(targetDate));
-                    setShowDatePicker(true);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="calendar-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon} />
-                  <Text style={styles.datePickerText as any} numberOfLines={1} adjustsFontSizeToFit>
-                    {formatDateString(targetDate)}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+            {/* Target Date */}
+            <View style={styles.formInputGroup as any}>
+              <Text style={styles.formInputLabel}>TARGET DATE</Text>
+              <TouchableOpacity
+                style={styles.formInputWrapper}
+                onPress={() => {
+                  setPickerDate(new Date(targetDate));
+                  setShowDatePicker(true);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="calendar-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon} />
+                <Text style={styles.datePickerText as any} numberOfLines={1} adjustsFontSizeToFit>
+                  {formatDateString(targetDate)}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Execute Action Button */}
             {editingMtfOrderId ? (
-              <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
                 <TouchableOpacity
                   style={[
                     styles.executeActionBtn,
@@ -446,6 +497,7 @@ export default function ZerodhaDashboard() {
                     setTradeSymbol('');
                     setTradeQty('10');
                     setTargetDate(new Date());
+                    setTradeBroker('ZERODHA');
                   }}
                   disabled={executingTrade}
                   activeOpacity={0.8}
@@ -483,8 +535,9 @@ export default function ZerodhaDashboard() {
                 style={[
                   styles.executeActionBtn,
                   styles.executeBuyBtn,
-                  executingTrade && styles.disabledButton
-                ]}
+                  executingTrade && styles.disabledButton,
+                  { marginTop: 12 }
+                ] as any}
                 onPress={handleExecuteOrder}
                 disabled={executingTrade}
                 activeOpacity={0.8}
@@ -512,6 +565,66 @@ export default function ZerodhaDashboard() {
 
             {/* Strategy Form */}
             <View style={{ marginTop: 16 }}>
+              {/* Broker Selection */}
+              <View style={styles.formInputGroup as any}>
+                <Text style={styles.formInputLabel as any}>BROKER</Text>
+                <View style={styles.formInputWrapper as any}>
+                  <Ionicons name="business-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon as any} />
+                  {Platform.OS === 'web' ? (
+                    <select
+                      value={strategyFormData.broker}
+                      onChange={(e: any) => setStrategyFormData({ ...strategyFormData, broker: e.target.value as any })}
+                      style={{
+                        flex: 1,
+                        backgroundColor: 'transparent',
+                        color: theme.textPrimary,
+                        borderWidth: 0,
+                        outlineStyle: 'none',
+                        fontSize: 14,
+                        fontWeight: '600',
+                        height: '100%',
+                        cursor: 'pointer',
+                      } as any}
+                    >
+                      <option value="ZERODHA" className="bg-background text-foreground font-black">ZERODHA</option>
+                      <option value="RUPEEZY" className="bg-background text-foreground font-black">RUPEEZY</option>
+                    </select>
+                  ) : (
+                    <TouchableOpacity
+                      style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+                      onPress={() => setShowStrategyBrokerDropdown(!showStrategyBrokerDropdown)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[
+                        { fontSize: 14, fontWeight: '600' },
+                        { color: theme.textPrimary }
+                      ] as any}>
+                        {strategyFormData.broker}
+                      </Text>
+                      <Ionicons name={showStrategyBrokerDropdown ? "chevron-up" : "chevron-down"} size={16} color={theme.textSecondary} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {Platform.OS !== 'web' && showStrategyBrokerDropdown && (
+                  <View style={styles.verticalDropdownContainer as any}>
+                    {['ZERODHA', 'RUPEEZY'].map((brokerOption) => (
+                      <TouchableOpacity
+                        key={brokerOption}
+                        style={styles.suggestionRow as any}
+                        onPress={() => {
+                          setStrategyFormData({ ...strategyFormData, broker: brokerOption as any });
+                          setShowStrategyBrokerDropdown(false);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.suggestionRowSymbol as any}>{brokerOption}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+
               {/* Strategy Name */}
               <View style={styles.formInputGroup as any}>
                 <Text style={styles.formInputLabel as any}>STRATEGY NAME</Text>
@@ -626,6 +739,7 @@ export default function ZerodhaDashboard() {
                         strategyName: '',
                         amount: '',
                         date: '',
+                        broker: 'ZERODHA',
                       });
                     }}
                     disabled={submittingStrategy}
@@ -737,6 +851,7 @@ export default function ZerodhaDashboard() {
                             const parsedDate = parseTargetDate(log.targetDate);
                             setTargetDate(parsedDate);
                             setPickerDate(parsedDate);
+                            setTradeBroker(log.broker || 'ZERODHA');
                             setEditingMtfOrderId(log.id);
                             setActiveTab('execute');
                             CustomAlert.alert(
@@ -831,6 +946,7 @@ export default function ZerodhaDashboard() {
                               strategyName: log.strategyName || '',
                               amount: log.amount ? log.amount.toString() : '',
                               date: log.date || '',
+                              broker: log.broker || 'ZERODHA',
                             });
                             setEditingStrategyOrderId(log.id);
                             setActiveTab('strategy');
@@ -885,271 +1001,6 @@ export default function ZerodhaDashboard() {
         );
     }
   };
-
-  const fetchZerodhaProfile = async () => {
-    try {
-      console.log("[Zerodha] Calling API: getMe (initial fetch)");
-      setZerodhaLoading(true);
-      setZerodhaError(null);
-      setIs404Error(false);
-      setIsTokenExpired(false);
-      const res = await zerodhaAPI.getMe();
-      console.log("[Zerodha] Response getMe (initial fetch):", res.status, res.data);
-      const payload = res.data;
-      if (payload && payload.success === true) {
-        setZerodhaUser(payload.data);
-        setZerodhaLoading(false);
-
-        try {
-          const marginsRes = await marginAPI.getAllMargins();
-          if (marginsRes.data && marginsRes.data.success === true) {
-            setMarginsData(marginsRes.data.data);
-          } else {
-            setMarginsData(marginsRes.data);
-          }
-        } catch (marginErr) {
-          console.error("Failed to load margin metrics:", marginErr);
-        }
-      } else {
-        setZerodhaError(payload?.message || "Kite Connect session is disconnected.");
-        setIsTokenExpired(true);
-        if (payload && typeof payload.data === 'string') {
-          setApiKey(payload.data);
-        }
-        setZerodhaLoading(false);
-      }
-    } catch (err: any) {
-      const status = err.response?.status;
-      const detail = err.response?.data?.detail || err.response?.data?.message || '';
-      console.error("[Zerodha] Error getMe (initial fetch):", status, err.response?.data || err.message);
-
-      if (status === 401) {
-        await logout();
-      } else if (status === 404) {
-        setZerodhaError("No linked Zerodha account found.");
-        setIs404Error(true);
-      } else if (status === 409 && typeof detail === 'string' && detail.includes('E002')) {
-        setZerodhaError("Auto-login in progress...");
-        setIsTokenExpired(true);
-        setAutoConnectLoading(true);
-        pollGetMe();
-      } else if (status === 409) {
-        setZerodhaError(detail || "Kite Connect session conflict.");
-        setIsTokenExpired(true);
-      } else {
-        setZerodhaError("Kite Connect session is disconnected.");
-        setIsTokenExpired(true);
-      }
-      setZerodhaLoading(false);
-    }
-  };
-
-  const pollGetMe = async () => {
-    try {
-      console.log("[Zerodha] Calling API: getMe (polling)");
-      const res = await zerodhaAPI.getMe();
-      console.log("[Zerodha] Response getMe (polling):", res.status, res.data);
-      if (res.data?.success) {
-        if (pollingRef.current) clearTimeout(pollingRef.current);
-        setAutoConnectLoading(false);
-        fetchZerodhaProfile();
-      } else {
-        if (pollingRef.current) clearTimeout(pollingRef.current);
-        setAutoConnectLoading(false);
-        setShowWebView(true);
-      }
-    } catch (err: any) {
-      const status = err.response?.status;
-      const detail = err.response?.data?.detail || err.response?.data?.message || '';
-      console.error("[Zerodha] Error getMe (polling):", status, err.response?.data || err.message);
-      if (status === 409 && typeof detail === 'string' && detail.includes('E002')) {
-        pollingRef.current = setTimeout(pollGetMe, 30000);
-      } else {
-        if (pollingRef.current) clearTimeout(pollingRef.current);
-        setAutoConnectLoading(false);
-        if (status === 409) {
-          CustomAlert.alert("Auto-Login Failed", detail || "Conflict occurred during login.");
-        }
-        setShowWebView(true);
-      }
-    }
-  };
-
-  const handleConnectKite = async () => {
-    const finalApiKey = apiKey || process.env.EXPO_PUBLIC_ZERODHA_API_KEY;
-    if (!finalApiKey) {
-      CustomAlert.alert("Missing API Key", "No saved API Key found. Please save your API config first.");
-      return;
-    }
-
-    try {
-      console.log("[Zerodha] Calling API: autoConnect");
-      setAutoConnectLoading(true);
-      const res = await zerodhaAPI.autoConnect();
-      console.log("[Zerodha] Response autoConnect:", res.status, res.data);
-      if (res.data && res.data.success === false) {
-        setAutoConnectLoading(false);
-        setShowWebView(true);
-        return;
-      }
-      if (res.status === 200 || res.status === 409) {
-        pollGetMe();
-      } else {
-        setAutoConnectLoading(false);
-        setShowWebView(true);
-      }
-    } catch (err: any) {
-      const status = err.response?.status;
-      const detail = err.response?.data?.detail || err.response?.data?.message || '';
-      console.error("[Zerodha] Error autoConnect:", status, err.response?.data || err.message);
-      if (status === 409 && typeof detail === 'string' && detail.includes('Request already exists')) {
-        pollGetMe();
-      } else {
-        setAutoConnectLoading(false);
-        if (status === 409) {
-          CustomAlert.alert("Auto-Login Failed", detail || "Conflict occurred during login.");
-        }
-        setShowWebView(true);
-      }
-    }
-  };
-
-  const handleNavigationChange = async (navState: any) => {
-    // Look out for request_token in the redirected URL parameter
-    if (navState.url.includes('request_token=')) {
-      const tokenMatch = navState.url.match(/[?&]request_token=([^&]+)/);
-      if (tokenMatch && tokenMatch[1]) {
-        const requestToken = tokenMatch[1];
-
-        // Immediately dismiss the webview
-        setShowWebView(false);
-
-        try {
-          setZerodhaLoading(true);
-          setZerodhaError(null);
-          setIsTokenExpired(false);
-
-          await zerodhaAPI.login(requestToken, user?.id || user?.userId || '');
-
-          CustomAlert.alert(
-            "Connection Successful",
-            "Your Zerodha Kite session has been successfully established and authenticated!",
-            [{ text: "OK", onPress: () => fetchZerodhaProfile() }]
-          );
-        } catch (err: any) {
-          console.error("Failed to complete Zerodha login:", err);
-          const errMsg = err.response?.data?.message || err.message || "Failed to authenticate session with the backend.";
-          CustomAlert.alert("Authentication Failed", errMsg);
-          setIsTokenExpired(true);
-        } finally {
-          setZerodhaLoading(false);
-        }
-      }
-    }
-  };
-
-  const handleSaveConfig = async () => {
-    if (!apiKey.trim() || !apiSecret.trim()) {
-      setFormError("Both API Key and API Secret are required.");
-      return;
-    }
-    if (enableAutoLogin) {
-      if (!userName.trim() || !password.trim() || !totpSecret.trim()) {
-        setFormError("User Name, Password, and TOTP Secret are required when Auto Login is enabled.");
-        return;
-      }
-    }
-    try {
-      setSavingConfig(true);
-      setFormError(null);
-      await zerodhaAPI.saveConfig({
-        apiKey: apiKey.trim(),
-        apiSecret: apiSecret.trim(),
-        enableAutoLogin,
-        userName: userName.trim(),
-        password: password.trim(),
-        totpSecret: totpSecret.trim(),
-      });
-      CustomAlert.alert(
-        "Configuration Saved",
-        "Your Zerodha Kite API credentials have been successfully updated. We will now attempt to load your profile.",
-        [{ text: "OK", onPress: () => fetchZerodhaProfile() }]
-      );
-    } catch (err: any) {
-      console.error("Failed to save Zerodha config:", err);
-      setFormError(err.response?.data?.message || "Failed to update configuration. Please try again.");
-    } finally {
-      setSavingConfig(false);
-    }
-  };
-
-  // Authentication Route Guardian & Profile Fetcher
-  useEffect(() => {
-    if (!appLoading) {
-      if (!user) {
-        router.replace('/login');
-      } else if (!hasFetchedProfile.current) {
-        hasFetchedProfile.current = true;
-        fetchZerodhaProfile();
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, appLoading]);
-
-  if (appLoading) {
-    return (
-      <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
-        <View style={[styles.container, styles.centered]}>
-          <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={styles.loadingText}>Verifying secure session...</Text>
-        </View>
-      </View>
-    );
-  }
-
-  if (!user) {
-    return null; // Don't render anything while redirecting
-  }
-
-  if (showWebView) {
-    const finalApiKey = apiKey || process.env.EXPO_PUBLIC_ZERODHA_API_KEY;
-    return (
-      <View style={[styles.webViewContainer, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
-        <View style={styles.webViewHeader}>
-          <TouchableOpacity
-            style={styles.webViewCloseButton}
-            onPress={() => setShowWebView(false)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="close-outline" size={24} color={theme.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.webViewHeaderTitle}>Kite Secure Login</Text>
-          <View style={{ width: 40 }} />
-        </View>
-        <WebView
-          source={{ uri: `https://kite.zerodha.com/connect/login?v=3&api_key=${finalApiKey}` }}
-          onNavigationStateChange={handleNavigationChange}
-          style={{ flex: 1 }}
-          startInLoadingState={true}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          onError={(syntheticEvent) => {
-            const { nativeEvent } = syntheticEvent;
-            console.error('WebView error: ', nativeEvent);
-          }}
-          onHttpError={(syntheticEvent) => {
-            const { nativeEvent } = syntheticEvent;
-            console.error('WebView HTTP error: ', nativeEvent);
-          }}
-          renderLoading={() => (
-            <View style={styles.webViewLoaderContainer}>
-              <ActivityIndicator size="large" color={theme.primary} />
-            </View>
-          )}
-        />
-      </View>
-    );
-  }
 
   const handleDeleteMtfOrder = async (orderId: string) => {
     CustomAlert.alert(
@@ -1235,6 +1086,7 @@ export default function ZerodhaDashboard() {
         strategyName: strategyFormData.strategyName,
         amount: amountVal,
         date: strategyFormData.date,
+        broker: strategyFormData.broker,
       };
 
       if (editingStrategyOrderId) {
@@ -1276,6 +1128,7 @@ export default function ZerodhaDashboard() {
         strategyName: '',
         amount: '',
         date: '',
+        broker: 'ZERODHA',
       });
     } catch (err: any) {
       console.error('Failed to save strategy order:', err);
@@ -1286,282 +1139,16 @@ export default function ZerodhaDashboard() {
     }
   };
 
-  const renderEditCalendar = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const year = pickerDate.getFullYear();
-    const month = pickerDate.getMonth();
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-    const firstDayIndex = new Date(year, month, 1).getDay();
-    const totalDays = new Date(year, month + 1, 0).getDate();
-
-    const cells = [];
-    for (let i = 0; i < firstDayIndex; i++) {
-      cells.push(<View key={`empty-edit-${i}`} style={styles.calendarDayCell as any} />);
-    }
-
-    for (let day = 1; day <= totalDays; day++) {
-      const cellDate = new Date(year, month, day);
-      const isPast = cellDate < today;
-      const isSelected = editTargetDate &&
-        editTargetDate.getDate() === day &&
-        editTargetDate.getMonth() === month &&
-        editTargetDate.getFullYear() === year;
-
-      cells.push(
-        <TouchableOpacity
-          key={`day-edit-${day}`}
-          style={[
-            styles.calendarDayCell,
-            isSelected && { backgroundColor: theme.primary, borderRadius: 20 },
-            isPast && { opacity: 0.3 }
-          ] as any}
-          disabled={isPast}
-          onPress={() => {
-            setEditTargetDate(cellDate);
-            setShowEditDatePicker(false);
-          }}
-        >
-          <Text style={[
-            styles.calendarDayText,
-            isSelected && { color: '#ffffff', fontWeight: 'bold' },
-            isPast && { color: theme.iconMuted }
-          ] as any}>
-            {day}
-          </Text>
-        </TouchableOpacity>
-      );
-    }
-
+  if (appLoading) {
     return (
-      <View style={{ padding: 12 }}>
-        <View style={styles.calendarHeader as any}>
-          <TouchableOpacity onPress={handlePrevMonth} style={styles.calendarNavBtn as any}>
-            <Ionicons name="chevron-back" size={18} color={theme.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.calendarMonthText as any}>{months[month]} {year}</Text>
-          <TouchableOpacity onPress={handleNextMonth} style={styles.calendarNavBtn as any}>
-            <Ionicons name="chevron-forward" size={18} color={theme.textPrimary} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.calendarGrid as any}>
-          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d) => (
-            <Text key={d} style={styles.calendarHeaderDayText as any}>{d}</Text>
-          ))}
-        </View>
-
-        <View style={styles.calendarGrid as any}>
-          {cells}
-        </View>
-
-        <TouchableOpacity
-          style={[styles.calendarCloseBtn, { marginTop: 12 }] as any}
-          onPress={() => setShowEditDatePicker(false)}
-        >
-          <Text style={styles.calendarCloseBtnText as any}>Close Picker</Text>
-        </TouchableOpacity>
+      <View style={[styles.safeArea, layout.screenPadding, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
-  };
+  }
 
-  const renderModifyOrderModal = () => {
-    if (!editingOrder) return null;
-
-    const isMtf = editingOrder.id.toString().startsWith('m');
-
-    const handleSaveChanges = async () => {
-      const qtyNum = parseInt(editQty);
-      if (isNaN(qtyNum) || qtyNum <= 0) {
-        CustomAlert.alert('Validation Error', 'Please enter a valid quantity.');
-        return;
-      }
-
-      try {
-        if (isMtf) {
-          const dateStr = editTargetDate ? editTargetDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-          const payload = {
-            userId: user?.id || user?.userId || 1,
-            symbol: editingOrder.symbol,
-            quantity: qtyNum,
-            date: dateStr,
-          };
-
-          await zerodhaAPI.updateOrder(editingOrder.id, payload);
-
-          setMtfOrders(prev => prev.map(o => o.id === editingOrder.id ? {
-            ...o,
-            qty: qtyNum,
-            targetDate: editTargetDate ? formatDateString(editTargetDate) : o.targetDate,
-          } : o));
-
-          CustomAlert.alert('Success', 'Scheduled MTF order modified successfully.');
-        } else {
-          const payload = {
-            symbol: editingOrder.symbol,
-            quantity: qtyNum,
-            strategyName: editingOrder.strategyName,
-          };
-
-          await strategyOrderAPI.updateOrder(editingOrder.id, payload);
-
-          setStrategyOrders(prev => prev.map(o => o.id === editingOrder.id ? {
-            ...o,
-            qty: qtyNum,
-          } : o));
-
-          CustomAlert.alert('Success', 'Strategy order modified successfully.');
-        }
-        setEditingOrder(null);
-      } catch (err: any) {
-        console.error('Failed to update order:', err);
-        if (isMtf) {
-          setMtfOrders(prev => prev.map(o => o.id === editingOrder.id ? {
-            ...o,
-            qty: qtyNum,
-            targetDate: editTargetDate ? formatDateString(editTargetDate) : o.targetDate,
-          } : o));
-        } else {
-          setStrategyOrders(prev => prev.map(o => o.id === editingOrder.id ? {
-            ...o,
-            qty: qtyNum,
-          } : o));
-        }
-        CustomAlert.alert('Success', 'Order modified successfully.');
-        setEditingOrder(null);
-      }
-    };
-
-    return (
-      <Modal
-        visible={editingOrder !== null}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setEditingOrder(null)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          enabled={Platform.OS === 'ios'}
-          style={styles.keyboardFrame}
-          keyboardVerticalOffset={insets.top + 60}
-        >
-          <View style={styles.modalOverlay as any}>
-            <KeyboardAwareScrollView
-              style={styles.modalKeyboardScroll as any}
-              contentContainerStyle={styles.editModalScrollContent as any}
-              keyboardShouldPersistTaps="handled"
-              extraKeyboardSpace={72}
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={styles.editModalContainer as any}>
-                <View style={styles.editModalHeader as any}>
-                  <Text style={styles.editModalTitle as any}>Modify Order</Text>
-                  <TouchableOpacity onPress={() => setEditingOrder(null)} style={styles.editModalCloseBtn as any}>
-                    <Ionicons name="close" size={20} color={theme.textSecondary} />
-                  </TouchableOpacity>
-                </View>
-
-                <View style={{ marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={[styles.historyTypeBadge, isMtf ? styles.historyBuyBadge : { backgroundColor: theme.infoBackground }]}>
-                    <Text style={[styles.historyTypeText, isMtf ? styles.historyBuyText : { color: theme.infoText }]}>
-                      {isMtf ? 'MTF BUY' : 'AUTO-TRADE'}
-                    </Text>
-                  </View>
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: theme.textPrimary }}>{editingOrder.symbol}</Text>
-                </View>
-
-                <View style={styles.formInputGroup}>
-                  <Text style={styles.formInputLabel}>QUANTITY</Text>
-                  <View style={styles.formInputWrapper}>
-                    <Ionicons name="layers-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
-                    <TextInput
-                      style={styles.formTextInput}
-                      value={editQty}
-                      onChangeText={setEditQty}
-                      keyboardType="number-pad"
-                      placeholder="Enter Shares quantity"
-                      placeholderTextColor={theme.placeholder}
-                    />
-                    <TouchableOpacity
-                      onPress={() => {
-                        const val = parseInt(editQty) || 0;
-                        if (val > 1) setEditQty((val - 1).toString());
-                      }}
-                      style={{ padding: 6 }}
-                    >
-                      <Ionicons name="remove-circle-outline" size={22} color={theme.primary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => {
-                        const val = parseInt(editQty) || 0;
-                        setEditQty((val + 1).toString());
-                      }}
-                      style={{ padding: 6 }}
-                    >
-                      <Ionicons name="add-circle-outline" size={22} color={theme.primary} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {isMtf && (
-                  <View style={styles.formInputGroup}>
-                    <Text style={styles.formInputLabel}>TARGET DATE</Text>
-                    <TouchableOpacity
-                      style={styles.formInputWrapper}
-                      onPress={() => setShowEditDatePicker(true)}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
-                      <Text
-                        style={{ flex: 1, color: editTargetDate ? theme.textPrimary : theme.iconMuted, fontSize: 13, fontWeight: '600' }}
-                        numberOfLines={1}
-                        adjustsFontSizeToFit
-                      >
-                        {editTargetDate ? formatDateString(editTargetDate) : 'Select Target Date'}
-                      </Text>
-                      <Ionicons name="chevron-down" size={16} color={theme.iconMuted} />
-                    </TouchableOpacity>
-                  </View>
-                )}
-
-                <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
-                  <TouchableOpacity
-                    style={[styles.calendarCloseBtn, { flex: 1, backgroundColor: theme.borderLight, borderWidth: 0 }] as any}
-                    onPress={() => setEditingOrder(null)}
-                  >
-                    <Text style={[styles.calendarCloseBtnText, { color: theme.textSecondary }] as any}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.calendarCloseBtn, { flex: 1, backgroundColor: theme.primary, borderWidth: 0 }] as any}
-                    onPress={handleSaveChanges}
-                  >
-                    <Text style={[styles.calendarCloseBtnText, { color: '#ffffff' }] as any}>Save Changes</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </KeyboardAwareScrollView>
-          </View>
-        </KeyboardAvoidingView>
-
-        {isMtf && (
-          <Modal
-            visible={showEditDatePicker}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setShowEditDatePicker(false)}
-          >
-            <View style={styles.modalOverlay as any}>
-              <View style={styles.modalCalendarContainer as any}>
-                {renderEditCalendar()}
-              </View>
-            </View>
-          </Modal>
-        )}
-      </Modal>
-    );
-  };
+  if (!user) return null;
 
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>
@@ -1585,298 +1172,33 @@ export default function ZerodhaDashboard() {
           keyboardShouldPersistTaps="handled"
           extraKeyboardSpace={72}
         >
-          {/* Connection Status Card */}
-          <View style={[styles.connectionCard, { borderLeftColor: zerodhaLoading ? theme.primary : zerodhaError ? theme.danger : theme.success }]}>
-            <View style={{ gap: 0 }}>
-              {/* Top Row: Brand Info and Settings Button */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <View style={[styles.brandContainer, { marginRight: 0 }]}>
-                  <View style={styles.kiteLogoPlaceholder}>
-                    <Ionicons name="link-outline" size={18} color={theme.primary} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    {zerodhaLoading ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <ActivityIndicator size="small" color={theme.primary} />
-                        <Text style={styles.connectionTitle}>Connecting...</Text>
-                      </View>
-                    ) : zerodhaError ? (
-                      <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
-                        Connection Inactive
-                      </Text>
-                    ) : (
-                      <Text style={styles.connectionTitle} numberOfLines={1}>
-                        {typeof zerodhaUser === 'string' ? 'Active Session' : (zerodhaUser?.userName || zerodhaUser?.name || 'Active Session')}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.blackCardConfigBtn as any}
-                  onPress={() => {
-                    setIs404Error(true);
-                    setIsTokenExpired(false);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="settings-outline" size={16} color={theme.textSecondary} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Bottom Row: Subtitle and Status Badge */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.borderLight, paddingTop: 8 }}>
-                <Text style={[styles.connectionSubtitle, { marginTop: 0, flex: 1, marginRight: 12 }]} numberOfLines={2}>
-                  {zerodhaError ? zerodhaError : 'Secured Zerodha Connection'}
+          {/* Custom Premium Segmented Tab Bar */}
+          <View style={styles.tabContainer as any}>
+            {[
+              { id: 'execute', label: 'EXECUTE', icon: 'flash' },
+              { id: 'strategy', label: 'STRATEGY', icon: 'analytics' },
+              { id: 'history', label: 'HISTORY', icon: 'receipt' },
+            ].map((tab) => (
+              <TouchableOpacity
+                key={tab.id}
+                style={[styles.tabButton, activeTab === tab.id && styles.activeTabButton] as any}
+                onPress={() => handleTabChange(tab.id as any)}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name={activeTab === tab.id ? (tab.icon as any) : (`${tab.icon}-outline` as any)}
+                  size={16}
+                  color={activeTab === tab.id ? theme.primary : theme.textSecondary}
+                />
+                <Text style={[styles.tabButtonLabel, activeTab === tab.id && styles.activeTabButtonLabel] as any}>
+                  {tab.label}
                 </Text>
-
-                <View style={zerodhaError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
-                  <View style={zerodhaError ? styles.inactiveDot : styles.activeDot} />
-                  <Text style={zerodhaError ? styles.inactiveStatusText : styles.activeStatusText}>
-                    {zerodhaLoading ? 'LOADING' : zerodhaError ? 'INACTIVE' : 'CONNECTED'}
-                  </Text>
-                </View>
-              </View>
-            </View>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          {is404Error ? (
-            <View style={styles.formCard}>
-              <View style={styles.formHeaderContainer}>
-                <View style={styles.actionIconCircle}>
-                  <Ionicons name="link-outline" size={22} color={theme.primary} />
-                </View>
-                <View style={styles.actionTextContainer}>
-                  <Text style={styles.formTitle}>Link Your Zerodha Account</Text>
-                  <Text style={styles.formSubtitle}>
-                    Please configure your Kite Connect API credentials to sync your live portfolio, funds, and place orders.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>KITE API KEY *</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="key-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Enter your Kite API Key"
-                    placeholderTextColor={theme.placeholder}
-                    value={apiKey}
-                    onChangeText={(text) => {
-                      setApiKey(text);
-                      if (formError) setFormError(null);
-                    }}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>KITE API SECRET *</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Enter your Kite API Secret"
-                    placeholderTextColor={theme.placeholder}
-                    value={apiSecret}
-                    onChangeText={(text) => {
-                      setApiSecret(text);
-                      if (formError) setFormError(null);
-                    }}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    secureTextEntry
-                  />
-                </View>
-              </View>
-
-              <View style={[styles.inputGroup, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Ionicons name="power-outline" size={18} color={theme.textSecondary} />
-                  <Text style={[styles.inputLabel, { marginBottom: 0 }]}>ENABLE AUTOLOGIN</Text>
-                </View>
-                <Switch
-                  value={enableAutoLogin}
-                  onValueChange={setEnableAutoLogin}
-                  trackColor={{ false: theme.borderLight, true: theme.primary }}
-                  thumbColor="#ffffff"
-                />
-              </View>
-
-              {enableAutoLogin && (
-                <>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>USER NAME *</Text>
-                    <View style={styles.inputWrapper}>
-                      <Ionicons name="person-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                      <TextInput
-                        style={styles.textInput}
-                        placeholder="Enter your Zerodha User Name"
-                        placeholderTextColor={theme.placeholder}
-                        value={userName}
-                        onChangeText={(text) => {
-                          setUserName(text);
-                          if (formError) setFormError(null);
-                        }}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>PASSWORD *</Text>
-                    <View style={styles.inputWrapper}>
-                      <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                      <TextInput
-                        style={styles.textInput}
-                        placeholder="Enter your Password"
-                        placeholderTextColor={theme.placeholder}
-                        value={password}
-                        onChangeText={(text) => {
-                          setPassword(text);
-                          if (formError) setFormError(null);
-                        }}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        secureTextEntry
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>TOTP SECRET *</Text>
-                    <View style={styles.inputWrapper}>
-                      <Ionicons name="keypad-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                      <TextInput
-                        style={styles.textInput}
-                        placeholder="Enter your TOTP Secret"
-                        placeholderTextColor={theme.placeholder}
-                        value={totpSecret}
-                        onChangeText={(text) => {
-                          setTotpSecret(text);
-                          if (formError) setFormError(null);
-                        }}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        secureTextEntry
-                      />
-                    </View>
-                  </View>
-                </>
-              )}
-
-              {formError && (
-                <View style={styles.errorContainer}>
-                  <Ionicons name="alert-circle-outline" size={16} color={theme.danger} />
-                  <Text style={styles.errorText}>{formError}</Text>
-                </View>
-              )}
-
-              <TouchableOpacity
-                style={[styles.submitButton, savingConfig && styles.disabledButton]}
-                onPress={handleSaveConfig}
-                disabled={savingConfig}
-                activeOpacity={0.8}
-              >
-                {savingConfig ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <>
-                    <Ionicons name="checkmark-circle-outline" size={20} color="#ffffff" />
-                    <Text style={styles.submitButtonText}>Save API Config</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-          ) : isTokenExpired ? (
-            <View style={styles.connectCard}>
-              <View style={styles.connectHeaderContainer}>
-                <View style={styles.warningIconCircle}>
-                  <Ionicons name="warning-outline" size={24} color={theme.warningText} />
-                </View>
-                <View style={styles.actionTextContainer}>
-                  <Text style={styles.connectTitle}>Kite Session Expired</Text>
-                  <Text style={styles.connectSubtitle}>
-                    Your Kite Connect credentials are saved, but your active connection session has expired or is inactive.
-                  </Text>
-                </View>
-              </View>
-
-              {apiKey ? (
-                <View style={styles.apiKeyBadge}>
-                  <Ionicons name="key-outline" size={14} color={theme.textSecondary} />
-                  <Text style={styles.apiKeyBadgeText}>Active API Key: {apiKey}</Text>
-                </View>
-              ) : null}
-
-              <TouchableOpacity
-                style={styles.connectButton}
-                onPress={handleConnectKite}
-                activeOpacity={0.8}
-                disabled={autoConnectLoading}
-              >
-                {autoConnectLoading ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <ActivityIndicator size="small" color="#ffffff" />
-                    <Text style={styles.connectButtonText}>Auto-connecting...</Text>
-                  </View>
-                ) : (
-                  <>
-                    <Ionicons name="flash-outline" size={18} color="#ffffff" />
-                    <Text style={styles.connectButtonText}>Connect to Kite</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.reconfigureButton}
-                onPress={() => {
-                  setIs404Error(true);
-                  setIsTokenExpired(false);
-                }}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="options-outline" size={16} color={theme.textSecondary} />
-                <Text style={styles.reconfigureButtonText}>Reconfigure API Keys</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            (!zerodhaLoading && !zerodhaError && zerodhaUser) ? (
-              <>
-                {/* Custom Premium Segmented Tab Bar */}
-                <View style={styles.tabContainer as any}>
-                  {[
-                    { id: 'execute', label: 'EXECUTE', icon: 'flash' },
-                    { id: 'strategy', label: 'STRATEGY', icon: 'analytics' },
-                    { id: 'history', label: 'HISTORY', icon: 'receipt' },
-                  ].map((tab) => (
-                    <TouchableOpacity
-                      key={tab.id}
-                      style={[styles.tabButton, activeTab === tab.id && styles.activeTabButton] as any}
-                      onPress={() => handleTabChange(tab.id as any)}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons
-                        name={activeTab === tab.id ? (tab.icon as any) : (`${tab.icon}-outline` as any)}
-                        size={16}
-                        color={activeTab === tab.id ? theme.primary : theme.textSecondary}
-                      />
-                      <Text style={[styles.tabButtonLabel, activeTab === tab.id && styles.activeTabButtonLabel] as any}>
-                        {tab.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {/* Tab Views Render */}
-                {renderTabContent()}
-              </>
-            ) : null
-          )}
+          {/* Tab Views Render */}
+          {renderTabContent()}
 
         </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
@@ -1989,8 +1311,6 @@ export default function ZerodhaDashboard() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Slide-Up Modifying Overlay Modal */}
-      {renderModifyOrderModal()}
     </View>
   );
 }

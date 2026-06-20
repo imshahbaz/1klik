@@ -234,7 +234,7 @@ export default function HomeScreen() {
               <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: '600', textAlign: 'center' }}>Screener</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/zerodha')} activeOpacity={0.7}>
+            <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/trade')} activeOpacity={0.7}>
               <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(16, 185, 129, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
                 <Ionicons name="pulse" size={30} color={theme.success || '#10b981'} />
               </View>

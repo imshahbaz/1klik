@@ -65,11 +65,21 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="zerodha"
+        name="trade"
         options={{
           title: 'Trade',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'pulse' : 'pulse-outline'} size={24} color={color} />
+          ),
+        }}
+        listeners={{ tabPress: requireAuth }}
+      />
+      <Tabs.Screen
+        name="brokers"
+        options={{
+          title: 'Brokers',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'link' : 'link-outline'} size={24} color={color} />
           ),
         }}
         listeners={{ tabPress: requireAuth }}
