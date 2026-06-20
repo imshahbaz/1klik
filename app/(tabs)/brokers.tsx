@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 
 export default function BrokersConfigScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
   const { user, appLoading, logout } = useAuth() as any;
@@ -178,9 +179,9 @@ export default function BrokersConfigScreen() {
     }
   };
 
-  const handleNavigationChange = async (navState: any) => {
-    if (navState.url.includes('request_token=')) {
-      const tokenMatch = navState.url.match(/[?&]request_token=([^&]+)/);
+  const checkZerodhaAuthUrl = async (url: string) => {
+    if (url && url.includes('request_token=')) {
+      const tokenMatch = url.match(/[?&]request_token=([^&]+)/);
       if (tokenMatch && tokenMatch[1]) {
         const requestToken = tokenMatch[1];
         setShowWebView(false);
@@ -189,11 +190,14 @@ export default function BrokersConfigScreen() {
           setZerodhaLoading(true);
           setZerodhaError(null);
           setIsTokenExpired(false);
-          await zerodhaAPI.login(requestToken, user?.id || user?.userId || '');
+          const loginRes = await zerodhaAPI.login(requestToken, user?.id || user?.userId || '');
+          if (loginRes.data && loginRes.data.success === false) {
+            throw new Error(loginRes.data.message || "Login failed on backend.");
+          }
+          await fetchZerodhaProfile();
           CustomAlert.alert(
             "Connection Successful",
-            "Your Zerodha Kite session has been successfully established and authenticated!",
-            [{ text: "OK", onPress: () => fetchZerodhaProfile() }]
+            "Your Zerodha Kite session has been successfully established and authenticated!"
           );
         } catch (err: any) {
           const errMsg = err.response?.data?.message || err.message || "Failed to authenticate session with the backend.";
@@ -203,6 +207,13 @@ export default function BrokersConfigScreen() {
           setZerodhaLoading(false);
         }
       }
+    }
+  };
+
+  const handleNavigationChange = (navState: any) => checkZerodhaAuthUrl(navState.url);
+  const handleZerodhaWebViewError = (e: any) => {
+    if (e.nativeEvent && e.nativeEvent.url) {
+      checkZerodhaAuthUrl(e.nativeEvent.url);
     }
   };
 
@@ -343,8 +354,21 @@ export default function BrokersConfigScreen() {
   useEffect(() => {
     if (activeBrokerTab === 'rupeezy') {
       fetchRupeezyProfile();
+    } else {
+      fetchZerodhaProfile();
     }
   }, [activeBrokerTab]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (activeBrokerTab === 'rupeezy') {
+        fetchRupeezyProfile();
+      } else {
+        fetchZerodhaProfile();
+      }
+    });
+    return unsubscribe;
+  }, [navigation, activeBrokerTab]);
 
   useEffect(() => {
     if (!appLoading && user && !hasFetchedProfile.current) {
@@ -381,6 +405,8 @@ export default function BrokersConfigScreen() {
         <WebView
           source={{ uri: `https://kite.zerodha.com/connect/login?v=3&api_key=${finalApiKey}` }}
           onNavigationStateChange={handleNavigationChange}
+          onError={handleZerodhaWebViewError}
+          onHttpError={handleZerodhaWebViewError}
           style={{ flex: 1 }}
           startInLoadingState={true}
           javaScriptEnabled={true}
