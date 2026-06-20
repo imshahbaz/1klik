@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Modal, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
@@ -54,9 +54,20 @@ export default function ScreenerScreen() {
     }
   };
 
+  const isNavigatingToChart = useRef(false);
+
   useFocusEffect(
     useCallback(() => {
+      if (isNavigatingToChart.current) {
+        // We are returning from the chart page, do not clear data.
+        isNavigatingToChart.current = false;
+        return;
+      }
+      // Initial load or returning from a different tab
       fetchStrategies();
+      setScanResults([]);
+      setSelectedStrategy(null);
+      setScanError(null);
     }, [])
   );
 
@@ -156,6 +167,7 @@ export default function ScreenerScreen() {
         activeOpacity={0.7}
         onPress={() => {
           if (symbol !== 'N/A') {
+            isNavigatingToChart.current = true;
             router.push(`/chartPage?symbol=${encodeURIComponent(symbol)}`);
           }
         }}
@@ -299,25 +311,34 @@ export default function ScreenerScreen() {
           {scanLoading ? (
             renderStockSkeletons()
           ) : scanError ? (
-            <View style={styles.resultsPlaceholder}>
-              <Ionicons name="alert-circle-outline" size={36} color={theme.danger} />
-              <Text style={styles.resultsErrorText}>{scanError}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={() => handleStrategyPress(selectedStrategy || '')} activeOpacity={0.8}>
+            <View style={styles.emptyStateContainer}>
+              <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.danger + '15' }]}>
+                <Ionicons name="alert-circle-outline" size={32} color={theme.danger} />
+              </View>
+              <Text style={styles.emptyStateTitle}>Scan Failed</Text>
+              <Text style={[styles.emptyStateSubtext, { color: theme.danger }]}>{scanError}</Text>
+              <TouchableOpacity style={[styles.retryButton, { marginTop: 8 }]} onPress={() => handleStrategyPress(selectedStrategy || '')} activeOpacity={0.8}>
                 <Text style={styles.retryText}>Retry Scan</Text>
               </TouchableOpacity>
             </View>
           ) : !selectedStrategy ? (
-            <View style={styles.resultsPlaceholder}>
-              <Ionicons name="radio-outline" size={44} color={theme.primary} />
-              <Text style={styles.resultsPlaceholderText}>
-                Choose a scanning strategy from the dropdown selector above to query the live market.
+            <View style={styles.emptyStateContainer}>
+              <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.primary + '15' }]}>
+                <Ionicons name="search-outline" size={32} color={theme.primary} />
+              </View>
+              <Text style={styles.emptyStateTitle}>Ready to Scan</Text>
+              <Text style={styles.emptyStateSubtext}>
+                Select a strategy above to query the market and find your next setup.
               </Text>
             </View>
           ) : scanResults.length === 0 ? (
-            <View style={styles.resultsPlaceholder}>
-              <Ionicons name="filter-outline" size={36} color={theme.iconMuted} />
-              <Text style={styles.resultsPlaceholderText}>
-                No stocks currently matching this scan criteria.
+            <View style={styles.emptyStateContainer}>
+              <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.borderLight }]}>
+                <Ionicons name="filter-outline" size={32} color={theme.iconMuted} />
+              </View>
+              <Text style={styles.emptyStateTitle}>No Matches Found</Text>
+              <Text style={styles.emptyStateSubtext}>
+                No stocks currently match the {selectedStrategy} criteria.
               </Text>
             </View>
           ) : (
