@@ -14,6 +14,7 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 import { DimensionsProvider } from '../context/DimensionsContext';
 import NetInfo from '@react-native-community/netinfo';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
+import { SecurityProvider } from '../context/SecurityContext';
 import { appUpdateInfo } from '../services/api';
 import { isFirebaseInitialized } from '../services/notificationService';
 
@@ -233,7 +234,9 @@ export default function RootLayout() {
           <ThemeProvider>
             <DimensionsProvider>
               <AlertProvider>
-                <AppContent />
+                <SecurityProvider>
+                  <AppContent />
+                </SecurityProvider>
               </AlertProvider>
             </DimensionsProvider>
           </ThemeProvider>
