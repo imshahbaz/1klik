@@ -147,9 +147,12 @@ export default function ScreenerScreen() {
 
     // Parse price safely
     const rawPrice = item.ltp || item.close || item.lastPrice || item.price;
-    const priceText = typeof rawPrice === 'number'
-      ? `₹${rawPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-      : rawPrice ? `₹${rawPrice}` : '—';
+    let priceText = '—';
+    if (typeof rawPrice === 'number') {
+      priceText = `₹${rawPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    } else if (rawPrice) {
+      priceText = `₹${rawPrice}`;
+    }
 
     // Parse margin value
     const rawMargin = item.margin || item.leverage || item.marginAllowed || '';
@@ -233,7 +236,9 @@ export default function ScreenerScreen() {
           </View>
 
           {/* Dropdown Select Box Trigger */}
-          {loading ? (
+          {(() => {
+            if (loading) {
+              return (
             <View style={styles.dropdownTrigger}>
               <View style={styles.dropdownLeft}>
                 <ActivityIndicator size="small" color={theme.primary} />
@@ -241,7 +246,10 @@ export default function ScreenerScreen() {
               </View>
               <Ionicons name="chevron-down" size={18} color={theme.iconMuted} />
             </View>
-          ) : error ? (
+              );
+            }
+            if (error) {
+              return (
             <TouchableOpacity
               style={[styles.dropdownTrigger, { borderColor: theme.danger }]}
               onPress={fetchStrategies}
@@ -253,7 +261,9 @@ export default function ScreenerScreen() {
               </View>
               <Ionicons name="refresh" size={16} color={theme.danger} />
             </TouchableOpacity>
-          ) : (
+              );
+            }
+            return (
             <TouchableOpacity
               style={[
                 styles.dropdownTrigger,
@@ -294,7 +304,8 @@ export default function ScreenerScreen() {
                 color={selectedStrategy ? theme.primary : theme.iconMuted}
               />
             </TouchableOpacity>
-          )}
+            );
+          })()}
         </View>
 
         {/* Divider */}
@@ -308,9 +319,12 @@ export default function ScreenerScreen() {
             </Text>
           </View>
 
-          {scanLoading ? (
-            renderStockSkeletons()
-          ) : scanError ? (
+          {(() => {
+            if (scanLoading) {
+              return renderStockSkeletons();
+            }
+            if (scanError) {
+              return (
             <View style={styles.emptyStateContainer}>
               <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.danger + '15' }]}>
                 <Ionicons name="alert-circle-outline" size={32} color={theme.danger} />
@@ -321,7 +335,10 @@ export default function ScreenerScreen() {
                 <Text style={styles.retryText}>Retry Scan</Text>
               </TouchableOpacity>
             </View>
-          ) : !selectedStrategy ? (
+              );
+            }
+            if (!selectedStrategy) {
+              return (
             <View style={styles.emptyStateContainer}>
               <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.primary + '15' }]}>
                 <Ionicons name="search-outline" size={32} color={theme.primary} />
@@ -331,7 +348,10 @@ export default function ScreenerScreen() {
                 Select a strategy above to query the market and find your next setup.
               </Text>
             </View>
-          ) : scanResults.length === 0 ? (
+              );
+            }
+            if (scanResults.length === 0) {
+              return (
             <View style={styles.emptyStateContainer}>
               <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.borderLight }]}>
                 <Ionicons name="filter-outline" size={32} color={theme.iconMuted} />
@@ -341,7 +361,9 @@ export default function ScreenerScreen() {
                 No stocks currently match the {selectedStrategy} criteria.
               </Text>
             </View>
-          ) : (
+              );
+            }
+            return (
             <FlatList
               data={scanResults}
               keyExtractor={(item, index) => (item.symbol || item.nsecode || item.name || index.toString()) + index}
@@ -355,7 +377,8 @@ export default function ScreenerScreen() {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             />
-          )}
+            );
+          })()}
         </View>
       </View>
 

@@ -141,12 +141,17 @@ export default function HomeScreen() {
         </View>
 
         {/* Market Status Card */}
-        {cardLoading && !marketData ? (
+        {(() => {
+          if (cardLoading && !marketData) {
+            return (
           <View style={[styles.card, styles.centeredCard]}>
             <ActivityIndicator size="small" color={theme.iconMuted} />
             <Text style={styles.loadingText}>Fetching Live Market Status...</Text>
           </View>
-        ) : error && !marketData ? (
+            );
+          }
+          if (error && !marketData) {
+            return (
           <View style={[styles.card, styles.centeredCard]}>
             <Ionicons name="alert-circle-outline" size={24} color={theme.danger} />
             <Text style={styles.errorText}>{error}</Text>
@@ -154,7 +159,9 @@ export default function HomeScreen() {
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
           </View>
-        ) : (
+            );
+          }
+          return (
           <TouchableOpacity
             style={styles.card}
             activeOpacity={0.9}
@@ -216,7 +223,8 @@ export default function HomeScreen() {
               </View>
             </View>
           </TouchableOpacity>
-        )}
+          );
+        })()}
 
         {/* Quick Actions Section */}
         <View style={{ backgroundColor: theme.card, borderRadius: 24, padding: 20, marginTop: 20, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 4 }}>

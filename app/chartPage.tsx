@@ -122,23 +122,32 @@ export default function ChartScreen() {
             <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>AI ANALYSIS</Text>
           </View>
 
-          {aiLoading ? (
+          {(() => {
+            if (aiLoading) {
+              return (
             <View style={[styles.aiCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <ActivityIndicator size="large" color={theme.primary} style={{ marginVertical: 32 }} />
             </View>
-          ) : aiAnalysis ? (
+              );
+            }
+            if (aiAnalysis) {
+              return (
             <View style={[styles.aiCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <View style={styles.aiGrid}>
                 {/* Left Column: Action, Confidence, Trend */}
                 <View style={styles.aiLeft}>
                   <View style={styles.aiItem}>
                     <Text style={[styles.aiLabel, { color: theme.textSecondary }]}>RECOMMENDATION</Text>
-                    <Text style={[styles.aiAction, {
-                      color: aiAnalysis.action?.toUpperCase() === 'BUY' ? '#22c55e' :
-                        aiAnalysis.action?.toUpperCase() === 'SELL' ? '#ef4444' : '#eab308'
-                    }]}>
-                      {aiAnalysis.action}
-                    </Text>
+                    {(() => {
+                      let actionColor = '#eab308';
+                      if (aiAnalysis.action?.toUpperCase() === 'BUY') actionColor = '#22c55e';
+                      else if (aiAnalysis.action?.toUpperCase() === 'SELL') actionColor = '#ef4444';
+                      return (
+                        <Text style={[styles.aiAction, { color: actionColor }]}>
+                          {aiAnalysis.action}
+                        </Text>
+                      );
+                    })()}
                   </View>
                   <View style={styles.aiRow}>
                     <View style={styles.aiItem}>
@@ -149,13 +158,11 @@ export default function ChartScreen() {
                     <View style={styles.aiItem}>
                       <Text style={[styles.aiLabel, { color: theme.textSecondary }]}>TREND</Text>
                       <View style={styles.trendRow}>
-                        {aiAnalysis.trend?.toUpperCase() === 'BULLISH' ? (
-                          <Ionicons name="trending-up" size={16} color="#22c55e" />
-                        ) : aiAnalysis.trend?.toUpperCase() === 'BEARISH' ? (
-                          <Ionicons name="trending-down" size={16} color="#ef4444" />
-                        ) : (
-                          <View style={styles.neutralDot} />
-                        )}
+                        {(() => {
+                          if (aiAnalysis.trend?.toUpperCase() === 'BULLISH') return <Ionicons name="trending-up" size={16} color="#22c55e" />;
+                          if (aiAnalysis.trend?.toUpperCase() === 'BEARISH') return <Ionicons name="trending-down" size={16} color="#ef4444" />;
+                          return <View style={styles.neutralDot} />;
+                        })()}
                         <Text style={[styles.aiValue, { color: theme.textPrimary, textTransform: 'capitalize', marginLeft: 4 }]}>{aiAnalysis.trend}</Text>
                       </View>
                     </View>
@@ -188,11 +195,14 @@ export default function ChartScreen() {
                 </View>
               </View>
             </View>
-          ) : (
+              );
+            }
+            return (
             <View style={[styles.emptyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <Text style={[styles.emptyText, { color: theme.textSecondary }]}>NO AI ANALYSIS AVAILABLE FOR THIS SYMBOL</Text>
             </View>
-          )}
+            );
+          })()}
         </View>
 
         {/* News Section */}
@@ -203,10 +213,12 @@ export default function ChartScreen() {
           </View>
 
           <View style={styles.newsList}>
-            {newsLoading ? (
-              <ActivityIndicator size="large" color={theme.primary} style={{ marginVertical: 32 }} />
-            ) : news.length > 0 ? (
-              news.map((item, index) => (
+            {(() => {
+              if (newsLoading) {
+                return <ActivityIndicator size="large" color={theme.primary} style={{ marginVertical: 32 }} />;
+              }
+              if (news.length > 0) {
+                return news.map((item, index) => (
                 <TouchableOpacity
                   key={index}
                   activeOpacity={0.7}
@@ -225,12 +237,14 @@ export default function ChartScreen() {
                     )}
                   </View>
                 </TouchableOpacity>
-              ))
-            ) : (
+                ));
+              }
+              return (
               <View style={[styles.emptyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <Text style={[styles.emptyText, { color: theme.textSecondary }]}>NO NEWS AVAILABLE FOR THIS SYMBOL</Text>
               </View>
-            )}
+              );
+            })()}
           </View>
         </View>
       </ScrollView>

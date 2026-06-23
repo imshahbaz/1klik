@@ -39,7 +39,7 @@ export async function requestUserPermission(): Promise<boolean> {
     if (Platform.OS === 'android') {
       const apiLevel = typeof Platform.Version === 'number'
         ? Platform.Version
-        : parseInt(String(Platform.Version), 10);
+        : Number.parseInt(String(Platform.Version), 10);
 
       if (apiLevel >= 33) {
         const granted = await PermissionsAndroid.request(
@@ -136,7 +136,7 @@ export async function checkNotificationPermission(): Promise<boolean> {
     if (Platform.OS === 'android') {
       const apiLevel = typeof Platform.Version === 'number'
         ? Platform.Version
-        : parseInt(String(Platform.Version), 10);
+        : Number.parseInt(String(Platform.Version), 10);
 
       if (apiLevel >= 33) {
         const hasAndroidPermission = await PermissionsAndroid.check(

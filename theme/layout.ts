@@ -13,7 +13,9 @@ export function useAdaptiveLayout(insets?: EdgeInsets) {
   return useMemo(() => {
     const isCompact = width < COMPACT_WIDTH;
     const isTablet = width >= TABLET_WIDTH;
-    const horizontalPadding = isCompact ? 14 : isTablet ? 32 : 20;
+    let horizontalPadding = 20;
+    if (isCompact) horizontalPadding = 14;
+    else if (isTablet) horizontalPadding = 32;
 
     return {
       width,

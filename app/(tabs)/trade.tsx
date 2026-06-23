@@ -93,11 +93,11 @@ export default function TradeScreen() {
     try {
       if (!dateStr) return new Date();
       const parsed = Date.parse(dateStr);
-      if (!isNaN(parsed)) return new Date(parsed);
+      if (!Number.isNaN(parsed)) return new Date(parsed);
 
       const parts = dateStr.split(' ');
       if (parts.length === 3) {
-        const day = parseInt(parts[0]);
+        const day = Number.parseInt(parts[0]);
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const fullMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -106,8 +106,8 @@ export default function TradeScreen() {
           monthIdx = fullMonths.findIndex(m => m.toLowerCase() === parts[1].toLowerCase());
         }
 
-        const year = parseInt(parts[2]);
-        if (!isNaN(day) && monthIdx !== -1 && !isNaN(year)) {
+        const year = Number.parseInt(parts[2]);
+        if (!Number.isNaN(day) && monthIdx !== -1 && !Number.isNaN(year)) {
           return new Date(year, monthIdx, day);
         }
       }
@@ -155,7 +155,12 @@ export default function TradeScreen() {
 
       if (mtfRes.status === 'fulfilled') {
         const rawData = mtfRes.value.data;
-        const ordersArray = Array.isArray(rawData) ? rawData : (Array.isArray(rawData?.data) ? rawData.data : []);
+        let ordersArray = [];
+        if (Array.isArray(rawData)) {
+          ordersArray = rawData;
+        } else if (Array.isArray(rawData?.data)) {
+          ordersArray = rawData.data;
+        }
         const formatted = ordersArray.map((order: any, idx: number) => ({
           id: order.id || `m-api-${idx}`,
           symbol: order.symbol,
@@ -173,7 +178,12 @@ export default function TradeScreen() {
 
       if (stratRes.status === 'fulfilled') {
         const rawData = stratRes.value.data;
-        const stratArray = Array.isArray(rawData) ? rawData : (Array.isArray(rawData?.data) ? rawData.data : []);
+        let stratArray = [];
+        if (Array.isArray(rawData)) {
+          stratArray = rawData;
+        } else if (Array.isArray(rawData?.data)) {
+          stratArray = rawData.data;
+        }
         const formatted = stratArray.map((order: any, idx: number) => ({
           id: order.id || order._id || `s-api-${idx}`,
           symbol: order.symbol || 'AUTO',
@@ -209,7 +219,7 @@ export default function TradeScreen() {
       CustomAlert.alert('Execution Alert', 'Please enter or select a stock symbol.');
       return;
     }
-    if (!tradeQty || parseInt(tradeQty) <= 0) {
+    if (!tradeQty || Number.parseInt(tradeQty) <= 0) {
       CustomAlert.alert('Execution Alert', 'Please enter a valid quantity.');
       return;
     }
@@ -220,7 +230,7 @@ export default function TradeScreen() {
     const payload = {
       userId: parsedUserId,
       symbol: tradeSymbol.toUpperCase().trim(),
-      quantity: parseInt(tradeQty),
+      quantity: Number.parseInt(tradeQty),
       date: isoDateString,
       broker: tradeBroker,
     };
@@ -234,7 +244,7 @@ export default function TradeScreen() {
         setMtfOrders(prev => prev.map(o => o.id === editingMtfOrderId ? {
           ...o,
           symbol: tradeSymbol.toUpperCase().trim(),
-          qty: parseInt(tradeQty),
+          qty: Number.parseInt(tradeQty),
           targetDate: formatDateString(targetDate),
           status: 'COMPLETED',
           reason: undefined,
@@ -252,7 +262,7 @@ export default function TradeScreen() {
           id: (mtfOrders.length + 1).toString(),
           symbol: tradeSymbol.toUpperCase().trim(),
           type: 'BUY',
-          qty: parseInt(tradeQty),
+          qty: Number.parseInt(tradeQty),
           price: response.data?.price || 2845.20,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: 'COMPLETED',
@@ -300,7 +310,7 @@ export default function TradeScreen() {
           id: (mtfOrders.length + 1).toString(),
           symbol: tradeSymbol.toUpperCase().trim(),
           type: 'BUY',
-          qty: parseInt(tradeQty),
+          qty: Number.parseInt(tradeQty),
           price: 0,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: isConflict ? 'CONFLICT' : 'REJECTED',
@@ -1061,8 +1071,8 @@ export default function TradeScreen() {
       CustomAlert.alert('Validation Error', 'Please select a Strategy Name.');
       return;
     }
-    const amountVal = parseFloat(strategyFormData.amount);
-    if (isNaN(amountVal) || amountVal <= 0) {
+    const amountVal = Number.parseFloat(strategyFormData.amount);
+    if (Number.isNaN(amountVal) || amountVal <= 0) {
       CustomAlert.alert('Validation Error', 'Amount must be greater than 0.');
       return;
     }
@@ -1255,9 +1265,12 @@ export default function TradeScreen() {
                   if (!dayDate) {
                     return <View key={`empty-${idx}`} style={styles.calendarDayCell as any} />;
                   }
-                  const currentSelectedDate = datePickerTarget === 'execute'
-                    ? targetDate
-                    : (strategyFormData.date ? new Date(strategyFormData.date) : new Date());
+                  let currentSelectedDate = new Date();
+                  if (datePickerTarget === 'execute') {
+                    currentSelectedDate = targetDate;
+                  } else if (strategyFormData.date) {
+                    currentSelectedDate = new Date(strategyFormData.date);
+                  }
 
                   const isSelected = currentSelectedDate.getDate() === dayDate.getDate() &&
                     currentSelectedDate.getMonth() === dayDate.getMonth() &&

@@ -451,6 +451,66 @@ export default function BrokersConfigScreen() {
     );
   }
 
+  let zerodhaStatusColor = theme.success;
+  if (zerodhaLoading) zerodhaStatusColor = theme.primary;
+  else if (zerodhaError) zerodhaStatusColor = theme.danger;
+
+  let zerodhaConnectionText = 'CONNECTED';
+  if (zerodhaLoading) zerodhaConnectionText = 'LOADING';
+  else if (zerodhaError) zerodhaConnectionText = 'INACTIVE';
+
+  let zerodhaStatusContent = null;
+  if (zerodhaLoading) {
+    zerodhaStatusContent = (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <ActivityIndicator size="small" color={theme.primary} />
+        <Text style={styles.connectionTitle}>Connecting...</Text>
+      </View>
+    );
+  } else if (zerodhaError) {
+    zerodhaStatusContent = (
+      <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
+        Connection Inactive
+      </Text>
+    );
+  } else {
+    zerodhaStatusContent = (
+      <Text style={styles.connectionTitle} numberOfLines={1}>
+        {typeof zerodhaUser === 'string' ? 'Active Session' : (zerodhaUser?.userName || zerodhaUser?.name || 'Active Session')}
+      </Text>
+    );
+  }
+
+  let rupeezyStatusColor = theme.success;
+  if (rupeezyLoading) rupeezyStatusColor = theme.primary;
+  else if (rupeezyError) rupeezyStatusColor = theme.danger;
+
+  let rupeezyConnectionText = 'CONNECTED';
+  if (rupeezyLoading) rupeezyConnectionText = 'LOADING';
+  else if (rupeezyError) rupeezyConnectionText = 'INACTIVE';
+
+  let rupeezyStatusContent = null;
+  if (rupeezyLoading) {
+    rupeezyStatusContent = (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <ActivityIndicator size="small" color={theme.primary} />
+        <Text style={styles.connectionTitle}>Connecting...</Text>
+      </View>
+    );
+  } else if (rupeezyError) {
+    rupeezyStatusContent = (
+      <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
+        Connection Inactive
+      </Text>
+    );
+  } else {
+    rupeezyStatusContent = (
+      <Text style={styles.connectionTitle} numberOfLines={1}>
+        {typeof rupeezyUser === 'string' ? 'Active Session' : (rupeezyUser?.userName || rupeezyUser?.name || 'Active Session')}
+      </Text>
+    );
+  }
+
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>
       <KeyboardAvoidingView
@@ -490,7 +550,7 @@ export default function BrokersConfigScreen() {
           {activeBrokerTab === 'zerodha' && (
             <View>
               {/* Connection Status Card */}
-              <View style={[styles.connectionCard, { borderLeftColor: zerodhaLoading ? theme.primary : zerodhaError ? theme.danger : theme.success }]}>
+              <View style={[styles.connectionCard, { borderLeftColor: zerodhaStatusColor }]}>
                 <View style={{ gap: 0 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View style={[styles.brandContainer, { marginRight: 0 }]}>
@@ -498,20 +558,7 @@ export default function BrokersConfigScreen() {
                         <Ionicons name="link-outline" size={18} color={theme.primary} />
                       </View>
                       <View style={{ flex: 1 }}>
-                        {zerodhaLoading ? (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <ActivityIndicator size="small" color={theme.primary} />
-                            <Text style={styles.connectionTitle}>Connecting...</Text>
-                          </View>
-                        ) : zerodhaError ? (
-                          <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
-                            Connection Inactive
-                          </Text>
-                        ) : (
-                          <Text style={styles.connectionTitle} numberOfLines={1}>
-                            {typeof zerodhaUser === 'string' ? 'Active Session' : (zerodhaUser?.userName || zerodhaUser?.name || 'Active Session')}
-                          </Text>
-                        )}
+                        {zerodhaStatusContent}
                       </View>
                     </View>
                     <TouchableOpacity style={styles.blackCardConfigBtn as any} onPress={() => setIs404Error(!is404Error)}>
@@ -525,7 +572,7 @@ export default function BrokersConfigScreen() {
                     <View style={zerodhaError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
                       <View style={zerodhaError ? styles.inactiveDot : styles.activeDot} />
                       <Text style={zerodhaError ? styles.inactiveStatusText : styles.activeStatusText}>
-                        {zerodhaLoading ? 'LOADING' : zerodhaError ? 'INACTIVE' : 'CONNECTED'}
+                        {zerodhaConnectionText}
                       </Text>
                     </View>
                   </View>
@@ -634,7 +681,7 @@ export default function BrokersConfigScreen() {
           {activeBrokerTab === 'rupeezy' && (
             <View>
               {/* Connection Status Card */}
-              <View style={[styles.connectionCard, { borderLeftColor: rupeezyLoading ? theme.primary : rupeezyError ? theme.danger : theme.success }]}>
+              <View style={[styles.connectionCard, { borderLeftColor: rupeezyStatusColor }]}>
                 <View style={{ gap: 0 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View style={[styles.brandContainer, { marginRight: 0 }]}>
@@ -642,20 +689,7 @@ export default function BrokersConfigScreen() {
                         <Ionicons name="link-outline" size={18} color={theme.primary} />
                       </View>
                       <View style={{ flex: 1 }}>
-                        {rupeezyLoading ? (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <ActivityIndicator size="small" color={theme.primary} />
-                            <Text style={styles.connectionTitle}>Connecting...</Text>
-                          </View>
-                        ) : rupeezyError ? (
-                          <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
-                            Connection Inactive
-                          </Text>
-                        ) : (
-                          <Text style={styles.connectionTitle} numberOfLines={1}>
-                            {typeof rupeezyUser === 'string' ? 'Active Session' : (rupeezyUser?.userName || rupeezyUser?.name || 'Active Session')}
-                          </Text>
-                        )}
+                        {rupeezyStatusContent}
                       </View>
                     </View>
                     <TouchableOpacity style={styles.blackCardConfigBtn as any} onPress={() => setIsRupeezy404Error(!isRupeezy404Error)}>
@@ -669,7 +703,7 @@ export default function BrokersConfigScreen() {
                     <View style={rupeezyError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
                       <View style={rupeezyError ? styles.inactiveDot : styles.activeDot} />
                       <Text style={rupeezyError ? styles.inactiveStatusText : styles.activeStatusText}>
-                        {rupeezyLoading ? 'LOADING' : rupeezyError ? 'INACTIVE' : 'CONNECTED'}
+                        {rupeezyConnectionText}
                       </Text>
                     </View>
                   </View>

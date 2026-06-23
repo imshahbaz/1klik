@@ -90,7 +90,7 @@ export default function CalculatorScreen() {
       const start = new Date(entryDate);
       const end = exitDate ? new Date(exitDate) : new Date(entryDate);
 
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
         if (exitDate && end.getTime() < start.getTime()) {
           setExitDate('');
           setDaysHeld(0);
@@ -131,19 +131,19 @@ export default function CalculatorScreen() {
       if (!selectedSymbol) {
         newErrors.stock = 'Stock selection is required';
       }
-      if (!buyPrice || isNaN(parseFloat(buyPrice)) || parseFloat(buyPrice) <= 0) {
+      if (!buyPrice || Number.isNaN(Number.parseFloat(buyPrice)) || Number.parseFloat(buyPrice) <= 0) {
         newErrors.buyPrice = 'Enter a valid buy price';
       }
-      if (!sellPrice || isNaN(parseFloat(sellPrice)) || parseFloat(sellPrice) <= 0) {
+      if (!sellPrice || Number.isNaN(Number.parseFloat(sellPrice)) || Number.parseFloat(sellPrice) <= 0) {
         newErrors.sellPrice = sellType === 'exact' ? 'Enter a valid target price' : 'Enter a valid percentage';
       }
     }
 
     if (stepNum === 2) {
-      if (daysHeld < 0 || isNaN(daysHeld)) {
+      if (daysHeld < 0 || Number.isNaN(daysHeld)) {
         newErrors.daysHeld = 'Enter valid holding days';
       }
-      if (!quantity || isNaN(parseFloat(quantity)) || parseFloat(quantity) <= 0) {
+      if (!quantity || Number.isNaN(Number.parseFloat(quantity)) || Number.parseFloat(quantity) <= 0) {
         newErrors.quantity = quantityType === 'quantity' ? 'Enter quantity' : 'Enter capital amount';
       }
     }
@@ -177,11 +177,11 @@ export default function CalculatorScreen() {
   const calculateReturns = () => {
     if (!validateStep(2)) return;
 
-    const leverage = parseFloat(selectedLeverage) || 1;
-    const bp = parseFloat(buyPrice);
-    const spInput = parseFloat(sellPrice);
+    const leverage = Number.parseFloat(selectedLeverage) || 1;
+    const bp = Number.parseFloat(buyPrice);
+    const spInput = Number.parseFloat(sellPrice);
     const days = daysHeld || 0;
-    const qtyVal = parseFloat(quantity);
+    const qtyVal = Number.parseFloat(quantity);
 
     // Calculate Exit Target price
     const sp = sellType === 'exact' ? spInput : bp * (1 + spInput / 100);
@@ -276,9 +276,10 @@ export default function CalculatorScreen() {
             layout.centeredContent,
             view === 'results' ? styles.resultsContentContainer : null,
           ]}>
-            {view === 'form' ? (
-              // FORM VIEWS
-              activeStep === 1 ? (
+            {(() => {
+              if (view === 'form') {
+                if (activeStep === 1) {
+                  return (
                 // STEP 1: STOCK SELECTION, ENTRY & EXIT
                 <View style={styles.stepContent}>
                   {/* Search Stock Input */}
@@ -431,7 +432,9 @@ export default function CalculatorScreen() {
                     <Ionicons name="arrow-forward" size={18} color="#ffffff" />
                   </TouchableOpacity>
                 </View>
-              ) : (
+                  );
+                } else {
+                  return (
                 // STEP 2: DATES & POSITION SIZE METHOD
                 <View style={styles.stepContent}>
                   {/* Date fields */}
@@ -545,10 +548,11 @@ export default function CalculatorScreen() {
                     </TouchableOpacity>
                   </View>
                 </View>
-              )
-            ) : (
+                  );
+                }
+              } else if (view === 'results' && results) {
+                return (
               // RESULTS SCREEN (Beautiful detailed outputs)
-              results && (
                 <View style={styles.resultsContainer}>
                   {/* Headline ROI card */}
                   <View style={[styles.headlineCard, results.isProfit ? styles.headlineCardProfit : styles.headlineCardLoss]}>
@@ -650,8 +654,10 @@ export default function CalculatorScreen() {
                     </View>
                   </View>
                 </View>
-              )
-            )}
+                );
+              }
+              return null;
+            })()}
           </View>
         </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
@@ -699,9 +705,12 @@ export default function CalculatorScreen() {
                   calendarDays.push(new Date(pickerDate.getFullYear(), pickerDate.getMonth(), i));
                 }
 
-                const currentSelectionDate = datePickerTarget === 'entry'
-                  ? (entryDate ? new Date(entryDate) : null)
-                  : (exitDate ? new Date(exitDate) : null);
+                let currentSelectionDate = null;
+                if (datePickerTarget === 'entry') {
+                  currentSelectionDate = entryDate ? new Date(entryDate) : null;
+                } else {
+                  currentSelectionDate = exitDate ? new Date(exitDate) : null;
+                }
 
                 const minAllowedDate = datePickerTarget === 'exit' && entryDate
                   ? new Date(entryDate)
