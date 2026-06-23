@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
@@ -12,13 +12,15 @@ import { zerodhaAPI, rupeezyAPI } from '../../services/api';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { getSafeBottomPadding } from '../../theme/safeArea';
 import { useZerodhaStyles } from '../../theme/zerodhaStyles';
+import ZerodhaCard from '../../components/brokers/ZerodhaCard';
+import RupeezyCard from '../../components/brokers/RupeezyCard';
 
 export default function BrokersConfigScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
-  const { user, appLoading, logout } = useAuth() as any;
+  const { user, appLoading } = useAuth() as any;
   const { isDarkMode, theme } = useTheme();
   const styles = useZerodhaStyles(isDarkMode);
   
@@ -80,12 +82,12 @@ export default function BrokersConfigScreen() {
       const res = await zerodhaAPI.getMe();
       const payload = res.data;
       
-      if (payload && payload.success === true) {
+      if (payload?.success === true) {
         setZerodhaUser(payload.data);
       } else {
         setZerodhaError(payload?.message || "Kite Connect session is disconnected.");
         setIsTokenExpired(true);
-        if (payload && typeof payload.data === 'string') {
+        if (typeof payload?.data === 'string') {
           setApiKey(payload.data);
         }
       }
@@ -153,7 +155,7 @@ export default function BrokersConfigScreen() {
     try {
       setAutoConnectLoading(true);
       const res = await zerodhaAPI.autoConnect();
-      if (res.data && res.data.success === false) {
+      if (res.data?.success === false) {
         setAutoConnectLoading(false);
         setShowWebView(true);
         return;
@@ -180,9 +182,9 @@ export default function BrokersConfigScreen() {
   };
 
   const checkZerodhaAuthUrl = async (url: string) => {
-    if (url && url.includes('request_token=')) {
-      const tokenMatch = url.match(/[?&]request_token=([^&]+)/);
-      if (tokenMatch && tokenMatch[1]) {
+    if (url?.includes('request_token=')) {
+      const tokenMatch = /[?&]request_token=([^&]+)/.exec(url);
+      if (tokenMatch?.[1]) {
         const requestToken = tokenMatch[1];
         setShowWebView(false);
 
@@ -191,7 +193,7 @@ export default function BrokersConfigScreen() {
           setZerodhaError(null);
           setIsTokenExpired(false);
           const loginRes = await zerodhaAPI.login(requestToken, user?.id || user?.userId || '');
-          if (loginRes.data && loginRes.data.success === false) {
+          if (loginRes.data?.success === false) {
             throw new Error(loginRes.data.message || "Login failed on backend.");
           }
           await fetchZerodhaProfile();
@@ -212,7 +214,7 @@ export default function BrokersConfigScreen() {
 
   const handleNavigationChange = (navState: any) => checkZerodhaAuthUrl(navState.url);
   const handleZerodhaWebViewError = (e: any) => {
-    if (e.nativeEvent && e.nativeEvent.url) {
+    if (e.nativeEvent?.url) {
       checkZerodhaAuthUrl(e.nativeEvent.url);
     }
   };
@@ -263,14 +265,14 @@ export default function BrokersConfigScreen() {
       const res = await rupeezyAPI.getMe();
       const payload = res.data;
       
-      if (payload && payload.success) {
+      if (payload?.success) {
         setRupeezyUser(payload.data);
       } else {
         setRupeezyError(payload?.message || "Rupeezy session is disconnected.");
         setIsRupeezyTokenExpired(true);
-        if (payload && typeof payload.data === 'string') {
+        if (typeof payload?.data === 'string') {
           setRupeezyAppId(payload.data);
-        } else if (payload && payload.data && payload.data.appId) {
+        } else if (payload?.data?.appId) {
           setRupeezyAppId(payload.data.appId);
         }
       }
@@ -292,9 +294,9 @@ export default function BrokersConfigScreen() {
   };
 
   const checkRupeezyAuthUrl = async (url: string) => {
-    if (url && url.includes('auth=')) {
-      const tokenMatch = url.match(/[?&]auth=([^&]+)/);
-      if (tokenMatch && tokenMatch[1]) {
+    if (url?.includes('auth=')) {
+      const tokenMatch = /[?&]auth=([^&]+)/.exec(url);
+      if (tokenMatch?.[1]) {
         const auth = tokenMatch[1];
         setShowRupeezyWebView(false);
 
@@ -303,7 +305,7 @@ export default function BrokersConfigScreen() {
           setRupeezyError(null);
           setIsRupeezyTokenExpired(false);
           const loginRes = await rupeezyAPI.login(auth, user?.id || user?.userId || '');
-          if (loginRes.data && loginRes.data.success === false) {
+          if (loginRes.data?.success === false) {
             throw new Error(loginRes.data.message || "Login failed on backend.");
           }
           await fetchRupeezyProfile();
@@ -324,7 +326,7 @@ export default function BrokersConfigScreen() {
 
   const handleRupeezyNavigationChange = (navState: any) => checkRupeezyAuthUrl(navState.url);
   const handleRupeezyWebViewError = (e: any) => {
-    if (e.nativeEvent && e.nativeEvent.url) {
+    if (e.nativeEvent?.url) {
       checkRupeezyAuthUrl(e.nativeEvent.url);
     }
   };
@@ -451,6 +453,66 @@ export default function BrokersConfigScreen() {
     );
   }
 
+  let zerodhaStatusColor = theme.success;
+  if (zerodhaLoading) zerodhaStatusColor = theme.primary;
+  else if (zerodhaError) zerodhaStatusColor = theme.danger;
+
+  let zerodhaConnectionText = 'CONNECTED';
+  if (zerodhaLoading) zerodhaConnectionText = 'LOADING';
+  else if (zerodhaError) zerodhaConnectionText = 'INACTIVE';
+
+  let zerodhaStatusContent = null;
+  if (zerodhaLoading) {
+    zerodhaStatusContent = (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <ActivityIndicator size="small" color={theme.primary} />
+        <Text style={styles.connectionTitle}>Connecting...</Text>
+      </View>
+    );
+  } else if (zerodhaError) {
+    zerodhaStatusContent = (
+      <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
+        Connection Inactive
+      </Text>
+    );
+  } else {
+    zerodhaStatusContent = (
+      <Text style={styles.connectionTitle} numberOfLines={1}>
+        {typeof zerodhaUser === 'string' ? 'Active Session' : (zerodhaUser?.userName || zerodhaUser?.name || 'Active Session')}
+      </Text>
+    );
+  }
+
+  let rupeezyStatusColor = theme.success;
+  if (rupeezyLoading) rupeezyStatusColor = theme.primary;
+  else if (rupeezyError) rupeezyStatusColor = theme.danger;
+
+  let rupeezyConnectionText = 'CONNECTED';
+  if (rupeezyLoading) rupeezyConnectionText = 'LOADING';
+  else if (rupeezyError) rupeezyConnectionText = 'INACTIVE';
+
+  let rupeezyStatusContent = null;
+  if (rupeezyLoading) {
+    rupeezyStatusContent = (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <ActivityIndicator size="small" color={theme.primary} />
+        <Text style={styles.connectionTitle}>Connecting...</Text>
+      </View>
+    );
+  } else if (rupeezyError) {
+    rupeezyStatusContent = (
+      <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
+        Connection Inactive
+      </Text>
+    );
+  } else {
+    rupeezyStatusContent = (
+      <Text style={styles.connectionTitle} numberOfLines={1}>
+        {typeof rupeezyUser === 'string' ? 'Active Session' : (rupeezyUser?.userName || rupeezyUser?.name || 'Active Session')}
+      </Text>
+    );
+  }
+
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>
       <KeyboardAvoidingView
@@ -488,263 +550,57 @@ export default function BrokersConfigScreen() {
           </View>
 
           {activeBrokerTab === 'zerodha' && (
-            <View>
-              {/* Connection Status Card */}
-              <View style={[styles.connectionCard, { borderLeftColor: zerodhaLoading ? theme.primary : zerodhaError ? theme.danger : theme.success }]}>
-                <View style={{ gap: 0 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <View style={[styles.brandContainer, { marginRight: 0 }]}>
-                      <View style={styles.kiteLogoPlaceholder}>
-                        <Ionicons name="link-outline" size={18} color={theme.primary} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        {zerodhaLoading ? (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <ActivityIndicator size="small" color={theme.primary} />
-                            <Text style={styles.connectionTitle}>Connecting...</Text>
-                          </View>
-                        ) : zerodhaError ? (
-                          <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
-                            Connection Inactive
-                          </Text>
-                        ) : (
-                          <Text style={styles.connectionTitle} numberOfLines={1}>
-                            {typeof zerodhaUser === 'string' ? 'Active Session' : (zerodhaUser?.userName || zerodhaUser?.name || 'Active Session')}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                    <TouchableOpacity style={styles.blackCardConfigBtn as any} onPress={() => setIs404Error(!is404Error)}>
-                      <Ionicons name="settings-outline" size={16} color={theme.textSecondary} />
-                    </TouchableOpacity>
-                  </View>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.borderLight, paddingTop: 8 }}>
-                    <Text style={[styles.connectionSubtitle, { marginTop: 0, flex: 1, marginRight: 12 }]} numberOfLines={2}>
-                      {zerodhaError ? zerodhaError : 'Secured Zerodha Connection'}
-                    </Text>
-                    <View style={zerodhaError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
-                      <View style={zerodhaError ? styles.inactiveDot : styles.activeDot} />
-                      <Text style={zerodhaError ? styles.inactiveStatusText : styles.activeStatusText}>
-                        {zerodhaLoading ? 'LOADING' : zerodhaError ? 'INACTIVE' : 'CONNECTED'}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              {/* Login Action Card if disconnected but config exists */}
-              {!is404Error && isTokenExpired && (
-                <View style={[styles.formCard, { marginTop: 16 }]}>
-                  <Text style={styles.formTitle}>Reconnect Required</Text>
-                  <Text style={styles.formSubtitle}>Your Kite Connect session has expired. Click below to re-authenticate.</Text>
-                  
-                  <TouchableOpacity
-                    style={[styles.submitButton, { marginTop: 16 }]}
-                    onPress={handleConnectKite}
-                    disabled={autoConnectLoading}
-                  >
-                    {autoConnectLoading ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <>
-                        <Ionicons name="flash-outline" size={20} color="#ffffff" />
-                        <Text style={styles.submitButtonText}>Connect to Kite</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Config Form */}
-              {is404Error && (
-                <View style={[styles.formCard, { marginTop: 16 }]}>
-                  <Text style={styles.formTitle}>Zerodha Configuration</Text>
-                  <Text style={styles.formSubtitle}>Enter your Kite Connect API credentials below.</Text>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>KITE API KEY *</Text>
-                    <View style={styles.inputWrapper}>
-                      <Ionicons name="key-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                      <TextInput style={styles.textInput} placeholder="Enter your Kite API Key" placeholderTextColor={theme.placeholder} value={apiKey} onChangeText={(text) => { setApiKey(text); setFormError(null); }} autoCapitalize="none" autoCorrect={false} />
-                    </View>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>KITE API SECRET *</Text>
-                    <View style={styles.inputWrapper}>
-                      <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                      <TextInput style={styles.textInput} placeholder="Enter your Kite API Secret" placeholderTextColor={theme.placeholder} value={apiSecret} onChangeText={(text) => { setApiSecret(text); setFormError(null); }} autoCapitalize="none" autoCorrect={false} secureTextEntry />
-                    </View>
-                  </View>
-
-                  <View style={[styles.inputGroup, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="power-outline" size={18} color={theme.textSecondary} />
-                      <Text style={[styles.inputLabel, { marginBottom: 0 }]}>ENABLE AUTOLOGIN</Text>
-                    </View>
-                    <Switch value={enableAutoLogin} onValueChange={setEnableAutoLogin} trackColor={{ false: theme.borderLight, true: theme.primary }} thumbColor="#ffffff" />
-                  </View>
-
-                  {enableAutoLogin && (
-                    <>
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>USER NAME *</Text>
-                        <View style={styles.inputWrapper}>
-                          <Ionicons name="person-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                          <TextInput style={styles.textInput} placeholder="Enter your Zerodha User Name" placeholderTextColor={theme.placeholder} value={userName} onChangeText={(text) => { setUserName(text); setFormError(null); }} autoCapitalize="none" autoCorrect={false} />
-                        </View>
-                      </View>
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>PASSWORD *</Text>
-                        <View style={styles.inputWrapper}>
-                          <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                          <TextInput style={styles.textInput} placeholder="Enter your Password" placeholderTextColor={theme.placeholder} value={password} onChangeText={(text) => { setPassword(text); setFormError(null); }} autoCapitalize="none" autoCorrect={false} secureTextEntry />
-                        </View>
-                      </View>
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>TOTP SECRET *</Text>
-                        <View style={styles.inputWrapper}>
-                          <Ionicons name="keypad-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                          <TextInput style={styles.textInput} placeholder="Enter your TOTP Secret" placeholderTextColor={theme.placeholder} value={totpSecret} onChangeText={(text) => { setTotpSecret(text); setFormError(null); }} autoCapitalize="none" autoCorrect={false} secureTextEntry />
-                        </View>
-                      </View>
-                    </>
-                  )}
-
-                  {formError && (
-                    <View style={styles.errorContainer}>
-                      <Ionicons name="alert-circle-outline" size={16} color={theme.danger} />
-                      <Text style={styles.errorText}>{formError}</Text>
-                    </View>
-                  )}
-
-                  <TouchableOpacity style={[styles.submitButton, savingConfig && styles.disabledButton]} onPress={handleSaveZerodhaConfig} disabled={savingConfig}>
-                    {savingConfig ? <ActivityIndicator size="small" color="#ffffff" /> : (
-                      <>
-                        <Ionicons name="checkmark-circle-outline" size={20} color="#ffffff" />
-                        <Text style={styles.submitButtonText}>Save API Config</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+            <ZerodhaCard
+              styles={styles}
+              theme={theme}
+              zerodhaStatusColor={zerodhaStatusColor}
+              zerodhaStatusContent={zerodhaStatusContent}
+              zerodhaConnectionText={zerodhaConnectionText}
+              zerodhaError={zerodhaError}
+              is404Error={is404Error}
+              setIs404Error={setIs404Error}
+              isTokenExpired={isTokenExpired}
+              autoConnectLoading={autoConnectLoading}
+              handleConnectKite={handleConnectKite}
+              apiKey={apiKey}
+              setApiKey={setApiKey}
+              apiSecret={apiSecret}
+              setApiSecret={setApiSecret}
+              enableAutoLogin={enableAutoLogin}
+              setEnableAutoLogin={setEnableAutoLogin}
+              userName={userName}
+              setUserName={setUserName}
+              password={password}
+              setPassword={setPassword}
+              totpSecret={totpSecret}
+              setTotpSecret={setTotpSecret}
+              formError={formError}
+              setFormError={setFormError}
+              savingConfig={savingConfig}
+              handleSaveZerodhaConfig={handleSaveZerodhaConfig}
+            />
           )}
 
           {activeBrokerTab === 'rupeezy' && (
-            <View>
-              {/* Connection Status Card */}
-              <View style={[styles.connectionCard, { borderLeftColor: rupeezyLoading ? theme.primary : rupeezyError ? theme.danger : theme.success }]}>
-                <View style={{ gap: 0 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <View style={[styles.brandContainer, { marginRight: 0 }]}>
-                      <View style={styles.kiteLogoPlaceholder}>
-                        <Ionicons name="link-outline" size={18} color={theme.primary} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        {rupeezyLoading ? (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <ActivityIndicator size="small" color={theme.primary} />
-                            <Text style={styles.connectionTitle}>Connecting...</Text>
-                          </View>
-                        ) : rupeezyError ? (
-                          <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
-                            Connection Inactive
-                          </Text>
-                        ) : (
-                          <Text style={styles.connectionTitle} numberOfLines={1}>
-                            {typeof rupeezyUser === 'string' ? 'Active Session' : (rupeezyUser?.userName || rupeezyUser?.name || 'Active Session')}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                    <TouchableOpacity style={styles.blackCardConfigBtn as any} onPress={() => setIsRupeezy404Error(!isRupeezy404Error)}>
-                      <Ionicons name="settings-outline" size={16} color={theme.textSecondary} />
-                    </TouchableOpacity>
-                  </View>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.borderLight, paddingTop: 8 }}>
-                    <Text style={[styles.connectionSubtitle, { marginTop: 0, flex: 1, marginRight: 12 }]} numberOfLines={2}>
-                      {rupeezyError ? rupeezyError : 'Secured Rupeezy Connection'}
-                    </Text>
-                    <View style={rupeezyError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
-                      <View style={rupeezyError ? styles.inactiveDot : styles.activeDot} />
-                      <Text style={rupeezyError ? styles.inactiveStatusText : styles.activeStatusText}>
-                        {rupeezyLoading ? 'LOADING' : rupeezyError ? 'INACTIVE' : 'CONNECTED'}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              {/* Login Action Card if disconnected but config exists */}
-              {!isRupeezy404Error && isRupeezyTokenExpired && (
-                <View style={[styles.formCard, { marginTop: 16 }]}>
-                  <Text style={styles.formTitle}>Reconnect Required</Text>
-                  <Text style={styles.formSubtitle}>Your Rupeezy session has expired. Click below to re-authenticate.</Text>
-                  
-                  <TouchableOpacity
-                    style={[styles.submitButton, { marginTop: 16 }]}
-                    onPress={() => {
-                      if (!rupeezyAppId) {
-                        CustomAlert.alert("Missing App ID", "No saved App ID found. Please save your API config first.");
-                        return;
-                      }
-                      setShowRupeezyWebView(true);
-                    }}
-                  >
-                    <Ionicons name="flash-outline" size={20} color="#ffffff" />
-                    <Text style={styles.submitButtonText}>Connect to Rupeezy</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Config Form */}
-              {isRupeezy404Error && (
-                <View style={[styles.formCard, { marginTop: 16 }]}>
-                  <View style={styles.formHeaderContainer}>
-                    <View style={styles.actionIconCircle}>
-                      <Ionicons name="business-outline" size={22} color={theme.primary} />
-                    </View>
-                    <View style={styles.actionTextContainer}>
-                      <Text style={styles.formTitle}>Rupeezy Configuration</Text>
-                      <Text style={styles.formSubtitle}>Enter your App ID and API Secret below.</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>APP ID *</Text>
-                    <View style={styles.inputWrapper}>
-                      <Ionicons name="apps-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                      <TextInput style={styles.textInput} placeholder="Enter App ID" placeholderTextColor={theme.placeholder} value={rupeezyAppId} onChangeText={(text) => { setRupeezyAppId(text); setRupeezyError(null); }} autoCapitalize="none" autoCorrect={false} />
-                    </View>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>API SECRET *</Text>
-                    <View style={styles.inputWrapper}>
-                      <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                      <TextInput style={styles.textInput} placeholder="Enter API Secret" placeholderTextColor={theme.placeholder} value={rupeezyApiSecret} onChangeText={(text) => { setRupeezyApiSecret(text); setRupeezyError(null); }} autoCapitalize="none" autoCorrect={false} secureTextEntry />
-                    </View>
-                  </View>
-
-                  {rupeezyError && (
-                    <View style={styles.errorContainer}>
-                      <Ionicons name="alert-circle-outline" size={16} color={theme.danger} />
-                      <Text style={styles.errorText}>{rupeezyError}</Text>
-                    </View>
-                  )}
-
-                  <TouchableOpacity style={[styles.submitButton, rupeezySaving && styles.disabledButton]} onPress={handleSaveRupeezyConfig} disabled={rupeezySaving}>
-                    {rupeezySaving ? <ActivityIndicator size="small" color="#ffffff" /> : (
-                      <>
-                        <Ionicons name="checkmark-circle-outline" size={20} color="#ffffff" />
-                        <Text style={styles.submitButtonText}>Save Rupeezy Config</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+            <RupeezyCard
+              styles={styles}
+              theme={theme}
+              rupeezyStatusColor={rupeezyStatusColor}
+              rupeezyStatusContent={rupeezyStatusContent}
+              rupeezyConnectionText={rupeezyConnectionText}
+              rupeezyError={rupeezyError}
+              isRupeezy404Error={isRupeezy404Error}
+              setIsRupeezy404Error={setIsRupeezy404Error}
+              isRupeezyTokenExpired={isRupeezyTokenExpired}
+              rupeezyAppId={rupeezyAppId}
+              setRupeezyAppId={setRupeezyAppId}
+              rupeezyApiSecret={rupeezyApiSecret}
+              setRupeezyApiSecret={setRupeezyApiSecret}
+              setShowRupeezyWebView={setShowRupeezyWebView}
+              rupeezySaving={rupeezySaving}
+              handleSaveRupeezyConfig={handleSaveRupeezyConfig}
+              setRupeezyError={setRupeezyError}
+            />
           )}
 
         </KeyboardAwareScrollView>

@@ -4,8 +4,28 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 
+const HomeIcon = ({ color, focused }: { color: string; focused: boolean }) => (
+  <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
+);
+
+const ScreenerIcon = ({ color, focused }: { color: string; focused: boolean }) => (
+  <Ionicons name={focused ? 'filter' : 'filter-outline'} size={24} color={color} />
+);
+
+const TradeIcon = ({ color, focused }: { color: string; focused: boolean }) => (
+  <Ionicons name={focused ? 'pulse' : 'pulse-outline'} size={24} color={color} />
+);
+
+const BrokersIcon = ({ color, focused }: { color: string; focused: boolean }) => (
+  <Ionicons name={focused ? 'link' : 'link-outline'} size={24} color={color} />
+);
+
+const SettingsIcon = ({ color, focused }: { color: string; focused: boolean }) => (
+  <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
+);
+
 export default function TabLayout() {
-  const { theme, isDarkMode } = useTheme();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { user } = useAuth() as any;
   const router = useRouter();
@@ -50,27 +70,21 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
-          ),
+          tabBarIcon: HomeIcon,
         }}
       />
       <Tabs.Screen
         name="screener"
         options={{
           title: 'Screener',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'filter' : 'filter-outline'} size={24} color={color} />
-          ),
+          tabBarIcon: ScreenerIcon,
         }}
       />
       <Tabs.Screen
         name="trade"
         options={{
           title: 'Trade',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'pulse' : 'pulse-outline'} size={24} color={color} />
-          ),
+          tabBarIcon: TradeIcon,
         }}
         listeners={{ tabPress: requireAuth }}
       />
@@ -78,9 +92,7 @@ export default function TabLayout() {
         name="brokers"
         options={{
           title: 'Brokers',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'link' : 'link-outline'} size={24} color={color} />
-          ),
+          tabBarIcon: BrokersIcon,
         }}
         listeners={{ tabPress: requireAuth }}
       />
@@ -88,9 +100,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
-          ),
+          tabBarIcon: SettingsIcon,
         }}
         listeners={{ tabPress: requireAuth }}
       />

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { AppState, DeviceEventEmitter } from 'react-native';
 import { authAPI, initializeBaseUrl, notificationAPI } from '../services/api';
 import {
@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const isInitialized = useRef(false);
 
-    const refreshUserData = async () => {
+    const refreshUserData = useCallback(async () => {
         try {
             const res = await authAPI.getMe();
             setUser(res.data.data);
@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } finally {
             setAppLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         const initApp = async () => {
@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     if (completed === 1) {
                         setBootProgress(0.7);
                     } else if (completed === 2) {
-                        setBootProgress(1.0);
+                        setBootProgress(1);
                     }
                 };
                 fetchGlobalConfig().finally(checkDone);
@@ -156,7 +156,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             appStateSubscription.remove();
             eventSubscription.remove();
         };
-    }, []);
+    }, [refreshUserData]); // refreshUserData is stable
 
     useEffect(() => {
         let unsubscribeTokenRefresh: (() => void) | undefined;
@@ -200,13 +200,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, [user]);
 
-    const login = (userData: any, showLoading = true) => {
+    const login = useCallback((userData: any, showLoading = true) => {
         if (showLoading) { setAuthLoading(true) }
         setUser(userData);
         if (showLoading) { setAuthLoading(false) }
-    };
+    }, []);
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         setAuthLoading(true);
         try {
             // 1. Call backend API to destroy session cookie on the server
@@ -224,21 +224,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(null);
             setAuthLoading(false);
         }
-    };
+    }, []);
+
+    const value = useMemo(() => ({
+        user,
+        login,
+        logout,
+        appLoading,
+        authLoading,
+        refreshUserData,
+        configLoading,
+        appConfig,
+        setAuthLoading,
+        bootProgress
+    }), [user, login, logout, appLoading, authLoading, refreshUserData, configLoading, appConfig, setAuthLoading, bootProgress]);
 
     return (
-        <AuthContext.Provider value={{
-            user,
-            login,
-            logout,
-            appLoading,
-            authLoading,
-            refreshUserData,
-            configLoading,
-            appConfig,
-            setAuthLoading,
-            bootProgress
-        }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );

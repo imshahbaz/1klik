@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,7 +12,6 @@ import { useAdaptiveLayout } from '../../theme/layout';
 import { useSettingsStyles } from '../../theme/settingsStyles';
 
 export default function SettingsScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
   const { user, refreshUserData } = useAuth() as any;
@@ -52,39 +50,47 @@ export default function SettingsScreen() {
     };
   }, []);
 
-  const handleNotificationToggle = async (value: boolean) => {
-    if (value) {
-      const granted = await requestUserPermission();
-      if (granted) {
-        setNotificationsEnabled(true);
-        try {
-          const token = await getFCMToken();
-          if (token) {
-            await notificationAPI.saveToken(token);
-          }
-        } catch (tokenErr) {
-          console.error('Settings: Failed to save FCM token:', tokenErr);
+  const enableNotifications = async () => {
+    const granted = await requestUserPermission();
+    if (granted) {
+      setNotificationsEnabled(true);
+      try {
+        const token = await getFCMToken();
+        if (token) {
+          await notificationAPI.saveToken(token);
         }
-      } else {
-        setNotificationsEnabled(false);
-        CustomAlert.alert(
-          'Notifications Blocked',
-          'Push notifications are disabled for this app. Please enable them in your device settings.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Open Settings', onPress: () => Linking.openSettings() }
-          ]
-        );
+      } catch (tokenErr) {
+        console.error('Settings: Failed to save FCM token:', tokenErr);
       }
     } else {
+      setNotificationsEnabled(false);
       CustomAlert.alert(
-        'Disable Notifications',
-        'To disable notifications, please turn them off in your device system settings.',
+        'Notifications Blocked',
+        'Push notifications are disabled for this app. Please enable them in your device settings.',
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Open Settings', onPress: () => Linking.openSettings() }
         ]
       );
+    }
+  };
+
+  const disableNotifications = () => {
+    CustomAlert.alert(
+      'Disable Notifications',
+      'To disable notifications, please turn them off in your device system settings.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open Settings', onPress: () => Linking.openSettings() }
+      ]
+    );
+  };
+
+  const handleNotificationToggle = async (value: boolean) => {
+    if (value) {
+      await enableNotifications();
+    } else {
+      disableNotifications();
     }
   };
 

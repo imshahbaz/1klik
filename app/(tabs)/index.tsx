@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -10,6 +10,8 @@ import { angelOneApi } from '../../services/api';
 import { useIndexStyles } from '../../theme/globalStyles';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { getSafeBottomPadding } from '../../theme/safeArea';
+import MarketStatusCard from '../../components/home/MarketStatusCard';
+import ProfileMenu from '../../components/home/ProfileMenu';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -141,82 +143,22 @@ export default function HomeScreen() {
         </View>
 
         {/* Market Status Card */}
-        {cardLoading && !marketData ? (
-          <View style={[styles.card, styles.centeredCard]}>
-            <ActivityIndicator size="small" color={theme.iconMuted} />
-            <Text style={styles.loadingText}>Fetching Live Market Status...</Text>
-          </View>
-        ) : error && !marketData ? (
-          <View style={[styles.card, styles.centeredCard]}>
-            <Ionicons name="alert-circle-outline" size={24} color={theme.danger} />
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => fetchMarketStatus(true)}>
-              <Text style={styles.retryText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.9}
-            onPress={() => fetchMarketStatus(true)} // Tap card to manually refresh
-          >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardTitleContainer}>
-                <Ionicons name="analytics-outline" size={18} color={theme.iconMuted} />
-                <Text style={styles.cardTitle}>Market Status</Text>
-              </View>
-              <View style={[styles.badge, isBullish ? styles.bullishBadge : styles.bearishBadge]}>
-                <View style={[styles.dot, isBullish ? styles.bullishDot : styles.bearishDot]} />
-                <Text style={[styles.badgeText, isBullish ? styles.bullishBadgeText : styles.bearishBadgeText]}>
-                  {isBullish ? 'BULLISH' : 'BEARISH'}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.cardBody}>
-              <Text style={styles.indexName}>{symbol}</Text>
-              <View style={styles.priceContainer}>
-                <Text style={styles.indexPrice} numberOfLines={1} adjustsFontSizeToFit>
-                  {ltp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </Text>
-                <View style={styles.changeContainer}>
-                  <Ionicons
-                    name={isBullish ? "caret-up" : "caret-down"}
-                    size={16}
-                    color={isBullish ? theme.success : theme.danger}
-                  />
-                  <Text style={[styles.indexChange, { color: isBullish ? theme.success : theme.danger }]}>
-                    {isBullish ? '+' : ''}
-                    {change.toFixed(2)} ({changePercent.toFixed(2)}%)
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.cardFooter}>
-              <View style={styles.footerCol}>
-                <Text style={styles.footerLabel}>OPEN</Text>
-                <Text style={styles.footerVal}>
-                  {open.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </Text>
-              </View>
-              <View style={styles.footerCol}>
-                <Text style={styles.footerLabel}>HIGH</Text>
-                <Text style={styles.footerVal}>
-                  {high.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </Text>
-              </View>
-              <View style={styles.footerCol}>
-                <Text style={styles.footerLabel}>LOW</Text>
-                <Text style={styles.footerVal}>
-                  {low.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        )}
+        <MarketStatusCard
+          styles={styles}
+          theme={theme}
+          cardLoading={cardLoading}
+          marketData={marketData}
+          error={error}
+          fetchMarketStatus={fetchMarketStatus}
+          isBullish={isBullish}
+          symbol={symbol}
+          ltp={ltp}
+          change={change}
+          changePercent={changePercent}
+          open={open}
+          high={high}
+          low={low}
+        />
 
         {/* Quick Actions Section */}
         <View style={{ backgroundColor: theme.card, borderRadius: 24, padding: 20, marginTop: 20, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 4 }}>
@@ -252,126 +194,17 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* Side Menu Drawer overlay (Matching Screener Screen Layout!) */}
-      <Modal
-        visible={showProfileMenu}
-        transparent={true}
-        animationType="none"
-        onRequestClose={() => setShowProfileMenu(false)}
-      >
-        <View style={styles.sideMenuOverlay}>
-          {/* Backdrop click dismiss */}
-          <TouchableOpacity
-            style={styles.backdrop}
-            activeOpacity={1}
-            onPress={() => setShowProfileMenu(false)}
-          />
-
-          {/* Drawer Panel */}
-          <View style={styles.drawerPanel}>
-            {/* Custom Navigation Header (Same style as Screener Screen!) */}
-            <View style={styles.drawerHeader}>
-              <TouchableOpacity style={styles.drawerBackButton} onPress={() => setShowProfileMenu(false)}>
-                <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
-              </TouchableOpacity>
-              <Text style={styles.drawerHeaderTitle}>Profile</Text>
-              <View style={{ width: 40 }} />
-            </View>
-
-            {/* Drawer Body (Same style as Screener Screen!) */}
-            <View style={styles.drawerBody}>
-              {user ? (
-                <View style={styles.profileDetailsCard}>
-                  <View style={styles.avatarCircle}>
-                    {user.profile ? (
-                      <Image
-                        source={{ uri: user.profile }}
-                        contentFit="cover"
-                        transition={120}
-                        style={styles.drawerAvatar}
-                      />
-                    ) : (
-                      <Ionicons name="person" size={36} color={theme.secondary} />
-                    )}
-                  </View>
-                  <Text style={styles.profileLabel}>Logged In As</Text>
-                  <Text style={styles.profileEmail} numberOfLines={1}>
-                    {user.name || user.email || user.mobile || user.username || 'User'}
-                  </Text>
-                  <View style={styles.profileDivider} />
-
-                  <View style={styles.themeToggleRow}>
-                    <Text style={styles.themeToggleLabel}>Dark Mode</Text>
-                    <Switch
-                      value={isDarkMode}
-                      onValueChange={toggleTheme}
-                      trackColor={{ false: theme.border, true: theme.primary }}
-                      thumbColor={theme.card}
-                    />
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.drawerSettingsButton}
-                    onPress={() => {
-                      setShowProfileMenu(false);
-                      router.push('/settings');
-                    }}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="settings-outline" size={18} color={theme.textPrimary} />
-                    <Text style={styles.settingsButtonText}>Settings</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.drawerLogoutButton}
-                    onPress={async () => {
-                      await logout();
-                      setShowProfileMenu(false);
-                    }}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="log-out-outline" size={18} color="#ffffff" />
-                    <Text style={styles.logoutButtonText}>Logout</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={styles.profileDetailsCard}>
-                  <View style={styles.avatarCircleGray}>
-                    <Ionicons name="person-outline" size={36} color={theme.iconMuted} />
-                  </View>
-                  <Text style={styles.profileLabel}>Account Status</Text>
-                  <Text style={styles.profileEmail}>Not logged in</Text>
-                  <Text style={styles.profileSubtext}>
-                    Log in to unlock custom algorithmic strategies, live market status metrics, and portfolio integrations.
-                  </Text>
-                  <View style={styles.profileDivider} />
-
-                  <View style={styles.themeToggleRow}>
-                    <Text style={styles.themeToggleLabel}>Dark Mode</Text>
-                    <Switch
-                      value={isDarkMode}
-                      onValueChange={toggleTheme}
-                      trackColor={{ false: theme.border, true: theme.primary }}
-                      thumbColor={theme.card}
-                    />
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.drawerLoginButton}
-                    onPress={() => {
-                      setShowProfileMenu(false);
-                      router.push('/login');
-                    }}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="log-in-outline" size={18} color={theme.darkCardText} />
-                    <Text style={styles.loginButtonText}>Login</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <ProfileMenu
+        styles={styles}
+        theme={theme}
+        showProfileMenu={showProfileMenu}
+        setShowProfileMenu={setShowProfileMenu}
+        user={user}
+        logout={logout}
+        isDarkMode={isDarkMode}
+        toggleTheme={toggleTheme}
+        router={router}
+      />
     </View>
   );
 }

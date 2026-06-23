@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { useColorScheme } from 'react-native';
 import { userPreferenceAPI } from '../services/api';
 import { Colors, darkColors, lightColors } from '../theme/colors';
@@ -24,31 +24,31 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (!appLoading) {
       const initTheme = async () => {
-        if (user && user.theme) {
+        if (user?.theme) {
           setIsDarkMode(user.theme === 'DARK');
           setThemeLoaded(true);
-        } else if (!user) {
+        } else if (user) {
+          setThemeLoaded(true);
+        } else {
           try {
             const savedTheme = await AsyncStorage.getItem(THEME_KEY);
-            if (savedTheme !== null) {
-              setIsDarkMode(savedTheme === 'dark');
-            } else {
+            if (savedTheme === null) {
               setIsDarkMode(systemColorScheme === 'dark');
+            } else {
+              setIsDarkMode(savedTheme === 'dark');
             }
           } catch (e) {
             console.error('Failed to load theme preference', e);
           } finally {
             setThemeLoaded(true);
           }
-        } else {
-          setThemeLoaded(true);
         }
       };
       initTheme();
     }
   }, [user, appLoading, systemColorScheme]);
 
-  const toggleTheme = async (value?: boolean) => {
+  const toggleTheme = useCallback(async (value?: boolean) => {
     try {
       const newValue = typeof value === 'boolean' ? value : !isDarkMode;
       setIsDarkMode(newValue);
@@ -64,12 +64,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (e) {
       console.error('Failed to save theme preference', e);
     }
-  };
+  }, [isDarkMode, user]);
 
   const theme = isDarkMode ? darkColors : lightColors;
 
+  const value = useMemo(() => ({
+    isDarkMode,
+    theme,
+    toggleTheme,
+    themeLoaded
+  }), [isDarkMode, theme, toggleTheme, themeLoaded]);
+
   return (
-    <ThemeContext.Provider value={{ isDarkMode, theme, toggleTheme, themeLoaded }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

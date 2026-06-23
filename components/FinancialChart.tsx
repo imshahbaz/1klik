@@ -3,10 +3,10 @@ import { View, Text, StyleSheet, processColor } from 'react-native';
 import { CandleStickChart } from 'react-native-charts-wrapper';
 
 interface ChartProps {
-  rawData: any[];
-  theme: any;
-  isDarkMode: boolean;
-  height?: number;
+  readonly rawData: any[];
+  readonly theme: any;
+  readonly isDarkMode: boolean;
+  readonly height?: number;
 }
 
 const months: Record<string, string> = {
@@ -23,7 +23,7 @@ export default function FinancialChart({ rawData, theme, isDarkMode, height = 40
     }
 
     const parsed = rawData.map(d => {
-      if (!d || !d.mtimestamp) return null;
+      if (!d?.mtimestamp) return null;
       const parts = d.mtimestamp.split('-');
       if (parts.length !== 3) return null;
       
@@ -31,12 +31,12 @@ export default function FinancialChart({ rawData, theme, isDarkMode, height = 40
       const monthNum = months[month] || '01';
       const time = `${year}-${monthNum}-${day.padStart(2, '0')}`;
       
-      const open = parseFloat(d.chOpeningPrice);
-      const high = parseFloat(d.chTradeHighPrice);
-      const low = parseFloat(d.chTradeLowPrice);
-      const close = parseFloat(d.chClosingPrice);
+      const open = Number.parseFloat(d.chOpeningPrice);
+      const high = Number.parseFloat(d.chTradeHighPrice);
+      const low = Number.parseFloat(d.chTradeLowPrice);
+      const close = Number.parseFloat(d.chClosingPrice);
 
-      if (isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close) || open === 0 || high === 0 || low === 0 || close === 0) {
+      if (Number.isNaN(open) || Number.isNaN(high) || Number.isNaN(low) || Number.isNaN(close) || open === 0 || high === 0 || low === 0 || close === 0) {
         return null;
       }
 
@@ -80,7 +80,7 @@ export default function FinancialChart({ rawData, theme, isDarkMode, height = 40
 
   const handleSelect = (event: any) => {
     const entry = event.nativeEvent;
-    if (entry && entry.x !== undefined) {
+    if (entry?.x !== undefined) {
       const idx = Math.floor(entry.x);
       if (idx >= 0 && idx < validData.length) {
         setSelectedEntry(validData[idx]);
@@ -88,28 +88,33 @@ export default function FinancialChart({ rawData, theme, isDarkMode, height = 40
     }
   };
 
+  let selectedColor = theme.textPrimary;
+  if (selectedEntry) {
+    selectedColor = selectedEntry.close >= selectedEntry.open ? TV_COLORS.up : TV_COLORS.down;
+  }
+
   return (
     <View style={{ height, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card }}>
       {/* Top Info Bar */}
       <View style={[styles.infoBar, { borderBottomColor: theme.border, backgroundColor: theme.card }]}>
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: theme.textSecondary }]}>O</Text>
-          <Text style={[styles.value, { color: selectedEntry ? (selectedEntry.close >= selectedEntry.open ? TV_COLORS.up : TV_COLORS.down) : theme.textPrimary }]}>
+          <Text style={[styles.value, { color: selectedColor }]}>
             {selectedEntry?.open.toFixed(2) || '--'}
           </Text>
           
           <Text style={[styles.label, { color: theme.textSecondary, marginLeft: 8 }]}>H</Text>
-          <Text style={[styles.value, { color: selectedEntry ? (selectedEntry.close >= selectedEntry.open ? TV_COLORS.up : TV_COLORS.down) : theme.textPrimary }]}>
+          <Text style={[styles.value, { color: selectedColor }]}>
             {selectedEntry?.high.toFixed(2) || '--'}
           </Text>
           
           <Text style={[styles.label, { color: theme.textSecondary, marginLeft: 8 }]}>L</Text>
-          <Text style={[styles.value, { color: selectedEntry ? (selectedEntry.close >= selectedEntry.open ? TV_COLORS.up : TV_COLORS.down) : theme.textPrimary }]}>
+          <Text style={[styles.value, { color: selectedColor }]}>
             {selectedEntry?.low.toFixed(2) || '--'}
           </Text>
           
           <Text style={[styles.label, { color: theme.textSecondary, marginLeft: 8 }]}>C</Text>
-          <Text style={[styles.value, { color: selectedEntry ? (selectedEntry.close >= selectedEntry.open ? TV_COLORS.up : TV_COLORS.down) : theme.textPrimary }]}>
+          <Text style={[styles.value, { color: selectedColor }]}>
             {selectedEntry?.close.toFixed(2) || '--'}
           </Text>
         </View>

@@ -1,15 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FinancialChart from '../components/FinancialChart';
 import { useTheme } from '../context/ThemeContext';
 import { newsApi, strategyAPI } from '../services/api';
+import AIAnalysisSection from '../components/chart/AIAnalysisSection';
+import NewsSection from '../components/chart/NewsSection';
 
 export default function ChartScreen() {
   const { symbol } = useLocalSearchParams<{ symbol: string }>();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDarkMode, theme } = useTheme();
 
@@ -116,123 +117,20 @@ export default function ChartScreen() {
         </View>
 
         {/* AI Analysis Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="sparkles" size={20} color={theme.primary} />
-            <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>AI ANALYSIS</Text>
-          </View>
-
-          {aiLoading ? (
-            <View style={[styles.aiCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <ActivityIndicator size="large" color={theme.primary} style={{ marginVertical: 32 }} />
-            </View>
-          ) : aiAnalysis ? (
-            <View style={[styles.aiCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <View style={styles.aiGrid}>
-                {/* Left Column: Action, Confidence, Trend */}
-                <View style={styles.aiLeft}>
-                  <View style={styles.aiItem}>
-                    <Text style={[styles.aiLabel, { color: theme.textSecondary }]}>RECOMMENDATION</Text>
-                    <Text style={[styles.aiAction, {
-                      color: aiAnalysis.action?.toUpperCase() === 'BUY' ? '#22c55e' :
-                        aiAnalysis.action?.toUpperCase() === 'SELL' ? '#ef4444' : '#eab308'
-                    }]}>
-                      {aiAnalysis.action}
-                    </Text>
-                  </View>
-                  <View style={styles.aiRow}>
-                    <View style={styles.aiItem}>
-                      <Text style={[styles.aiLabel, { color: theme.textSecondary }]}>CONFIDENCE</Text>
-                      <Text style={[styles.aiValue, { color: theme.textPrimary }]}>{aiAnalysis.confidence}%</Text>
-                    </View>
-                    <View style={[styles.dividerVertical, { backgroundColor: theme.border }]} />
-                    <View style={styles.aiItem}>
-                      <Text style={[styles.aiLabel, { color: theme.textSecondary }]}>TREND</Text>
-                      <View style={styles.trendRow}>
-                        {aiAnalysis.trend?.toUpperCase() === 'BULLISH' ? (
-                          <Ionicons name="trending-up" size={16} color="#22c55e" />
-                        ) : aiAnalysis.trend?.toUpperCase() === 'BEARISH' ? (
-                          <Ionicons name="trending-down" size={16} color="#ef4444" />
-                        ) : (
-                          <View style={styles.neutralDot} />
-                        )}
-                        <Text style={[styles.aiValue, { color: theme.textPrimary, textTransform: 'capitalize', marginLeft: 4 }]}>{aiAnalysis.trend}</Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {(aiAnalysis.tomorrow_high || aiAnalysis.tomorrow_low) && (
-                    <View style={[styles.targetRow, { borderTopColor: theme.border }]}>
-                      {aiAnalysis.tomorrow_high && (
-                        <View style={styles.aiItem}>
-                          <Text style={[styles.aiLabel, { color: theme.textSecondary }]}>EXPECTED HIGH</Text>
-                          <Text style={[styles.aiValue, { color: '#22c55e' }]}>₹{aiAnalysis.tomorrow_high}</Text>
-                        </View>
-                      )}
-                      {aiAnalysis.tomorrow_low && (
-                        <View style={styles.aiItem}>
-                          <Text style={[styles.aiLabel, { color: theme.textSecondary }]}>EXPECTED LOW</Text>
-                          <Text style={[styles.aiValue, { color: '#ef4444' }]}>₹{aiAnalysis.tomorrow_low}</Text>
-                        </View>
-                      )}
-                    </View>
-                  )}
-                </View>
-
-                {/* Right Column: Reasoning */}
-                <View style={styles.aiRight}>
-                  <Text style={[styles.aiLabel, { color: theme.textSecondary, marginBottom: 8 }]}>ANALYSIS & REASONING</Text>
-                  <Text style={[styles.aiReasoning, { color: theme.textSecondary }]}>
-                    {aiAnalysis.reasoning}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          ) : (
-            <View style={[styles.emptyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>NO AI ANALYSIS AVAILABLE FOR THIS SYMBOL</Text>
-            </View>
-          )}
-        </View>
+        <AIAnalysisSection
+          styles={styles}
+          theme={theme}
+          aiLoading={aiLoading}
+          aiAnalysis={aiAnalysis}
+        />
 
         {/* News Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="newspaper" size={20} color={theme.primary} />
-            <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>MARKET HEADLINES</Text>
-          </View>
-
-          <View style={styles.newsList}>
-            {newsLoading ? (
-              <ActivityIndicator size="large" color={theme.primary} style={{ marginVertical: 32 }} />
-            ) : news.length > 0 ? (
-              news.map((item, index) => (
-                <TouchableOpacity
-                  key={index}
-                  activeOpacity={0.7}
-                  style={[styles.newsItem, { backgroundColor: theme.card, borderColor: theme.border }]}
-                >
-                  <View style={[styles.newsDot, { backgroundColor: theme.primary }]} />
-                  <View style={styles.newsContent}>
-                    <Text style={[styles.newsTitle, { color: theme.textPrimary }]}>{item.title}</Text>
-                    {item.published && (
-                      <View style={styles.newsMeta}>
-                        <Ionicons name="time-outline" size={12} color={theme.textSecondary} />
-                        <Text style={[styles.newsDate, { color: theme.textSecondary }]}>
-                          {new Date(item.published * 1000).toLocaleString()}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <View style={[styles.emptyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={[styles.emptyText, { color: theme.textSecondary }]}>NO NEWS AVAILABLE FOR THIS SYMBOL</Text>
-              </View>
-            )}
-          </View>
-        </View>
+        <NewsSection
+          styles={styles}
+          theme={theme}
+          newsLoading={newsLoading}
+          news={news}
+        />
       </ScrollView>
     </View>
   );
