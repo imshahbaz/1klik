@@ -3,6 +3,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { CustomAlert } from '../context/AlertContext';
@@ -11,14 +12,18 @@ import { useTheme } from '../context/ThemeContext';
 import { authAPI, googleAPI } from '../services/api';
 import { useAdaptiveLayout } from '../theme/layout';
 import { useLoginStyles } from '../theme/loginStyles';
+import { darkColors } from '../theme/colors';
 
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
   const { login } = useAuth() as any;
-  const { isDarkMode, theme } = useTheme();
-  const styles = useLoginStyles(isDarkMode);
+  const { isDarkMode } = useTheme();
+  
+  // Force dark mode colors to match the pitch black splash screen background
+  const theme = darkColors;
+  const styles = useLoginStyles(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,7 +83,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[styles.safeArea, layout.screenPadding]}>
+    <View style={[styles.safeArea, layout.screenPadding, { backgroundColor: '#000000' }]}>
 
 
       <KeyboardAvoidingView
@@ -97,15 +102,14 @@ export default function LoginScreen() {
         >
           <View style={[styles.container, layout.centeredContent]}>
             {/* Title Brand Section */}
-            <View style={styles.titleSection}>
-              <View style={styles.brandIconCircle}>
-                <Ionicons name="flash-outline" size={32} color="#ffffff" />
-              </View>
-              <Text style={styles.brandName}>1Klik Trading</Text>
+            <View style={{ alignItems: 'center', marginBottom: 40 }}>
+              <Text style={[styles.brandName, { color: '#ffffff', fontSize: 26 }]}>Welcome to 1Klik</Text>
+              <Text style={[styles.brandTagline, { color: '#94a3b8', fontSize: 15 }]}>
+                Sign in to access your trading dashboard
+              </Text>
             </View>
-
             {/* Login Options Card */}
-            <View style={styles.formCard}>
+            <View style={[styles.formCard, { backgroundColor: '#111827', borderColor: '#374151' }]}>
               {error ? (
                 <View style={styles.errorAlert}>
                   <Ionicons name="alert-circle-outline" size={20} color={theme.danger} />
