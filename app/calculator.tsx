@@ -313,9 +313,7 @@ export default function CalculatorScreen() {
                       errors={errors}
                       setErrors={setErrors}
                       entryDate={entryDate}
-                      setEntryDate={setEntryDate}
                       exitDate={exitDate}
-                      setExitDate={setExitDate}
                       setDatePickerTarget={setDatePickerTarget}
                       setPickerDate={setPickerDate}
                       setShowDatePicker={setShowDatePicker}

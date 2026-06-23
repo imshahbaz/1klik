@@ -8,9 +8,7 @@ interface CalculatorStepTwoProps {
   readonly errors: Record<string, string>;
   readonly setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   readonly entryDate: string;
-  readonly setEntryDate: (val: string) => void;
   readonly exitDate: string;
-  readonly setExitDate: (val: string) => void;
   readonly setDatePickerTarget: (val: 'entry' | 'exit') => void;
   readonly setPickerDate: (val: Date) => void;
   readonly setShowDatePicker: (val: boolean) => void;

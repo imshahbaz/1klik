@@ -11,19 +11,19 @@ interface StrategyTabProps {
     readonly date: string;
     readonly broker: 'ZERODHA' | 'RUPEEZY';
   };
-  setStrategyFormData: (data: any) => void;
-  showStrategyBrokerDropdown: boolean;
-  setShowStrategyBrokerDropdown: (show: boolean) => void;
-  showStrategyDropdown: boolean;
-  setShowStrategyDropdown: (show: boolean) => void;
-  setDatePickerTarget: (target: 'execute' | 'strategy') => void;
-  setPickerDate: (date: Date) => void;
-  setShowDatePicker: (show: boolean) => void;
-  editingStrategyOrderId: string | null;
-  setEditingStrategyOrderId: (id: string | null) => void;
-  submittingStrategy: boolean;
-  handleSaveStrategyOrder: () => void;
-  formatDateString: (date: Date) => string;
+  readonly setStrategyFormData: (data: any) => void;
+  readonly showStrategyBrokerDropdown: boolean;
+  readonly setShowStrategyBrokerDropdown: (show: boolean) => void;
+  readonly showStrategyDropdown: boolean;
+  readonly setShowStrategyDropdown: (show: boolean) => void;
+  readonly setDatePickerTarget: (target: 'execute' | 'strategy') => void;
+  readonly setPickerDate: (date: Date) => void;
+  readonly setShowDatePicker: (show: boolean) => void;
+  readonly editingStrategyOrderId: string | null;
+  readonly setEditingStrategyOrderId: (id: string | null) => void;
+  readonly submittingStrategy: boolean;
+  readonly handleSaveStrategyOrder: () => void;
+  readonly formatDateString: (date: Date) => string;
 }
 
 const BrokerSelection = ({
