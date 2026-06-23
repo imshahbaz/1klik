@@ -9,7 +9,7 @@ const startIdx = content.indexOf(targetFuncStart);
 const endIdx = content.indexOf(targetFuncEnd);
 
 if (startIdx !== -1 && endIdx !== -1) {
-  const replacement = \  const checkRupeezyAuthUrl = async (url: string) => {
+  const replacement = `  const checkRupeezyAuthUrl = async (url: string) => {
     if (url && url.includes('auth=')) {
       const tokenMatch = url.match(/[?&]auth=([^&]+)/);
       if (tokenMatch && tokenMatch[1]) {
@@ -44,7 +44,7 @@ if (startIdx !== -1 && endIdx !== -1) {
     }
   };
 
-\;
+`;
   
   const newContent = content.substring(0, startIdx) + replacement + content.substring(endIdx);
   fs.writeFileSync(filePath, newContent, 'utf8');

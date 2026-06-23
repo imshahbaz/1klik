@@ -23,7 +23,7 @@ export default function FinancialChart({ rawData, theme, isDarkMode, height = 40
     }
 
     const parsed = rawData.map(d => {
-      if (!d || !d.mtimestamp) return null;
+      if (!d?.mtimestamp) return null;
       const parts = d.mtimestamp.split('-');
       if (parts.length !== 3) return null;
       
@@ -80,7 +80,7 @@ export default function FinancialChart({ rawData, theme, isDarkMode, height = 40
 
   const handleSelect = (event: any) => {
     const entry = event.nativeEvent;
-    if (entry && entry.x !== undefined) {
+    if (entry?.x !== undefined) {
       const idx = Math.floor(entry.x);
       if (idx >= 0 && idx < validData.length) {
         setSelectedEntry(validData[idx]);

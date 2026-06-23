@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('node:path');
 
 const localAndroidGoogleServicesFile = path.join(__dirname, 'google-services.json');
 const localIosGoogleServicesFile = path.join(__dirname, 'GoogleService-Info.plist');

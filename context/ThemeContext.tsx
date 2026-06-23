@@ -24,7 +24,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (!appLoading) {
       const initTheme = async () => {
-        if (user && user.theme) {
+        if (user?.theme) {
           setIsDarkMode(user.theme === 'DARK');
           setThemeLoaded(true);
         } else if (!user) {

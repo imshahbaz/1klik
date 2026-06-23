@@ -10,12 +10,60 @@ import { useTheme } from '../../context/ThemeContext';
 import { marginAPI, strategyOrderAPI, zerodhaAPI } from '../../services/api';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { useZerodhaStyles } from '../../theme/zerodhaStyles';
+import ExecuteTab from '../../components/trade/ExecuteTab';
+import StrategyTab from '../../components/trade/StrategyTab';
+import HistoryTab from '../../components/trade/HistoryTab';
+
+const formatDateString = (date: Date) => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+};
+
+const formatMtfOrders = (rawData: any) => {
+  let ordersArray = [];
+  if (Array.isArray(rawData)) {
+    ordersArray = rawData;
+  } else if (Array.isArray(rawData?.data)) {
+    ordersArray = rawData.data;
+  }
+  return ordersArray.map((order: any, idx: number) => ({
+    id: order.id || `m-api-${idx}`,
+    symbol: order.symbol,
+    qty: order.quantity || order.qty || 10,
+    price: order.price || 2845.20,
+    time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    status: order.status || 'COMPLETED',
+    reason: order.reason || undefined,
+    targetDate: order.date ? formatDateString(new Date(order.date)) : 'Today',
+  }));
+};
+
+const formatStrategyOrders = (rawData: any) => {
+  let stratArray = [];
+  if (Array.isArray(rawData)) {
+    stratArray = rawData;
+  } else if (Array.isArray(rawData?.data)) {
+    stratArray = rawData.data;
+  }
+  return stratArray.map((order: any, idx: number) => ({
+    id: order.id || order._id || `s-api-${idx}`,
+    symbol: order.symbol || 'AUTO',
+    qty: order.quantity || order.qty || 1,
+    price: order.price || 0,
+    time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    status: order.status || 'COMPLETED',
+    reason: order.reason || undefined,
+    strategyName: order.strategyName || 'RSI15MIN',
+    amount: order.amount || 0,
+    date: order.date || '',
+  }));
+};
 
 export default function TradeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
-  const { user, appLoading, logout } = useAuth() as any;
+  const { user, appLoading } = useAuth() as any;
   const { isDarkMode, theme } = useTheme();
   const styles = useZerodhaStyles(isDarkMode);
 
@@ -40,7 +88,7 @@ export default function TradeScreen() {
 
   // Filtered Margins helper
   const filteredMargins = Array.isArray(marginsData) ? marginsData
-    .filter((m: any) => m && m.symbol && m.symbol.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((m: any) => m?.symbol?.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a: any, b: any) => {
       const q = searchQuery.toLowerCase();
       const sA = a.symbol.toLowerCase();
@@ -117,10 +165,7 @@ export default function TradeScreen() {
     }
   };
 
-  const formatDateString = (date: Date) => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
-  };
+
 
   const formatIsoDate = (date: Date) => {
     const year = date.getFullYear();
@@ -155,22 +200,7 @@ export default function TradeScreen() {
 
       if (mtfRes.status === 'fulfilled') {
         const rawData = mtfRes.value.data;
-        let ordersArray = [];
-        if (Array.isArray(rawData)) {
-          ordersArray = rawData;
-        } else if (Array.isArray(rawData?.data)) {
-          ordersArray = rawData.data;
-        }
-        const formatted = ordersArray.map((order: any, idx: number) => ({
-          id: order.id || `m-api-${idx}`,
-          symbol: order.symbol,
-          qty: order.quantity || order.qty || 10,
-          price: order.price || 2845.20,
-          time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          status: order.status || 'COMPLETED',
-          reason: order.reason || undefined,
-          targetDate: order.date ? formatDateString(new Date(order.date)) : 'Today',
-        }));
+        const formatted = formatMtfOrders(rawData);
         setMtfOrders(formatted);
       } else {
         setMtfOrders([]);
@@ -178,24 +208,7 @@ export default function TradeScreen() {
 
       if (stratRes.status === 'fulfilled') {
         const rawData = stratRes.value.data;
-        let stratArray = [];
-        if (Array.isArray(rawData)) {
-          stratArray = rawData;
-        } else if (Array.isArray(rawData?.data)) {
-          stratArray = rawData.data;
-        }
-        const formatted = stratArray.map((order: any, idx: number) => ({
-          id: order.id || order._id || `s-api-${idx}`,
-          symbol: order.symbol || 'AUTO',
-          qty: order.quantity || order.qty || 1,
-          price: order.price || 0,
-          time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          status: order.status || 'COMPLETED',
-          reason: order.reason || undefined,
-          strategyName: order.strategyName || 'RSI15MIN',
-          amount: order.amount || 0,
-          date: order.date || '',
-        }));
+        const formatted = formatStrategyOrders(rawData);
         setStrategyOrders(formatted);
       } else {
         setStrategyOrders([]);
@@ -340,674 +353,75 @@ export default function TradeScreen() {
     switch (activeTab) {
       case 'execute':
         return (
-          <View style={styles.tabCard}>
-            <Text style={styles.tabCardTitle}>Broker Direct Execution</Text>
-            <Text style={styles.tabCardSubtitle}>Instant trade triggers sent directly to your broker terminal.</Text>
-
-            {/* Broker Selection */}
-            <View style={styles.formInputGroup as any}>
-              <Text style={styles.formInputLabel as any}>BROKER</Text>
-              <View style={styles.formInputWrapper as any}>
-                <Ionicons name="business-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon as any} />
-                {Platform.OS === 'web' ? (
-                  <select
-                    value={tradeBroker}
-                    onChange={(e: any) => setTradeBroker(e.target.value as any)}
-                    style={{
-                      flex: 1,
-                      backgroundColor: 'transparent',
-                      color: theme.textPrimary,
-                      borderWidth: 0,
-                      outlineStyle: 'none',
-                      fontSize: 14,
-                      fontWeight: '600',
-                      height: '100%',
-                      cursor: 'pointer',
-                    } as any}
-                  >
-                    <option value="ZERODHA" className="bg-background text-foreground font-black">ZERODHA</option>
-                    <option value="RUPEEZY" className="bg-background text-foreground font-black">RUPEEZY</option>
-                  </select>
-                ) : (
-                  <TouchableOpacity
-                    style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
-                    onPress={() => setShowExecuteBrokerDropdown(!showExecuteBrokerDropdown)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[
-                      { fontSize: 14, fontWeight: '600' },
-                      { color: theme.textPrimary }
-                    ] as any}>
-                      {tradeBroker}
-                    </Text>
-                    <Ionicons name={showExecuteBrokerDropdown ? "chevron-up" : "chevron-down"} size={16} color={theme.textSecondary} />
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {Platform.OS !== 'web' && showExecuteBrokerDropdown && (
-                <View style={styles.verticalDropdownContainer as any}>
-                  {['ZERODHA', 'RUPEEZY'].map((brokerOption) => (
-                    <TouchableOpacity
-                      key={brokerOption}
-                      style={styles.suggestionRow as any}
-                      onPress={() => {
-                        setTradeBroker(brokerOption as any);
-                        setShowExecuteBrokerDropdown(false);
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.suggestionRowSymbol as any}>{brokerOption}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
-
-            {/* Trading Symbol */}
-            <View style={styles.formInputGroup as any}>
-              <Text style={styles.formInputLabel as any}>SYMBOL</Text>
-              <View style={styles.formInputWrapper as any}>
-                <Ionicons name="trending-up-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon as any} />
-                <TextInput
-                  style={styles.formTextInput as any}
-                  value={tradeSymbol}
-                  onChangeText={(val) => {
-                    setTradeSymbol(val);
-                    setSearchQuery(val);
-                  }}
-                  autoCapitalize="characters"
-                  autoCorrect={false}
-                  placeholder="e.g. RELIANCE"
-                  placeholderTextColor={theme.placeholder}
-                />
-              </View>
-
-              {/* Autocomplete suggestions dropdown based on margins */}
-              {searchQuery && filteredMargins.length > 0 ? (
-                <View style={styles.verticalDropdownContainer as any}>
-                  {filteredMargins.map((marginItem: any, idx: number) => (
-                    <TouchableOpacity
-                      key={idx}
-                      style={styles.suggestionRow as any}
-                      onPress={() => {
-                        setTradeSymbol(marginItem.symbol);
-                        setSearchQuery(''); // Close recommendations on tap
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Ionicons name="trending-up" size={14} color={theme.primary} />
-                        <Text style={styles.suggestionRowSymbol as any}>{marginItem.symbol}</Text>
-                      </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        {marginItem.requiredMargin || marginItem.leverage ? (
-                          <Text style={styles.suggestionRowBadge as any}>
-                            {marginItem.requiredMargin || marginItem.leverage}
-                          </Text>
-                        ) : null}
-                        {marginItem.price || marginItem.ltp ? (
-                          <Text style={styles.suggestionRowPrice as any}>
-                            ₹{marginItem.price || marginItem.ltp}
-                          </Text>
-                        ) : null}
-                        <Ionicons name="chevron-forward" size={14} color={theme.iconMuted} />
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              ) : null}
-            </View>
-
-            {/* Quantity */}
-            <View style={styles.formInputGroup as any}>
-              <Text style={styles.formInputLabel}>QUANTITY</Text>
-              <View style={styles.formInputWrapper}>
-                <Ionicons name="layers-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon} />
-                <TextInput
-                  style={styles.formTextInput}
-                  value={tradeQty}
-                  onChangeText={setTradeQty}
-                  keyboardType="number-pad"
-                  placeholder="0"
-                  placeholderTextColor={theme.placeholder}
-                />
-              </View>
-            </View>
-
-            {/* Target Date */}
-            <View style={styles.formInputGroup as any}>
-              <Text style={styles.formInputLabel}>TARGET DATE</Text>
-              <TouchableOpacity
-                style={styles.formInputWrapper}
-                onPress={() => {
-                  setPickerDate(new Date(targetDate));
-                  setShowDatePicker(true);
-                }}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="calendar-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon} />
-                <Text style={styles.datePickerText as any} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatDateString(targetDate)}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Execute Action Button */}
-            {editingMtfOrderId ? (
-              <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
-                <TouchableOpacity
-                  style={[
-                    styles.executeActionBtn,
-                    styles.executeBuyBtn,
-                    { flex: 1, backgroundColor: theme.borderLight, borderWidth: 0 }
-                  ] as any}
-                  onPress={() => {
-                    setEditingMtfOrderId(null);
-                    setTradeSymbol('');
-                    setTradeQty('10');
-                    setTargetDate(new Date());
-                    setTradeBroker('ZERODHA');
-                  }}
-                  disabled={executingTrade}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.executeActionBtnText, { color: theme.textSecondary }] as any}>
-                    CANCEL EDIT
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.executeActionBtn,
-                    styles.executeBuyBtn,
-                    { flex: 1 },
-                    executingTrade && styles.disabledButton
-                  ] as any}
-                  onPress={handleExecuteOrder}
-                  disabled={executingTrade}
-                  activeOpacity={0.8}
-                >
-                  {executingTrade ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <>
-                      <Ionicons name="checkmark-circle-outline" size={18} color="#ffffff" />
-                      <Text style={styles.executeActionBtnText}>
-                        UPDATE ORDER
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity
-                style={[
-                  styles.executeActionBtn,
-                  styles.executeBuyBtn,
-                  executingTrade && styles.disabledButton,
-                  { marginTop: 12 }
-                ] as any}
-                onPress={handleExecuteOrder}
-                disabled={executingTrade}
-                activeOpacity={0.8}
-              >
-                {executingTrade ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <>
-                    <Ionicons name="flash-outline" size={18} color="#ffffff" />
-                    <Text style={styles.executeActionBtnText}>
-                      PLACE ORDER
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
+          <ExecuteTab
+            styles={styles}
+            theme={theme}
+            tradeBroker={tradeBroker}
+            setTradeBroker={setTradeBroker}
+            showExecuteBrokerDropdown={showExecuteBrokerDropdown}
+            setShowExecuteBrokerDropdown={setShowExecuteBrokerDropdown}
+            tradeSymbol={tradeSymbol}
+            setTradeSymbol={setTradeSymbol}
+            setSearchQuery={setSearchQuery}
+            searchQuery={searchQuery}
+            filteredMargins={filteredMargins}
+            tradeQty={tradeQty}
+            setTradeQty={setTradeQty}
+            targetDate={targetDate}
+            setPickerDate={setPickerDate}
+            setShowDatePicker={setShowDatePicker}
+            editingMtfOrderId={editingMtfOrderId}
+            setEditingMtfOrderId={setEditingMtfOrderId}
+            setTargetDate={setTargetDate}
+            executingTrade={executingTrade}
+            handleExecuteOrder={handleExecuteOrder}
+            formatDateString={formatDateString}
+          />
         );
 
       case 'strategy':
         return (
-          <View style={styles.tabCard}>
-            <Text style={styles.tabCardTitle}>Deployed Trading Algorithms</Text>
-            <Text style={styles.tabCardSubtitle}>Auto-execute trades based on quantitative indicators and rules.</Text>
+          <StrategyTab
+            styles={styles}
+            theme={theme}
+            strategyFormData={strategyFormData}
+            setStrategyFormData={setStrategyFormData}
+            showStrategyBrokerDropdown={showStrategyBrokerDropdown}
+            setShowStrategyBrokerDropdown={setShowStrategyBrokerDropdown}
+            showStrategyDropdown={showStrategyDropdown}
+            setShowStrategyDropdown={setShowStrategyDropdown}
+            setDatePickerTarget={setDatePickerTarget}
+            setPickerDate={setPickerDate}
+            setShowDatePicker={setShowDatePicker}
+            editingStrategyOrderId={editingStrategyOrderId}
+            setEditingStrategyOrderId={setEditingStrategyOrderId}
+            submittingStrategy={submittingStrategy}
+            handleSaveStrategyOrder={handleSaveStrategyOrder}
+            formatDateString={formatDateString}
+          />
+        );
 
-            {/* Strategy Form */}
-            <View style={{ marginTop: 16 }}>
-              {/* Broker Selection */}
-              <View style={styles.formInputGroup as any}>
-                <Text style={styles.formInputLabel as any}>BROKER</Text>
-                <View style={styles.formInputWrapper as any}>
-                  <Ionicons name="business-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon as any} />
-                  {Platform.OS === 'web' ? (
-                    <select
-                      value={strategyFormData.broker}
-                      onChange={(e: any) => setStrategyFormData({ ...strategyFormData, broker: e.target.value as any })}
-                      style={{
-                        flex: 1,
-                        backgroundColor: 'transparent',
-                        color: theme.textPrimary,
-                        borderWidth: 0,
-                        outlineStyle: 'none',
-                        fontSize: 14,
-                        fontWeight: '600',
-                        height: '100%',
-                        cursor: 'pointer',
-                      } as any}
-                    >
-                      <option value="ZERODHA" className="bg-background text-foreground font-black">ZERODHA</option>
-                      <option value="RUPEEZY" className="bg-background text-foreground font-black">RUPEEZY</option>
-                    </select>
-                  ) : (
-                    <TouchableOpacity
-                      style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
-                      onPress={() => setShowStrategyBrokerDropdown(!showStrategyBrokerDropdown)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[
-                        { fontSize: 14, fontWeight: '600' },
-                        { color: theme.textPrimary }
-                      ] as any}>
-                        {strategyFormData.broker}
-                      </Text>
-                      <Ionicons name={showStrategyBrokerDropdown ? "chevron-up" : "chevron-down"} size={16} color={theme.textSecondary} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {Platform.OS !== 'web' && showStrategyBrokerDropdown && (
-                  <View style={styles.verticalDropdownContainer as any}>
-                    {['ZERODHA', 'RUPEEZY'].map((brokerOption) => (
-                      <TouchableOpacity
-                        key={brokerOption}
-                        style={styles.suggestionRow as any}
-                        onPress={() => {
-                          setStrategyFormData({ ...strategyFormData, broker: brokerOption as any });
-                          setShowStrategyBrokerDropdown(false);
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={styles.suggestionRowSymbol as any}>{brokerOption}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {/* Strategy Name */}
-              <View style={styles.formInputGroup as any}>
-                <Text style={styles.formInputLabel as any}>STRATEGY NAME</Text>
-                <View style={styles.formInputWrapper as any}>
-                  <Ionicons name="git-branch-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon as any} />
-                  {Platform.OS === 'web' ? (
-                    <select
-                      value={strategyFormData.strategyName}
-                      onChange={(e: any) => setStrategyFormData({ ...strategyFormData, strategyName: e.target.value })}
-                      style={{
-                        flex: 1,
-                        backgroundColor: 'transparent',
-                        color: theme.textPrimary,
-                        borderWidth: 0,
-                        outlineStyle: 'none',
-                        fontSize: 14,
-                        fontWeight: '600',
-                        height: '100%',
-                        cursor: 'pointer',
-                      } as any}
-                    >
-                      <option value="" style={{ color: theme.placeholder }}>Select Strategy</option>
-                      <option value="RSI15MIN" className="bg-background text-foreground font-black">RSI15MIN</option>
-                      <option value="MACD15MIN" className="bg-background text-foreground font-black">MACD15MIN</option>
-                    </select>
-                  ) : (
-                    <TouchableOpacity
-                      style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
-                      onPress={() => setShowStrategyDropdown(!showStrategyDropdown)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[
-                        { fontSize: 14, fontWeight: '600' },
-                        strategyFormData.strategyName ? { color: theme.textPrimary } : { color: theme.placeholder }
-                      ] as any}>
-                        {strategyFormData.strategyName || "Select Strategy"}
-                      </Text>
-                      <Ionicons name={showStrategyDropdown ? "chevron-up" : "chevron-down"} size={16} color={theme.textSecondary} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {Platform.OS !== 'web' && showStrategyDropdown && (
-                  <View style={styles.verticalDropdownContainer as any}>
-                    {['RSI15MIN', 'MACD15MIN'].map((strat) => (
-                      <TouchableOpacity
-                        key={strat}
-                        style={styles.suggestionRow as any}
-                        onPress={() => {
-                          setStrategyFormData({ ...strategyFormData, strategyName: strat });
-                          setShowStrategyDropdown(false);
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={styles.suggestionRowSymbol as any}>{strat}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {/* Date */}
-              <View style={styles.formInputGroup as any}>
-                <Text style={styles.formInputLabel as any}>DATE</Text>
-                <TouchableOpacity
-                  style={styles.formInputWrapper as any}
-                  onPress={() => {
-                    setDatePickerTarget('strategy');
-                    setPickerDate(strategyFormData.date ? new Date(strategyFormData.date) : new Date());
-                    setShowDatePicker(true);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="calendar-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon as any} />
-                  <Text style={[
-                    styles.datePickerText as any,
-                    !strategyFormData.date && { color: theme.placeholder }
-                  ] as any} numberOfLines={1} adjustsFontSizeToFit>
-                    {strategyFormData.date ? formatDateString(new Date(strategyFormData.date)) : "Select Date"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Amount */}
-              <View style={styles.formInputGroup as any}>
-                <Text style={styles.formInputLabel as any}>AMOUNT (₹)</Text>
-                <View style={styles.formInputWrapper as any}>
-                  <Ionicons name="card-outline" size={18} color={theme.textSecondary} style={styles.formInputIcon as any} />
-                  <TextInput
-                    style={styles.formTextInput as any}
-                    value={strategyFormData.amount}
-                    onChangeText={(val) => setStrategyFormData({ ...strategyFormData, amount: val })}
-                    keyboardType="numeric"
-                    placeholder="Enter Amount (e.g. 5000)"
-                    placeholderTextColor={theme.placeholder}
-                  />
-                </View>
-              </View>
-
-              {/* Submit Buttons */}
-              {editingStrategyOrderId ? (
-                <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
-                  <TouchableOpacity
-                    style={[
-                      styles.executeActionBtn,
-                      styles.executeBuyBtn,
-                      { flex: 1, backgroundColor: theme.borderLight, borderWidth: 0 }
-                    ] as any}
-                    onPress={() => {
-                      setEditingStrategyOrderId(null);
-                      setStrategyFormData({
-                        strategyName: '',
-                        amount: '',
-                        date: '',
-                        broker: 'ZERODHA',
-                      });
-                    }}
-                    disabled={submittingStrategy}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.executeActionBtnText, { color: theme.textSecondary }] as any}>
-                      CANCEL EDIT
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.executeActionBtn,
-                      styles.executeBuyBtn,
-                      { flex: 1 },
-                      submittingStrategy && styles.disabledButton
-                    ] as any}
-                    onPress={handleSaveStrategyOrder}
-                    disabled={submittingStrategy}
-                    activeOpacity={0.8}
-                  >
-                    {submittingStrategy ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <>
-                        <Ionicons name="checkmark-circle-outline" size={18} color="#ffffff" />
-                        <Text style={styles.executeActionBtnText}>
-                          UPDATE ORDER
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  style={[
-                    styles.executeActionBtn,
-                    styles.executeBuyBtn,
-                    submittingStrategy && styles.disabledButton,
-                    { marginTop: 12 }
-                  ] as any}
-                  onPress={handleSaveStrategyOrder}
-                  disabled={submittingStrategy}
-                  activeOpacity={0.8}
-                >
-                  {submittingStrategy ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <>
-                      <Ionicons name="flash-outline" size={18} color="#ffffff" />
-                      <Text style={styles.executeActionBtnText}>
-                        PLACE ORDER
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        ); case 'history':
+      case 'history':
         return (
-          <View style={styles.tabCard}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.tabCardTitle}>Order History</Text>
-              </View>
-              {loadingHistory && <ActivityIndicator size="small" color={theme.primary} style={{ marginLeft: 8 }} />}
-            </View>
-
-            {/* Section 1: MTF History */}
-            <View style={styles.historySectionHeader as any}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="calendar-outline" size={15} color={theme.primary} />
-                <Text style={styles.historySectionTitle as any}>MTF HISTORY</Text>
-              </View>
-              <Text style={styles.historySectionBadge as any}>{mtfOrders.length} Orders</Text>
-            </View>
-
-            <View style={styles.historyList}>
-              {mtfOrders.length === 0 ? (
-                <View style={styles.emptyHistoryContainer as any}>
-                  <Ionicons name="receipt-outline" size={24} color={theme.iconMuted} />
-                  <Text style={styles.emptyHistoryText as any}>No MTF orders found</Text>
-                </View>
-              ) : (
-                mtfOrders.map((log) => (
-                  <View key={log.id} style={styles.historyItem}>
-                    <View style={styles.historyHeader}>
-                      <View style={styles.historyLeftInfo}>
-                        <View style={[
-                          styles.historyTypeBadge,
-                          styles.historyBuyBadge
-                        ]}>
-                          <Text style={[
-                            styles.historyTypeText,
-                            styles.historyBuyText
-                          ]}>
-                            MTF BUY
-                          </Text>
-                        </View>
-                        <Text style={styles.historySymbolText}>{log.symbol}</Text>
-                        <Text style={styles.historyQtyText}>{log.qty} Shares</Text>
-                      </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                        <TouchableOpacity
-                          onPress={() => {
-                            setTradeSymbol(log.symbol);
-                            setTradeQty(log.qty.toString());
-                            const parsedDate = parseTargetDate(log.targetDate);
-                            setTargetDate(parsedDate);
-                            setPickerDate(parsedDate);
-                            setTradeBroker(log.broker || 'ZERODHA');
-                            setEditingMtfOrderId(log.id);
-                            setActiveTab('execute');
-                            CustomAlert.alert(
-                              'Loaded to Execute Tab',
-                              `Order details for ${log.symbol} loaded into execution form.`
-                            );
-                          }}
-                          style={{ padding: 4 }}
-                          activeOpacity={0.7}
-                        >
-                          <Ionicons name="create-outline" size={16} color={theme.textSecondary} />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          onPress={() => handleDeleteMtfOrder(log.id)}
-                          style={{ padding: 4 }}
-                          activeOpacity={0.7}
-                        >
-                          <Ionicons name="trash-outline" size={16} color={theme.danger} />
-                        </TouchableOpacity>
-
-                        {log.status === 'COMPLETED' ? null : (
-                          <View style={[
-                            styles.statusBadge,
-                            log.status === 'CONFLICT' ? styles.statusConflictBadge : styles.statusErrorBadge
-                          ] as any}>
-                            <Text style={[
-                              styles.statusBadgeText,
-                              log.status === 'CONFLICT' ? styles.statusConflictText : styles.statusErrorText
-                            ] as any}>
-                              {log.status}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                    </View>
-
-                    <View style={styles.historyFooter}>
-                      <Text style={styles.historyPriceText}>
-                        {log.targetDate ? `Target: ${log.targetDate}` : `₹${(log.price * log.qty).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
-                      </Text>
-                    </View>
-                    {log.reason ? (
-                      <Text style={styles.historyRejectReason}>Reason: {log.reason}</Text>
-                    ) : null}
-                  </View>
-                ))
-              )}
-            </View>
-
-            {/* Visual Separation Divider */}
-            <View style={styles.historyDividerSeparator as any} />
-
-            {/* Section 2: Strategy History */}
-            <View style={styles.historySectionHeader as any}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="analytics-outline" size={15} color={theme.primary} />
-                <Text style={styles.historySectionTitle as any}>STRATEGY HISTORY</Text>
-              </View>
-              <Text style={styles.historySectionBadge as any}>{strategyOrders.length} Trades</Text>
-            </View>
-
-            <View style={styles.historyList}>
-              {strategyOrders.length === 0 ? (
-                <View style={styles.emptyHistoryContainer as any}>
-                  <Ionicons name="flash-outline" size={24} color={theme.iconMuted} />
-                  <Text style={styles.emptyHistoryText as any}>No strategy orders triggered</Text>
-                </View>
-              ) : (
-                strategyOrders.map((log) => (
-                  <View key={log.id} style={styles.historyItem}>
-                    <View style={styles.historyHeader}>
-                      <View style={styles.historyLeftInfo}>
-                        <View style={[
-                          styles.historyTypeBadge,
-                          { backgroundColor: theme.infoBackground }
-                        ]}>
-                          <Text style={[
-                            styles.historyTypeText,
-                            { color: theme.infoText }
-                          ]}>
-                            AUTO-TRADE
-                          </Text>
-                        </View>
-                        <Text style={styles.historySymbolText}>{log.strategyName}</Text>
-                        <Text style={styles.historyQtyText}>₹{log.amount}</Text>
-                      </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                        <TouchableOpacity
-                          onPress={() => {
-                            setStrategyFormData({
-                              strategyName: log.strategyName || '',
-                              amount: log.amount ? log.amount.toString() : '',
-                              date: log.date || '',
-                              broker: log.broker || 'ZERODHA',
-                            });
-                            setEditingStrategyOrderId(log.id);
-                            setActiveTab('strategy');
-                            CustomAlert.alert(
-                              'Loaded to Strategy Tab',
-                              `Strategy order details loaded into form.`
-                            );
-                          }}
-                          style={{ padding: 4 }}
-                          activeOpacity={0.7}
-                        >
-                          <Ionicons name="create-outline" size={16} color={theme.textSecondary} />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          onPress={() => handleDeleteStrategyOrder(log.id)}
-                          style={{ padding: 4 }}
-                          activeOpacity={0.7}
-                        >
-                          <Ionicons name="trash-outline" size={16} color={theme.danger} />
-                        </TouchableOpacity>
-
-                        {log.status === 'COMPLETED' ? null : (
-                          <View style={[
-                            styles.statusBadge,
-                            styles.statusErrorBadge
-                          ] as any}>
-                            <Text style={[
-                              styles.statusBadgeText,
-                              styles.statusErrorText
-                            ] as any}>
-                              {log.status}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                    </View>
-
-                    <View style={styles.historyFooter}>
-                      <Text style={[styles.historyPriceText, { color: theme.textSecondary }] as any}>
-                        Date: {log.date}
-                      </Text>
-                    </View>
-                    {log.reason ? (
-                      <Text style={styles.historyRejectReason}>Reason: {log.reason}</Text>
-                    ) : null}
-                  </View>
-                ))
-              )}
-            </View>
-          </View>
+          <HistoryTab
+            styles={styles}
+            theme={theme}
+            loadingHistory={loadingHistory}
+            mtfOrders={mtfOrders}
+            strategyOrders={strategyOrders}
+            setTradeSymbol={setTradeSymbol}
+            setTradeQty={setTradeQty}
+            setTargetDate={setTargetDate}
+            setPickerDate={setPickerDate}
+            setTradeBroker={setTradeBroker}
+            setEditingMtfOrderId={setEditingMtfOrderId}
+            setActiveTab={setActiveTab}
+            handleDeleteMtfOrder={handleDeleteMtfOrder}
+            setStrategyFormData={setStrategyFormData}
+            setEditingStrategyOrderId={setEditingStrategyOrderId}
+            handleDeleteStrategyOrder={handleDeleteStrategyOrder}
+            parseTargetDate={parseTargetDate}
+          />
         );
     }
   };

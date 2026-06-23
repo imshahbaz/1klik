@@ -13,7 +13,6 @@ import { useAdaptiveLayout } from '../../theme/layout';
 import { useSettingsStyles } from '../../theme/settingsStyles';
 
 export default function SettingsScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
   const { user, refreshUserData } = useAuth() as any;
