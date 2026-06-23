@@ -20,8 +20,8 @@ const compareVersions = (v1, v2) => {
   const parts1 = String(v1).split('.').map(Number);
   const parts2 = String(v2).split('.').map(Number);
   for (let i = 0; i < 3; i++) {
-    const p1 = isNaN(parts1[i]) ? 0 : parts1[i];
-    const p2 = isNaN(parts2[i]) ? 0 : parts2[i];
+    const p1 = Number.isNaN(parts1[i]) ? 0 : parts1[i];
+    const p2 = Number.isNaN(parts2[i]) ? 0 : parts2[i];
     if (p1 < p2) return -1;
     if (p1 > p2) return 1;
   }

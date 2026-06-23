@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -202,8 +202,10 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
+  const contextValue = useMemo(() => ({}), []);
+
   return (
-    <AlertContext.Provider value={{}}>
+    <AlertContext.Provider value={contextValue}>
       {children}
 
       {/* Global Theme-compliant Alert Modal */}
