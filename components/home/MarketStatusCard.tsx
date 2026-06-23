@@ -3,20 +3,20 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface MarketStatusCardProps {
-  styles: any;
-  theme: any;
-  cardLoading: boolean;
-  marketData: any;
-  error: string | null;
-  fetchMarketStatus: (showLoader?: boolean) => void;
-  isBullish: boolean;
-  symbol: string;
-  ltp: number;
-  change: number;
-  changePercent: number;
-  open: number;
-  high: number;
-  low: number;
+  readonly styles: any;
+  readonly theme: any;
+  readonly cardLoading: boolean;
+  readonly marketData: any;
+  readonly error: string | null;
+  readonly fetchMarketStatus: (showLoader?: boolean) => void;
+  readonly isBullish: boolean;
+  readonly symbol: string;
+  readonly ltp: number;
+  readonly change: number;
+  readonly changePercent: number;
+  readonly open: number;
+  readonly high: number;
+  readonly low: number;
 }
 
 export default function MarketStatusCard({

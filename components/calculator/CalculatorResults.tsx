@@ -3,12 +3,12 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface CalculatorResultsProps {
-  styles: any;
-  theme: any;
-  results: any;
-  setView: (val: 'form' | 'results') => void;
-  resetForm: () => void;
-  formatCurrency: (val: string) => string;
+  readonly styles: any;
+  readonly theme: any;
+  readonly results: any;
+  readonly setView: (val: 'form' | 'results') => void;
+  readonly resetForm: () => void;
+  readonly formatCurrency: (val: string) => string;
 }
 
 export default function CalculatorResults({

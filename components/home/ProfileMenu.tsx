@@ -4,15 +4,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 
 interface ProfileMenuProps {
-  styles: any;
-  theme: any;
-  showProfileMenu: boolean;
-  setShowProfileMenu: (val: boolean) => void;
-  user: any;
-  logout: () => Promise<void>;
-  isDarkMode: boolean;
-  toggleTheme: () => void;
-  router: any;
+  readonly styles: any;
+  readonly theme: any;
+  readonly showProfileMenu: boolean;
+  readonly setShowProfileMenu: (val: boolean) => void;
+  readonly user: any;
+  readonly logout: () => Promise<void>;
+  readonly isDarkMode: boolean;
+  readonly toggleTheme: () => void;
+  readonly router: any;
 }
 
 export default function ProfileMenu({

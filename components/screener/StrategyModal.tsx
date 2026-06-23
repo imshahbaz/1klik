@@ -3,14 +3,14 @@ import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface StrategyModalProps {
-  styles: any;
-  theme: any;
-  dropdownVisible: boolean;
-  setDropdownVisible: (val: boolean) => void;
-  strategies: any[];
-  selectedStrategy: string | null;
-  handleStrategyPress: (name: string) => void;
-  getStrategyMetadata: (name: string) => { iconName: any; badgeText: string };
+  readonly styles: any;
+  readonly theme: any;
+  readonly dropdownVisible: boolean;
+  readonly setDropdownVisible: (val: boolean) => void;
+  readonly strategies: any[];
+  readonly selectedStrategy: string | null;
+  readonly handleStrategyPress: (name: string) => void;
+  readonly getStrategyMetadata: (name: string) => { iconName: any; badgeText: string };
 }
 
 export default function StrategyModal({

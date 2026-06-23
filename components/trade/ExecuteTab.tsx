@@ -3,28 +3,28 @@ import { View, Text, TouchableOpacity, TextInput, ActivityIndicator, Platform } 
 import { Ionicons } from '@expo/vector-icons';
 
 interface ExecuteTabProps {
-  styles: any;
-  theme: any;
-  tradeBroker: 'ZERODHA' | 'RUPEEZY';
-  setTradeBroker: (broker: 'ZERODHA' | 'RUPEEZY') => void;
-  showExecuteBrokerDropdown: boolean;
-  setShowExecuteBrokerDropdown: (show: boolean) => void;
-  tradeSymbol: string;
-  setTradeSymbol: (symbol: string) => void;
-  setSearchQuery: (query: string) => void;
-  searchQuery: string;
-  filteredMargins: any[];
-  tradeQty: string;
-  setTradeQty: (qty: string) => void;
-  targetDate: Date;
-  setPickerDate: (date: Date) => void;
-  setShowDatePicker: (show: boolean) => void;
-  editingMtfOrderId: string | null;
-  setEditingMtfOrderId: (id: string | null) => void;
-  setTargetDate: (date: Date) => void;
-  executingTrade: boolean;
-  handleExecuteOrder: () => void;
-  formatDateString: (date: Date) => string;
+  readonly styles: any;
+  readonly theme: any;
+  readonly tradeBroker: 'ZERODHA' | 'RUPEEZY';
+  readonly setTradeBroker: (broker: 'ZERODHA' | 'RUPEEZY') => void;
+  readonly showExecuteBrokerDropdown: boolean;
+  readonly setShowExecuteBrokerDropdown: (show: boolean) => void;
+  readonly tradeSymbol: string;
+  readonly setTradeSymbol: (symbol: string) => void;
+  readonly setSearchQuery: (query: string) => void;
+  readonly searchQuery: string;
+  readonly filteredMargins: any[];
+  readonly tradeQty: string;
+  readonly setTradeQty: (qty: string) => void;
+  readonly targetDate: Date;
+  readonly setPickerDate: (date: Date) => void;
+  readonly setShowDatePicker: (show: boolean) => void;
+  readonly editingMtfOrderId: string | null;
+  readonly setEditingMtfOrderId: (id: string | null) => void;
+  readonly setTargetDate: (date: Date) => void;
+  readonly executingTrade: boolean;
+  readonly handleExecuteOrder: () => void;
+  readonly formatDateString: (date: Date) => string;
 }
 
 export default function ExecuteTab({

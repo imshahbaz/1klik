@@ -3,16 +3,16 @@ import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface ScreenerResultsProps {
-  styles: any;
-  theme: any;
-  layout: any;
-  selectedStrategy: string | null;
-  scanLoading: boolean;
-  scanError: string | null;
-  scanResults: any[];
-  renderStockSkeletons: () => any;
-  handleStrategyPress: (name: string) => void;
-  renderStockResultItem: ({ item }: { item: any }) => any;
+  readonly styles: any;
+  readonly theme: any;
+  readonly layout: any;
+  readonly selectedStrategy: string | null;
+  readonly scanLoading: boolean;
+  readonly scanError: string | null;
+  readonly scanResults: any[];
+  readonly renderStockSkeletons: () => any;
+  readonly handleStrategyPress: (name: string) => void;
+  readonly renderStockResultItem: ({ item }: { item: any }) => any;
 }
 
 export default function ScreenerResults({

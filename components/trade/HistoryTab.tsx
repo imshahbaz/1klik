@@ -4,23 +4,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { CustomAlert } from '../../context/AlertContext';
 
 interface HistoryTabProps {
-  styles: any;
-  theme: any;
-  loadingHistory: boolean;
-  mtfOrders: any[];
-  strategyOrders: any[];
-  setTradeSymbol: (symbol: string) => void;
-  setTradeQty: (qty: string) => void;
-  setTargetDate: (date: Date) => void;
-  setPickerDate: (date: Date) => void;
-  setTradeBroker: (broker: 'ZERODHA' | 'RUPEEZY') => void;
-  setEditingMtfOrderId: (id: string | null) => void;
-  setActiveTab: (tab: 'execute' | 'strategy' | 'history') => void;
-  handleDeleteMtfOrder: (id: string) => void;
-  setStrategyFormData: (data: any) => void;
-  setEditingStrategyOrderId: (id: string | null) => void;
-  handleDeleteStrategyOrder: (id: string) => void;
-  parseTargetDate: (dateStr: string) => Date;
+  readonly styles: any;
+  readonly theme: any;
+  readonly loadingHistory: boolean;
+  readonly mtfOrders: any[];
+  readonly strategyOrders: any[];
+  readonly setTradeSymbol: (symbol: string) => void;
+  readonly setTradeQty: (qty: string) => void;
+  readonly setTargetDate: (date: Date) => void;
+  readonly setPickerDate: (date: Date) => void;
+  readonly setTradeBroker: (broker: 'ZERODHA' | 'RUPEEZY') => void;
+  readonly setEditingMtfOrderId: (id: string | null) => void;
+  readonly setActiveTab: (tab: 'execute' | 'strategy' | 'history') => void;
+  readonly handleDeleteMtfOrder: (id: string) => void;
+  readonly setStrategyFormData: (data: any) => void;
+  readonly setEditingStrategyOrderId: (id: string | null) => void;
+  readonly handleDeleteStrategyOrder: (id: string) => void;
+  readonly parseTargetDate: (dateStr: string) => Date;
 }
 
 export default function HistoryTab({

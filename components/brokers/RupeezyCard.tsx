@@ -4,23 +4,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { CustomAlert } from '../../context/AlertContext';
 
 interface RupeezyCardProps {
-  styles: any;
-  theme: any;
-  rupeezyStatusColor: string;
-  rupeezyStatusContent: React.ReactNode;
-  rupeezyConnectionText: string;
-  rupeezyError: string | null;
-  isRupeezy404Error: boolean;
-  setIsRupeezy404Error: (val: boolean) => void;
-  isRupeezyTokenExpired: boolean;
-  rupeezyAppId: string;
-  setRupeezyAppId: (val: string) => void;
-  rupeezyApiSecret: string;
-  setRupeezyApiSecret: (val: string) => void;
-  setShowRupeezyWebView: (val: boolean) => void;
-  rupeezySaving: boolean;
-  handleSaveRupeezyConfig: () => void;
-  setRupeezyError: (val: string | null) => void;
+  readonly styles: any;
+  readonly theme: any;
+  readonly rupeezyStatusColor: string;
+  readonly rupeezyStatusContent: React.ReactNode;
+  readonly rupeezyConnectionText: string;
+  readonly rupeezyError: string | null;
+  readonly isRupeezy404Error: boolean;
+  readonly setIsRupeezy404Error: (val: boolean) => void;
+  readonly isRupeezyTokenExpired: boolean;
+  readonly rupeezyAppId: string;
+  readonly setRupeezyAppId: (val: string) => void;
+  readonly rupeezyApiSecret: string;
+  readonly setRupeezyApiSecret: (val: string) => void;
+  readonly setShowRupeezyWebView: (val: boolean) => void;
+  readonly rupeezySaving: boolean;
+  readonly handleSaveRupeezyConfig: () => void;
+  readonly setRupeezyError: (val: string | null) => void;
 }
 
 export default function RupeezyCard({
@@ -62,7 +62,7 @@ export default function RupeezyCard({
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.borderLight, paddingTop: 8 }}>
             <Text style={[styles.connectionSubtitle, { marginTop: 0, flex: 1, marginRight: 12 }]} numberOfLines={2}>
-              {rupeezyError ? rupeezyError : 'Secured Rupeezy Connection'}
+              {rupeezyError || 'Secured Rupeezy Connection'}
             </Text>
             <View style={rupeezyError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
               <View style={rupeezyError ? styles.inactiveDot : styles.activeDot} />

@@ -3,33 +3,33 @@ import { View, Text, TouchableOpacity, ActivityIndicator, TextInput, Switch } fr
 import { Ionicons } from '@expo/vector-icons';
 
 interface ZerodhaCardProps {
-  styles: any;
-  theme: any;
-  zerodhaStatusColor: string;
-  zerodhaStatusContent: React.ReactNode;
-  zerodhaConnectionText: string;
-  zerodhaError: string | null;
-  is404Error: boolean;
-  setIs404Error: (val: boolean) => void;
-  isTokenExpired: boolean;
-  autoConnectLoading: boolean;
-  handleConnectKite: () => void;
-  apiKey: string;
-  setApiKey: (val: string) => void;
-  apiSecret: string;
-  setApiSecret: (val: string) => void;
-  enableAutoLogin: boolean;
-  setEnableAutoLogin: (val: boolean) => void;
-  userName: string;
-  setUserName: (val: string) => void;
-  password: string;
-  setPassword: (val: string) => void;
-  totpSecret: string;
-  setTotpSecret: (val: string) => void;
-  formError: string | null;
-  setFormError: (val: string | null) => void;
-  savingConfig: boolean;
-  handleSaveZerodhaConfig: () => void;
+  readonly styles: any;
+  readonly theme: any;
+  readonly zerodhaStatusColor: string;
+  readonly zerodhaStatusContent: React.ReactNode;
+  readonly zerodhaConnectionText: string;
+  readonly zerodhaError: string | null;
+  readonly is404Error: boolean;
+  readonly setIs404Error: (val: boolean) => void;
+  readonly isTokenExpired: boolean;
+  readonly autoConnectLoading: boolean;
+  readonly handleConnectKite: () => void;
+  readonly apiKey: string;
+  readonly setApiKey: (val: string) => void;
+  readonly apiSecret: string;
+  readonly setApiSecret: (val: string) => void;
+  readonly enableAutoLogin: boolean;
+  readonly setEnableAutoLogin: (val: boolean) => void;
+  readonly userName: string;
+  readonly setUserName: (val: string) => void;
+  readonly password: string;
+  readonly setPassword: (val: string) => void;
+  readonly totpSecret: string;
+  readonly setTotpSecret: (val: string) => void;
+  readonly formError: string | null;
+  readonly setFormError: (val: string | null) => void;
+  readonly savingConfig: boolean;
+  readonly handleSaveZerodhaConfig: () => void;
 }
 
 export default function ZerodhaCard({
@@ -81,7 +81,7 @@ export default function ZerodhaCard({
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.borderLight, paddingTop: 8 }}>
             <Text style={[styles.connectionSubtitle, { marginTop: 0, flex: 1, marginRight: 12 }]} numberOfLines={2}>
-              {zerodhaError ? zerodhaError : 'Secured Zerodha Connection'}
+              {zerodhaError || 'Secured Zerodha Connection'}
             </Text>
             <View style={zerodhaError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
               <View style={zerodhaError ? styles.inactiveDot : styles.activeDot} />

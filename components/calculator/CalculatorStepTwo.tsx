@@ -3,24 +3,24 @@ import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface CalculatorStepTwoProps {
-  styles: any;
-  theme: any;
-  errors: Record<string, string>;
-  setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  entryDate: string;
-  setEntryDate: (val: string) => void;
-  exitDate: string;
-  setExitDate: (val: string) => void;
-  setDatePickerTarget: (val: 'entry' | 'exit') => void;
-  setPickerDate: (val: Date) => void;
-  setShowDatePicker: (val: boolean) => void;
-  daysHeld: number;
-  quantityType: 'quantity' | 'investment';
-  setQuantityType: (val: 'quantity' | 'investment') => void;
-  quantity: string;
-  setQuantity: (val: string) => void;
-  setActiveStep: (val: 1 | 2) => void;
-  calculateReturns: () => void;
+  readonly styles: any;
+  readonly theme: any;
+  readonly errors: Record<string, string>;
+  readonly setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  readonly entryDate: string;
+  readonly setEntryDate: (val: string) => void;
+  readonly exitDate: string;
+  readonly setExitDate: (val: string) => void;
+  readonly setDatePickerTarget: (val: 'entry' | 'exit') => void;
+  readonly setPickerDate: (val: Date) => void;
+  readonly setShowDatePicker: (val: boolean) => void;
+  readonly daysHeld: number;
+  readonly quantityType: 'quantity' | 'investment';
+  readonly setQuantityType: (val: 'quantity' | 'investment') => void;
+  readonly quantity: string;
+  readonly setQuantity: (val: string) => void;
+  readonly setActiveStep: (val: 1 | 2) => void;
+  readonly calculateReturns: () => void;
 }
 
 export default function CalculatorStepTwo({

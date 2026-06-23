@@ -3,10 +3,10 @@ import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface NewsSectionProps {
-  styles: any;
-  theme: any;
-  newsLoading: boolean;
-  news: any[];
+  readonly styles: any;
+  readonly theme: any;
+  readonly newsLoading: boolean;
+  readonly news: any[];
 }
 
 export default function NewsSection({

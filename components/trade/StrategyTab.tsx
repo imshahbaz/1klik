@@ -3,13 +3,13 @@ import { View, Text, TouchableOpacity, TextInput, ActivityIndicator, Platform } 
 import { Ionicons } from '@expo/vector-icons';
 
 interface StrategyTabProps {
-  styles: any;
-  theme: any;
-  strategyFormData: {
-    strategyName: string;
-    amount: string;
-    date: string;
-    broker: 'ZERODHA' | 'RUPEEZY';
+  readonly styles: any;
+  readonly theme: any;
+  readonly strategyFormData: {
+    readonly strategyName: string;
+    readonly amount: string;
+    readonly date: string;
+    readonly broker: 'ZERODHA' | 'RUPEEZY';
   };
   setStrategyFormData: (data: any) => void;
   showStrategyBrokerDropdown: boolean;

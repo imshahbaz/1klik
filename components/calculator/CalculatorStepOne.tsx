@@ -3,27 +3,27 @@ import { View, Text, TouchableOpacity, TextInput, ActivityIndicator, ScrollView 
 import { Ionicons } from '@expo/vector-icons';
 
 interface CalculatorStepOneProps {
-  styles: any;
-  theme: any;
-  errors: Record<string, string>;
-  setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  selectedSymbol: string;
-  setSelectedSymbol: (val: string) => void;
-  searchQuery: string;
-  setSearchQuery: (val: string) => void;
-  showDropdown: boolean;
-  setShowDropdown: (val: boolean) => void;
-  loadingMargins: boolean;
-  filteredMargins: any[];
-  setSelectedLeverage: (val: string) => void;
-  selectedLeverage: string;
-  buyPrice: string;
-  setBuyPrice: (val: string) => void;
-  sellType: 'exact' | 'percent';
-  setSellType: (val: 'exact' | 'percent') => void;
-  sellPrice: string;
-  setSellPrice: (val: string) => void;
-  handleNext: () => void;
+  readonly styles: any;
+  readonly theme: any;
+  readonly errors: Record<string, string>;
+  readonly setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  readonly selectedSymbol: string;
+  readonly setSelectedSymbol: (val: string) => void;
+  readonly searchQuery: string;
+  readonly setSearchQuery: (val: string) => void;
+  readonly showDropdown: boolean;
+  readonly setShowDropdown: (val: boolean) => void;
+  readonly loadingMargins: boolean;
+  readonly filteredMargins: any[];
+  readonly setSelectedLeverage: (val: string) => void;
+  readonly selectedLeverage: string;
+  readonly buyPrice: string;
+  readonly setBuyPrice: (val: string) => void;
+  readonly sellType: 'exact' | 'percent';
+  readonly setSellType: (val: 'exact' | 'percent') => void;
+  readonly sellPrice: string;
+  readonly setSellPrice: (val: string) => void;
+  readonly handleNext: () => void;
 }
 
 const SymbolSearch = ({

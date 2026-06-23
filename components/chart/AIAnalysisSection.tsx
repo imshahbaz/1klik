@@ -3,10 +3,10 @@ import { View, Text, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface AIAnalysisSectionProps {
-  styles: any;
-  theme: any;
-  aiLoading: boolean;
-  aiAnalysis: any;
+  readonly styles: any;
+  readonly theme: any;
+  readonly aiLoading: boolean;
+  readonly aiAnalysis: any;
 }
 
 export default function AIAnalysisSection({
