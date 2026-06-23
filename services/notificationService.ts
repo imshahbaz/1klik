@@ -21,6 +21,7 @@ export function isFirebaseInitialized(): boolean {
   try {
     return getApps().length > 0;
   } catch (error) {
+    console.warn('Firebase initialization check failed:', error);
     return false;
   }
 }

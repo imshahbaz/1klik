@@ -174,7 +174,6 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         };
       } else if (btn.style === 'destructive') {
         btnBg = theme.danger;
-        textCol = '#ffffff';
       }
 
       return (

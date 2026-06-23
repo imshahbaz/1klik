@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 
 interface KeyboardAwareScrollViewProps extends ScrollViewProps {
-  extraKeyboardSpace?: number;
+  readonly extraKeyboardSpace?: number;
 }
 
 export function KeyboardAwareScrollView({
@@ -116,13 +116,7 @@ export function KeyboardAwareScrollView({
     onScroll?.(event);
   };
 
-  const handleResponderRelease = () => {
-    if (keyboardVisible) {
-      scheduleFocusedInputCheck();
-    }
-  };
-
-  const handleTouchEnd = () => {
+  const handleInteractionEnd = () => {
     if (keyboardVisible) {
       scheduleFocusedInputCheck();
     }
@@ -140,8 +134,8 @@ export function KeyboardAwareScrollView({
       keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
       scrollEventThrottle={scrollEventThrottle}
       onScroll={handleScroll}
-      onResponderRelease={handleResponderRelease}
-      onTouchEnd={handleTouchEnd}
+      onResponderRelease={handleInteractionEnd}
+      onTouchEnd={handleInteractionEnd}
       contentContainerStyle={mergedContentContainerStyle}
       {...props}
     >

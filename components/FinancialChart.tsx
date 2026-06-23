@@ -3,10 +3,10 @@ import { View, Text, StyleSheet, processColor } from 'react-native';
 import { CandleStickChart } from 'react-native-charts-wrapper';
 
 interface ChartProps {
-  rawData: any[];
-  theme: any;
-  isDarkMode: boolean;
-  height?: number;
+  readonly rawData: any[];
+  readonly theme: any;
+  readonly isDarkMode: boolean;
+  readonly height?: number;
 }
 
 const months: Record<string, string> = {

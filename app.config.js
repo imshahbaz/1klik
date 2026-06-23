@@ -3,7 +3,8 @@ const path = require('node:path');
 const localAndroidGoogleServicesFile = path.join(__dirname, 'google-services.json');
 const localIosGoogleServicesFile = path.join(__dirname, 'GoogleService-Info.plist');
 
-module.exports = ({ config }) => ({
+module.exports = function configureApp({ config }) {
+  return {
   ...config,
   ios: {
     ...config.ios,
@@ -15,4 +16,5 @@ module.exports = ({ config }) => ({
     googleServicesFile:
       process.env.GOOGLE_SERVICES_JSON ?? config.android?.googleServicesFile ?? localAndroidGoogleServicesFile,
   },
-});
+  };
+};

@@ -100,7 +100,7 @@ export default function CalculatorScreen() {
         }
         const diffTime = end.getTime() - start.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        setDaysHeld(diffDays > 0 ? diffDays : 0);
+        setDaysHeld(Math.max(0, diffDays));
       }
     } else {
       setDaysHeld(0);

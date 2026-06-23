@@ -10,7 +10,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-export let appUpdateInfo = {
+export const appUpdateInfo = {
   updateNeeded: false,
   downloadUrl: ''
 };
@@ -78,7 +78,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const isAuthMe = error.config?.url?.includes('/auth/me');
-    if (error.response && error.response.status === 401) {
+    if (error.response?.status === 401) {
       DeviceEventEmitter.emit('auth-expired');
       if (isAuthMe) {
         return Promise.resolve({ data: null });

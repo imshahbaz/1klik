@@ -183,7 +183,7 @@ export default function BrokersConfigScreen() {
 
   const checkZerodhaAuthUrl = async (url: string) => {
     if (url?.includes('request_token=')) {
-      const tokenMatch = url.match(/[?&]request_token=([^&]+)/);
+      const tokenMatch = /[?&]request_token=([^&]+)/.exec(url);
       if (tokenMatch?.[1]) {
         const requestToken = tokenMatch[1];
         setShowWebView(false);
@@ -295,7 +295,7 @@ export default function BrokersConfigScreen() {
 
   const checkRupeezyAuthUrl = async (url: string) => {
     if (url?.includes('auth=')) {
-      const tokenMatch = url.match(/[?&]auth=([^&]+)/);
+      const tokenMatch = /[?&]auth=([^&]+)/.exec(url);
       if (tokenMatch?.[1]) {
         const auth = tokenMatch[1];
         setShowRupeezyWebView(false);
