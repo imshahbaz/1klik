@@ -3,18 +3,13 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
+import { useMargins } from '../context/MarginContext';
 import { useTheme } from '../context/ThemeContext';
-import { marginAPI } from '../services/api';
 import { useCalculatorStyles } from '../theme/calculatorStyles';
 import { useAdaptiveLayout } from '../theme/layout';
 import CalculatorStepOne from '../components/calculator/CalculatorStepOne';
 import CalculatorStepTwo from '../components/calculator/CalculatorStepTwo';
 import CalculatorResults from '../components/calculator/CalculatorResults';
-
-interface MarginData {
-  symbol: string;
-  requiredMargin: string | number;
-}
 
 export default function CalculatorScreen() {
   const insets = useSafeAreaInsets();
@@ -26,9 +21,7 @@ export default function CalculatorScreen() {
   const [view, setView] = useState<'form' | 'results'>('form');
   const [activeStep, setActiveStep] = useState<1 | 2>(1);
 
-  // API margins
-  const [margins, setMargins] = useState<MarginData[]>([]);
-  const [loadingMargins, setLoadingMargins] = useState(true);
+  const { margins, loadingMargins } = useMargins();
 
   // Search Stocks states
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,23 +60,6 @@ export default function CalculatorScreen() {
   // Results State
   const [results, setResults] = useState<any>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Fetch margins on mount
-  useEffect(() => {
-    const fetchMargins = async () => {
-      setLoadingMargins(true);
-      try {
-        const response = await marginAPI.getAllMargins();
-        const data = response?.data?.data || response?.data || [];
-        setMargins(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('Error fetching margins:', err);
-      } finally {
-        setLoadingMargins(false);
-      }
-    };
-    fetchMargins();
-  }, []);
 
   // Calculate days held whenever entryDate or exitDate changes
   useEffect(() => {

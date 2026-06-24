@@ -3,18 +3,13 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useStrategies } from '../../context/StrategyContext';
 import { useTheme } from '../../context/ThemeContext';
 import { strategyAPI } from '../../services/api';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { useScreenerStyles } from '../../theme/screenerStyles';
 import ScreenerResults from '../../components/screener/ScreenerResults';
 import StrategyModal from '../../components/screener/StrategyModal';
-
-interface Strategy {
-  name: string;
-  scanClause: string;
-  active: boolean;
-}
 
 export default function ScreenerScreen() {
   const router = useRouter();
@@ -23,10 +18,12 @@ export default function ScreenerScreen() {
   const { isDarkMode, theme } = useTheme();
   const styles = useScreenerStyles(isDarkMode);
 
-  // Strategies list states
-  const [strategies, setStrategies] = useState<Strategy[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    strategies,
+    loadingStrategies,
+    strategiesError,
+    refreshStrategies,
+  } = useStrategies();
 
   // Scan Results State
   const [selectedStrategy, setSelectedStrategy] = useState<string | null>(null);
@@ -37,25 +34,6 @@ export default function ScreenerScreen() {
   // Dropdown visibility state
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
-  const fetchStrategies = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await strategyAPI.getStrategies();
-      const payload = res.data?.data || res.data;
-      if (Array.isArray(payload)) {
-        setStrategies(payload);
-      } else {
-        setError('Invalid response structure');
-      }
-    } catch (err: any) {
-      console.error('Failed to load strategies:', err);
-      setError('Failed to fetch strategies');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const isNavigatingToChart = useRef(false);
 
   useFocusEffect(
@@ -65,8 +43,6 @@ export default function ScreenerScreen() {
         isNavigatingToChart.current = false;
         return;
       }
-      // Initial load or returning from a different tab
-      fetchStrategies();
       setScanResults([]);
       setSelectedStrategy(null);
       setScanError(null);
@@ -217,7 +193,7 @@ export default function ScreenerScreen() {
 
           {/* Dropdown Select Box Trigger */}
           {(() => {
-            if (loading) {
+            if (loadingStrategies) {
               return (
             <View style={styles.dropdownTrigger}>
               <View style={styles.dropdownLeft}>
@@ -228,11 +204,11 @@ export default function ScreenerScreen() {
             </View>
               );
             }
-            if (error) {
+            if (strategiesError) {
               return (
             <TouchableOpacity
               style={[styles.dropdownTrigger, { borderColor: theme.danger }]}
-              onPress={fetchStrategies}
+              onPress={refreshStrategies}
               activeOpacity={0.8}
             >
               <View style={styles.dropdownLeft}>

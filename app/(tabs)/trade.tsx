@@ -6,8 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
+import { useMargins } from '../../context/MarginContext';
 import { useTheme } from '../../context/ThemeContext';
-import { marginAPI, strategyOrderAPI, zerodhaAPI } from '../../services/api';
+import { strategyOrderAPI, zerodhaAPI } from '../../services/api';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 import ExecuteTab from '../../components/trade/ExecuteTab';
@@ -74,17 +75,7 @@ export default function TradeScreen() {
   }, [user, appLoading]);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [marginsData, setMarginsData] = useState<any[]>([]);
-
-  useEffect(() => {
-    marginAPI.getAllMargins().then(res => {
-      if (res.data?.success) {
-        setMarginsData(res.data.data);
-      } else {
-        setMarginsData(res.data);
-      }
-    }).catch(console.error);
-  }, []);
+  const { margins: marginsData } = useMargins();
 
   // Filtered Margins helper
   const filteredMargins = Array.isArray(marginsData) ? marginsData
@@ -572,7 +563,9 @@ export default function TradeScreen() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return <View style={{ flex: 1, backgroundColor: theme.background }} />;
+  }
 
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>

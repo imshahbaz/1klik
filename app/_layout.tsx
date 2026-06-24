@@ -12,7 +12,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AlertProvider } from '../context/AlertContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { DimensionsProvider } from '../context/DimensionsContext';
+import { MarginProvider } from '../context/MarginContext';
 import NetInfo from '@react-native-community/netinfo';
+import { StrategyProvider } from '../context/StrategyContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { SecurityProvider } from '../context/SecurityContext';
 import { appUpdateInfo } from '../services/api';
@@ -235,7 +237,11 @@ export default function RootLayout() {
             <DimensionsProvider>
               <AlertProvider>
                 <SecurityProvider>
-                  <AppContent />
+                  <MarginProvider>
+                    <StrategyProvider>
+                      <AppContent />
+                    </StrategyProvider>
+                  </MarginProvider>
                 </SecurityProvider>
               </AlertProvider>
             </DimensionsProvider>
