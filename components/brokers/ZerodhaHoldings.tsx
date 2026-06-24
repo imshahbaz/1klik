@@ -136,6 +136,33 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
     }
   };
 
+  const handleDeleteDetail = (symbol: string, detailId: number) => {
+    CustomAlert.alert(
+      'Delete Holding Entry',
+      'Are you sure you want to delete this specific buy entry? This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await holdingsAPI.deleteHoldingDetail(symbol, detailId);
+              fetchHoldings();
+              CustomAlert.alert('Success', 'Holding entry deleted successfully.');
+            } catch (err: any) {
+              console.error('Failed to delete holding detail:', err);
+              const errorMsg = err.response?.data?.message || err.message || 'Failed to delete holding entry.';
+              CustomAlert.alert('Error', errorMsg);
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleDeleteHolding = (symbol: string) => {
     CustomAlert.alert(
       'Delete Holding',
@@ -299,105 +326,153 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
             const breakEvenPrice = totalQty > 0 ? breakEvenSellAmount / totalQty : 0;
             
             const isExpanded = expandedSymbol === holding.symbol;
+            const isProfit = pnl >= 0;
 
             return (
-              <View key={holding.symbol || index} style={{ marginBottom: 12, borderWidth: 1, borderColor: theme.borderLight, borderRadius: 12, overflow: 'hidden' }}>
+              <View key={holding.symbol || index} style={{ 
+                marginBottom: 16, 
+                borderWidth: 1, 
+                borderColor: isExpanded ? (isProfit ? theme.success : theme.danger) : theme.borderLight, 
+                borderLeftWidth: 4,
+                borderLeftColor: isProfit ? theme.success : theme.danger,
+                borderRadius: 16, 
+                backgroundColor: theme.card,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+                overflow: 'hidden' 
+              }}>
                 <TouchableOpacity 
-                  style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: theme.card }}
+                  style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: 'transparent' }}
                   onPress={() => setExpandedSymbol(isExpanded ? null : holding.symbol)}
                   activeOpacity={0.7}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: theme.textPrimary, fontSize: 16, fontWeight: '700' }}>{holding.symbol}</Text>
-                    <Text style={{ color: theme.textSecondary, fontSize: 13 }}>
-                      {totalQty} Shares {leverage > 1 ? `• ${leverage}x MTF` : ''}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                      <Text style={{ color: theme.textPrimary, fontSize: 17, fontWeight: '800', letterSpacing: 0.5 }}>{holding.symbol}</Text>
+                      {leverage > 1 && (
+                        <View style={{ marginLeft: 8, backgroundColor: 'rgba(59, 130, 246, 0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                          <Text style={{ color: theme.primary, fontSize: 10, fontWeight: '800' }}>{leverage}x MTF</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={{ color: theme.textSecondary, fontSize: 13, fontWeight: '500' }}>
+                      {totalQty} Shares
                     </Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ color: theme.textPrimary, fontSize: 16, fontWeight: '600' }}>₹{ltp.toFixed(2)}</Text>
-                    <Text style={{ color: pnl >= 0 ? theme.success : theme.danger, fontSize: 13, fontWeight: '600', marginTop: 2 }}>
-                      {pnl >= 0 ? '+' : ''}₹{pnl.toFixed(2)} ({pnlPercent.toFixed(2)}%)
-                    </Text>
+                    <Text style={{ color: theme.textPrimary, fontSize: 17, fontWeight: '700' }}>₹{ltp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                      <Ionicons name={isProfit ? 'trending-up' : 'trending-down'} size={14} color={isProfit ? theme.success : theme.danger} style={{ marginRight: 4 }} />
+                      <Text style={{ color: isProfit ? theme.success : theme.danger, fontSize: 13, fontWeight: '700' }}>
+                        {isProfit ? '+' : ''}₹{pnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({pnlPercent.toFixed(2)}%)
+                      </Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
 
                 {isExpanded && (
-                  <View style={{ padding: 12, backgroundColor: theme.background, borderTopWidth: 1, borderTopColor: theme.borderLight }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
-                      <View>
-                        <Text style={{ color: theme.textSecondary, fontSize: 12, marginBottom: 2 }}>Avg. Price</Text>
-                        <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '600' }}>₹{avgPrice.toFixed(2)}</Text>
+                  <View style={{ paddingHorizontal: 16, paddingBottom: 16, backgroundColor: 'transparent', borderTopWidth: 1, borderTopColor: theme.borderLight }}>
+                    <View style={{ flexDirection: 'row', marginTop: 16, marginBottom: 16, backgroundColor: theme.card, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: theme.borderLight }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: theme.textSecondary, fontSize: 11, fontWeight: '600', textTransform: 'uppercase', marginBottom: 4 }}>Avg. Price</Text>
+                        <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '700' }}>₹{avgPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
                       </View>
-                      <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={{ color: theme.textSecondary, fontSize: 12, marginBottom: 2 }}>Total Invested</Text>
-                        <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '600' }}>₹{totalMarginUsed.toFixed(2)}</Text>
+                      <View style={{ width: 1, backgroundColor: theme.borderLight, marginHorizontal: 12 }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: theme.textSecondary, fontSize: 11, fontWeight: '600', textTransform: 'uppercase', marginBottom: 4 }}>Invested Margin</Text>
+                        <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '700' }}>₹{totalMarginUsed.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
                       </View>
                     </View>
                     
-                    <View style={{ marginBottom: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: theme.borderLight }}>
+                    <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.05)', borderRadius: 12, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.2)' }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '600' }}>Break-Even Target</Text>
+                        <Text style={{ color: theme.primary, fontSize: 16, fontWeight: '800' }}>
+                          ₹{breakEvenPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </Text>
+                      </View>
+                      
                       {totalBuyCharges > 0 && (
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                          <Text style={{ color: theme.textSecondary, fontSize: 13, fontWeight: '500' }}>Buy Charges</Text>
-                          <Text style={{ color: theme.danger, fontSize: 13, fontWeight: '600' }}>
-                            ₹{totalBuyCharges.toFixed(2)}
+                          <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '500' }}>Past Buy Charges</Text>
+                          <Text style={{ color: theme.danger, fontSize: 12, fontWeight: '600' }}>
+                            - ₹{totalBuyCharges.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </Text>
                         </View>
                       )}
                       
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <Text style={{ color: theme.textSecondary, fontSize: 13, fontWeight: '500' }}>Est. Sell Charges</Text>
-                        <Text style={{ color: theme.danger, fontSize: 13, fontWeight: '600' }}>
-                          ₹{estSellCharges.toFixed(2)}
+                        <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '500' }}>Est. Sell Charges</Text>
+                        <Text style={{ color: theme.danger, fontSize: 12, fontWeight: '600' }}>
+                          - ₹{estSellCharges.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </Text>
                       </View>
 
                       {totalInterest > 0 && (
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-                          <Text style={{ color: theme.textSecondary, fontSize: 13, fontWeight: '500' }}>Total Interest Till Date</Text>
-                          <Text style={{ color: theme.warning || '#F59E0B', fontSize: 13, fontWeight: '700' }}>
-                            ₹{totalInterest.toFixed(2)}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(245, 158, 11, 0.1)' }}>
+                          <Text style={{ color: theme.warning || '#F59E0B', fontSize: 12, fontWeight: '700' }}>Accrued MTF Interest</Text>
+                          <Text style={{ color: theme.warning || '#F59E0B', fontSize: 12, fontWeight: '800' }}>
+                            - ₹{totalInterest.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </Text>
                         </View>
                       )}
-
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 8, borderTopWidth: 1, borderTopColor: theme.borderLight }}>
-                        <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '700' }}>Break-Even Price</Text>
-                        <Text style={{ color: theme.primary, fontSize: 15, fontWeight: '700' }}>
-                          ₹{breakEvenPrice.toFixed(2)}
-                        </Text>
-                      </View>
                     </View>
 
-                    <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 8 }}>
-                      BREAKDOWN
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                      <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '700', letterSpacing: 0.5 }}>HOLDING BREAKDOWN</Text>
+                      <View style={{ flex: 1, height: 1, backgroundColor: theme.borderLight, marginLeft: 12 }} />
+                    </View>
                     
                     {detailsWithInterest.map((detail: any, dIndex: number) => {
-                      const buyDateStr = detail.buyDate ? new Date(detail.buyDate).toLocaleDateString() : 'N/A';
+                      const buyDateStr = detail.buyDate ? new Date(detail.buyDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
                       return (
-                        <View key={detail.id || dIndex} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <View key={detail.id || dIndex} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: theme.card, padding: 12, borderRadius: 10, marginBottom: 8, borderWidth: 1, borderColor: theme.borderLight }}>
                           <View>
-                            <Text style={{ color: theme.textSecondary, fontSize: 13 }}>
-                              {buyDateStr} {detail.days > 0 ? `(${detail.days} days)` : ''}
-                            </Text>
-                            <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: '500', marginTop: 2 }}>
-                              {detail.quantity} @ ₹{detail.price?.toFixed(2) || '0.00'}
-                            </Text>
-                            {detail.interest > 0 && (
-                              <Text style={{ color: theme.warning || '#F59E0B', fontSize: 12, marginTop: 2 }}>
-                                Interest: ₹{detail.interest.toFixed(2)}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                              <Ionicons name="calendar-outline" size={12} color={theme.textSecondary} style={{ marginRight: 4 }} />
+                              <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '500' }}>
+                                {buyDateStr} {detail.days > 0 ? ` • ${detail.days} days ago` : ''}
                               </Text>
-                            )}
-                            <Text style={{ color: theme.danger, fontSize: 12, marginTop: 2 }}>
-                              Charges: ₹{detail.detailBuyCharges?.toFixed(2) || '0.00'}
+                            </View>
+                            <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '700', marginBottom: 4 }}>
+                              {detail.quantity} <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '500' }}>@</Text> ₹{detail.price?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
                             </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              {detail.interest > 0 && (
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                  <Ionicons name="time-outline" size={10} color={theme.warning || '#F59E0B'} style={{ marginRight: 2 }} />
+                                  <Text style={{ color: theme.warning || '#F59E0B', fontSize: 11, fontWeight: '600' }}>
+                                    ₹{detail.interest.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </Text>
+                                </View>
+                              )}
+                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Ionicons name="receipt-outline" size={10} color={theme.danger} style={{ marginRight: 2 }} />
+                                <Text style={{ color: theme.danger, fontSize: 11, fontWeight: '600' }}>
+                                  ₹{detail.detailBuyCharges?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                                </Text>
+                              </View>
+                            </View>
                           </View>
-                          <TouchableOpacity 
-                            style={{ padding: 6, backgroundColor: theme.card, borderRadius: 6, borderWidth: 1, borderColor: theme.borderLight }}
-                            onPress={() => openEditModal(holding.symbol, detail)}
-                          >
-                            <Ionicons name="pencil" size={14} color={theme.primary} />
-                          </TouchableOpacity>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <TouchableOpacity 
+                              style={{ width: 36, height: 36, backgroundColor: 'rgba(59, 130, 246, 0.08)', borderRadius: 18, justifyContent: 'center', alignItems: 'center' }}
+                              onPress={() => openEditModal(holding.symbol, detail)}
+                              activeOpacity={0.7}
+                            >
+                              <Ionicons name="pencil" size={16} color={theme.primary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                              style={{ width: 36, height: 36, backgroundColor: 'rgba(239, 68, 68, 0.08)', borderRadius: 18, justifyContent: 'center', alignItems: 'center' }}
+                              onPress={() => handleDeleteDetail(holding.symbol, detail.id)}
+                              activeOpacity={0.7}
+                            >
+                              <Ionicons name="trash-outline" size={16} color={theme.danger} />
+                            </TouchableOpacity>
+                          </View>
                         </View>
                       );
                     })}

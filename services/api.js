@@ -225,6 +225,7 @@ export const holdingsAPI = {
   addHolding: (data) => api.post('/api/holdings?brokerType=ZERODHA', data),
   updateHolding: (data) => api.put('/api/holdings?brokerType=ZERODHA', data),
   deleteHolding: (symbol) => api.delete(`/api/holdings/${symbol}?brokerType=ZERODHA`),
+  deleteHoldingDetail: (symbol, id) => api.delete(`/api/holdings/detail/${symbol}/${id}?brokerType=ZERODHA`),
 }
 
 export default api;
