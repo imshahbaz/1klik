@@ -2,14 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import CalculatorResults from '../components/calculator/CalculatorResults';
+import CalculatorStepOne from '../components/calculator/CalculatorStepOne';
+import CalculatorStepTwo from '../components/calculator/CalculatorStepTwo';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { useMargins } from '../context/MarginContext';
 import { useTheme } from '../context/ThemeContext';
 import { useCalculatorStyles } from '../theme/calculatorStyles';
 import { useAdaptiveLayout } from '../theme/layout';
-import CalculatorStepOne from '../components/calculator/CalculatorStepOne';
-import CalculatorStepTwo from '../components/calculator/CalculatorStepTwo';
-import CalculatorResults from '../components/calculator/CalculatorResults';
 
 export default function CalculatorScreen() {
   const insets = useSafeAreaInsets();
@@ -37,9 +37,12 @@ export default function CalculatorScreen() {
   // Step 2 Fields
   const [entryDate, setEntryDate] = useState(() => {
     const today = new Date();
-    return today.toISOString().split('T')[0]; // YYYY-MM-DD
+    return today.toISOString().split('T')[0];
   });
-  const [exitDate, setExitDate] = useState('');
+  const [exitDate, setExitDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
   const [daysHeld, setDaysHeld] = useState(0);
   const [quantity, setQuantity] = useState('');
   const [quantityType, setQuantityType] = useState<'quantity' | 'investment'>('quantity');
@@ -65,7 +68,7 @@ export default function CalculatorScreen() {
   useEffect(() => {
     if (entryDate) {
       const start = new Date(entryDate);
-      const end = exitDate ? new Date(exitDate) : new Date(entryDate);
+      const end = exitDate ? new Date(exitDate) : new Date(new Date().toISOString().split('T')[0]);
 
       if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
         if (exitDate && end.getTime() < start.getTime()) {
