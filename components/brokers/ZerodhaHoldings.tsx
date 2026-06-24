@@ -142,8 +142,8 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
       'Are you sure you want to delete this specific buy entry? This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
+        {
+          text: 'Delete',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -169,9 +169,9 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
       `Are you sure you want to delete all manual holdings for ${symbol}?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive', 
+        {
+          text: 'Delete',
+          style: 'destructive',
           onPress: async () => {
             try {
               setLoading(true);
@@ -278,7 +278,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
               const totalValue = detail.quantity * detail.price;
               const marginUsed = totalValue / leverage;
               const fundedAmt = totalValue - marginUsed;
-              
+
               totalMarginUsed += marginUsed;
 
               // Calculate Buy Side Charges
@@ -290,9 +290,9 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
               const buySebi = totalValue * 0.000001;
               const buyGst = 0.18 * (buyBrokerage + pledgeCharge + buyTrans + buySebi);
               const detailBuyCharges = buyBrokerage + pledgeCharge + buySTT + buyStamp + buyTrans + buySebi + buyGst;
-              
+
               totalBuyCharges += detailBuyCharges;
-              
+
               let days = 0;
               if (detail.buyDate) {
                 const buyDate = new Date(detail.buyDate);
@@ -304,7 +304,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
               }
               const interest = (fundedAmt * 0.15 * days) / 365;
               totalInterest += interest;
-              
+
               return { ...detail, interest, days, detailBuyCharges };
             }) || [];
 
@@ -324,49 +324,52 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
             const totalFixedCosts = totalCost + totalInterest + totalBuyCharges + 41.3;
             const breakEvenSellAmount = totalFixedCosts / 0.99895811;
             const breakEvenPrice = totalQty > 0 ? breakEvenSellAmount / totalQty : 0;
-            
+
             const isExpanded = expandedSymbol === holding.symbol;
             const isProfit = pnl >= 0;
 
             return (
-              <View key={holding.symbol || index} style={{ 
-                marginBottom: 16, 
-                borderWidth: 1, 
-                borderColor: isExpanded ? (isProfit ? theme.success : theme.danger) : theme.borderLight, 
+              <View key={holding.symbol || index} style={{
+                marginBottom: 16,
+                borderWidth: 1,
+                borderColor: isExpanded ? (isProfit ? theme.success : theme.danger) : theme.borderLight,
                 borderLeftWidth: 4,
                 borderLeftColor: isProfit ? theme.success : theme.danger,
-                borderRadius: 16, 
+                borderRadius: 16,
                 backgroundColor: theme.card,
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.05,
                 shadowRadius: 4,
                 elevation: 2,
-                overflow: 'hidden' 
+                overflow: 'hidden'
               }}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: 'transparent' }}
                   onPress={() => setExpandedSymbol(isExpanded ? null : holding.symbol)}
                   activeOpacity={0.7}
                 >
-                  <View style={{ flex: 1 }}>
+                  <View style={{ flex: 1, paddingRight: 16 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                      <Text style={{ color: theme.textPrimary, fontSize: 17, fontWeight: '800', letterSpacing: 0.5 }}>{holding.symbol}</Text>
+                      <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '600' }} numberOfLines={1} ellipsizeMode="tail">
+                        {holding.symbol}
+                      </Text>
                       {leverage > 1 && (
-                        <View style={{ marginLeft: 8, backgroundColor: 'rgba(59, 130, 246, 0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                          <Text style={{ color: theme.primary, fontSize: 10, fontWeight: '800' }}>{leverage}x MTF</Text>
+                        <View style={{ marginLeft: 8, backgroundColor: 'rgba(59, 130, 246, 0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                          <Text style={{ color: theme.primary, fontSize: 9, fontWeight: '700' }}>{leverage}x MTF</Text>
                         </View>
                       )}
                     </View>
-                    <Text style={{ color: theme.textSecondary, fontSize: 13, fontWeight: '500' }}>
+                    <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
                       {totalQty} Shares
                     </Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ color: theme.textPrimary, fontSize: 17, fontWeight: '700' }}>₹{ltp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+                    <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '600' }}>
+                      ₹{ltp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                      <Ionicons name={isProfit ? 'trending-up' : 'trending-down'} size={14} color={isProfit ? theme.success : theme.danger} style={{ marginRight: 4 }} />
-                      <Text style={{ color: isProfit ? theme.success : theme.danger, fontSize: 13, fontWeight: '700' }}>
+                      <Text style={{ color: isProfit ? theme.success : theme.danger, fontSize: 12, fontWeight: '500' }}>
                         {isProfit ? '+' : ''}₹{pnl.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({pnlPercent.toFixed(2)}%)
                       </Text>
                     </View>
@@ -386,7 +389,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
                         <Text style={{ color: theme.textPrimary, fontSize: 15, fontWeight: '700' }}>₹{totalMarginUsed.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
                       </View>
                     </View>
-                    
+
                     <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.05)', borderRadius: 12, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.2)' }}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                         <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '600' }}>Break-Even Target</Text>
@@ -394,7 +397,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
                           ₹{breakEvenPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </Text>
                       </View>
-                      
+
                       {totalBuyCharges > 0 && (
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                           <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '500' }}>Past Buy Charges</Text>
@@ -403,7 +406,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
                           </Text>
                         </View>
                       )}
-                      
+
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                         <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '500' }}>Est. Sell Charges</Text>
                         <Text style={{ color: theme.danger, fontSize: 12, fontWeight: '600' }}>
@@ -421,62 +424,56 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
                       )}
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                      <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '700', letterSpacing: 0.5 }}>HOLDING BREAKDOWN</Text>
-                      <View style={{ flex: 1, height: 1, backgroundColor: theme.borderLight, marginLeft: 12 }} />
-                    </View>
-                    
-                    {detailsWithInterest.map((detail: any, dIndex: number) => {
-                      const buyDateStr = detail.buyDate ? new Date(detail.buyDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
-                      return (
-                        <View key={detail.id || dIndex} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: theme.card, padding: 12, borderRadius: 10, marginBottom: 8, borderWidth: 1, borderColor: theme.borderLight }}>
-                          <View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                              <Ionicons name="calendar-outline" size={12} color={theme.textSecondary} style={{ marginRight: 4 }} />
-                              <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '500' }}>
-                                {buyDateStr} {detail.days > 0 ? ` • ${detail.days} days ago` : ''}
-                              </Text>
-                            </View>
-                            <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '700', marginBottom: 4 }}>
-                              {detail.quantity} <Text style={{ color: theme.textSecondary, fontSize: 12, fontWeight: '500' }}>@</Text> ₹{detail.price?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                            </Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                              {detail.interest > 0 && (
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                  <Ionicons name="time-outline" size={10} color={theme.warning || '#F59E0B'} style={{ marginRight: 2 }} />
-                                  <Text style={{ color: theme.warning || '#F59E0B', fontSize: 11, fontWeight: '600' }}>
-                                    ₹{detail.interest.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <View style={{ marginTop: 8 }}>
+                      <Text style={{ color: theme.textSecondary, fontSize: 11, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                        Holding Breakdown
+                      </Text>
+
+                      {detailsWithInterest.map((detail: any, dIndex: number) => {
+                        const buyDateStr = detail.buyDate ? new Date(detail.buyDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : 'N/A';
+                        return (
+                          <View key={detail.id || dIndex} style={{ paddingVertical: 10, borderBottomWidth: dIndex === detailsWithInterest.length - 1 ? 0 : 1, borderBottomColor: theme.borderLight }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <View style={{ flex: 1 }}>
+                                <Text style={{ color: theme.textSecondary, fontSize: 12, marginBottom: 2 }}>
+                                  {buyDateStr} {detail.days > 0 ? `(${detail.days}d)` : ''}
+                                </Text>
+                                <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '600' }}>
+                                  {detail.quantity} @ ₹{detail.price?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                                </Text>
+                                <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
+                                  {detail.interest > 0 && (
+                                    <Text style={{ color: theme.textSecondary, fontSize: 11 }}>
+                                      Int: <Text style={{ color: theme.warning || '#F59E0B' }}>₹{detail.interest.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+                                    </Text>
+                                  )}
+                                  <Text style={{ color: theme.textSecondary, fontSize: 11 }}>
+                                    Chg: <Text style={{ color: theme.danger }}>₹{detail.detailBuyCharges?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</Text>
                                   </Text>
                                 </View>
-                              )}
-                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Ionicons name="receipt-outline" size={10} color={theme.danger} style={{ marginRight: 2 }} />
-                                <Text style={{ color: theme.danger, fontSize: 11, fontWeight: '600' }}>
-                                  ₹{detail.detailBuyCharges?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                                </Text>
+                              </View>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 4, marginRight: 4 }}>
+                                <TouchableOpacity
+                                  onPress={() => openEditModal(holding.symbol, detail)}
+                                  activeOpacity={0.7}
+                                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                  <Ionicons name="pencil" size={16} color={theme.textSecondary} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  onPress={() => handleDeleteDetail(holding.symbol, detail.id)}
+                                  activeOpacity={0.7}
+                                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                  <Ionicons name="trash-outline" size={16} color={theme.textSecondary} />
+                                </TouchableOpacity>
                               </View>
                             </View>
                           </View>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <TouchableOpacity 
-                              style={{ width: 36, height: 36, backgroundColor: 'rgba(59, 130, 246, 0.08)', borderRadius: 18, justifyContent: 'center', alignItems: 'center' }}
-                              onPress={() => openEditModal(holding.symbol, detail)}
-                              activeOpacity={0.7}
-                            >
-                              <Ionicons name="pencil" size={16} color={theme.primary} />
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                              style={{ width: 36, height: 36, backgroundColor: 'rgba(239, 68, 68, 0.08)', borderRadius: 18, justifyContent: 'center', alignItems: 'center' }}
-                              onPress={() => handleDeleteDetail(holding.symbol, detail.id)}
-                              activeOpacity={0.7}
-                            >
-                              <Ionicons name="trash-outline" size={16} color={theme.danger} />
-                            </TouchableOpacity>
-                          </View>
-                        </View>
-                      );
-                    })}
-                    <TouchableOpacity 
+                        );
+                      })}
+                    </View>
+                    <TouchableOpacity
                       style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 10, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 8 }}
                       onPress={() => handleDeleteHolding(holding.symbol)}
                       activeOpacity={0.7}
