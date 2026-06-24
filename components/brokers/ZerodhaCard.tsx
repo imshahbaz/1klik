@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, TextInput, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { ActivityIndicator, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import ZerodhaHoldings from './ZerodhaHoldings';
 
 interface ZerodhaCardProps {
   readonly styles: any;
@@ -98,7 +99,7 @@ export default function ZerodhaCard({
         <View style={[styles.formCard, { marginTop: 16 }]}>
           <Text style={styles.formTitle}>Reconnect Required</Text>
           <Text style={styles.formSubtitle}>Your Kite Connect session has expired. Click below to re-authenticate.</Text>
-          
+
           <TouchableOpacity
             style={[styles.submitButton, { marginTop: 16 }]}
             onPress={handleConnectKite}
@@ -115,6 +116,9 @@ export default function ZerodhaCard({
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Holdings Section - always show */}
+      <ZerodhaHoldings styles={styles} theme={theme} />
 
       {/* Config Form */}
       {is404Error && (

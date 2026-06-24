@@ -220,4 +220,11 @@ export const rupeezyAPI = {
   saveConfig: (config) => api.post('/api/rupeezy/config', config),
 }
 
+export const holdingsAPI = {
+  getHoldings: () => api.get('/api/holdings/all?brokerType=ZERODHA'),
+  addHolding: (data) => api.post('/api/holdings?brokerType=ZERODHA', data),
+  updateHolding: (data) => api.put('/api/holdings?brokerType=ZERODHA', data),
+  deleteHolding: (symbol) => api.delete(`/api/holdings/${symbol}?brokerType=ZERODHA`),
+}
+
 export default api;
