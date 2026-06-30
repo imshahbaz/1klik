@@ -256,7 +256,6 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
             <HoldingCard
               key={holding.symbol || index}
               holding={holding}
-              styles={styles}
               theme={theme}
               isExpanded={expandedSymbol === holding.symbol}
               onToggle={toggleExpanded}

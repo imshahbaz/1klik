@@ -27,7 +27,8 @@ SplashScreen.preventAutoHideAsync().catch(() => { });
 // Register background message handler
 if (isFirebaseInitialized()) {
   try {
-    setBackgroundMessageHandler(getMessaging(), async (remoteMessage) => {
+    setBackgroundMessageHandler(getMessaging(), async () => {
+      // No-op: background data messages are handled by the OS notification tray.
     });
   } catch (error) {
     console.warn('Firebase background messaging failed to initialize:', error);

@@ -4,7 +4,6 @@ import { Text, TouchableOpacity, View } from 'react-native';
 
 interface HoldingCardProps {
   readonly holding: any;
-  readonly styles: any;
   readonly theme: any;
   readonly isExpanded: boolean;
   readonly onToggle: (symbol: string) => void;
@@ -30,7 +29,6 @@ const formatINR = (value: number) =>
  */
 function HoldingCardBase({
   holding,
-  styles,
   theme,
   isExpanded,
   onToggle,
