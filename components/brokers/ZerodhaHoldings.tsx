@@ -6,6 +6,7 @@ import { CustomAlert } from '../../context/AlertContext';
 import { useMargins } from '../../context/MarginContext';
 import { holdingsAPI } from '../../services/api';
 import { formatDateString, formatIsoDate } from '../../utils/date';
+import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import HoldingCard from './HoldingCard';
 
 export default function ZerodhaHoldings({ styles, theme }: any) {
@@ -146,8 +147,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
       fetchHoldings();
     } catch (err: any) {
       console.error('Failed to save holding:', err);
-      const errorMsg = err.response?.data?.message || err.message || 'Failed to save holding. Please try again.';
-      CustomAlert.alert('Error', errorMsg);
+      CustomAlert.alert('Error', getFriendlyErrorMessage(err, 'Could not save the holding. Please try again.'));
     } finally {
       setAdding(false);
     }
@@ -170,8 +170,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
               CustomAlert.alert('Success', 'Holding entry deleted successfully.');
             } catch (err: any) {
               console.error('Failed to delete holding detail:', err);
-              const errorMsg = err.response?.data?.message || err.message || 'Failed to delete holding entry.';
-              CustomAlert.alert('Error', errorMsg);
+              CustomAlert.alert('Error', getFriendlyErrorMessage(err, 'Could not delete the holding entry. Please try again.'));
               setLoading(false);
             }
           }
@@ -197,7 +196,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
               fetchHoldings();
             } catch (err: any) {
               console.error('Failed to delete holding:', err);
-              CustomAlert.alert('Error', err.response?.data?.message || 'Failed to delete holding.');
+              CustomAlert.alert('Error', getFriendlyErrorMessage(err, 'Could not delete the holding. Please try again.'));
               setLoading(false);
             }
           }

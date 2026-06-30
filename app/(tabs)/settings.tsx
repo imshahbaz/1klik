@@ -7,6 +7,7 @@ import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { notificationAPI, userPreferenceAPI } from '../../services/api';
+import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import { checkNotificationPermission, getFCMToken, requestUserPermission } from '../../services/notificationService';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { useSettingsStyles } from '../../theme/settingsStyles';
@@ -167,8 +168,7 @@ export default function SettingsScreen() {
       setSuccessMessage('Username updated successfully!');
     } catch (err: any) {
       console.error('Failed to update username:', err);
-      const errMsg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to update username';
-      setErrorMessage(errMsg);
+      setErrorMessage(getFriendlyErrorMessage(err, 'Could not update your username. Please try again.'));
     } finally {
       setLoading(false);
     }

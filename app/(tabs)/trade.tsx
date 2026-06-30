@@ -17,6 +17,7 @@ import ExecuteTab from '../../components/trade/ExecuteTab';
 import StrategyTab from '../../components/trade/StrategyTab';
 import HistoryTab from '../../components/trade/HistoryTab';
 import DatePickerModal from '../../components/trade/DatePickerModal';
+import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import {
   formatDateString,
   formatIsoDate,
@@ -196,24 +197,24 @@ export default function TradeScreen() {
       console.error('Failed to process MTF order:', err);
 
       const isConflict = err?.response?.status === 409;
-      const errMsg = err?.response?.data?.message || err?.message || 'Network error occurred.';
+      const errMsg = getFriendlyErrorMessage(err, 'Please try again.');
 
       if (editingMtfOrderId) {
         setMtfOrders(prev => prev.map(o => o.id === editingMtfOrderId ? {
           ...o,
           status: isConflict ? 'CONFLICT' : 'REJECTED',
-          reason: isConflict ? (err?.response?.data?.message || 'Order already scheduled for this date') : errMsg,
+          reason: isConflict ? 'Already scheduled for this date.' : errMsg,
         } : o));
 
         if (isConflict) {
           CustomAlert.alert(
             'Scheduling Conflict',
-            err?.response?.data?.message || 'An MTF order is already scheduled for this symbol on the selected target date.'
+            'An MTF order is already scheduled for this symbol on the selected date.'
           );
         } else {
           CustomAlert.alert(
             'Update Failed',
-            `Could not update MTF order: ${errMsg}`
+            `Could not update the MTF order. ${errMsg}`
           );
         }
       } else {
@@ -225,7 +226,7 @@ export default function TradeScreen() {
           price: 0,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: isConflict ? 'CONFLICT' : 'REJECTED',
-          reason: isConflict ? (err?.response?.data?.message || 'Order already scheduled for this date') : errMsg,
+          reason: isConflict ? 'Already scheduled for this date.' : errMsg,
           targetDate: formatDateString(targetDate),
         };
         setMtfOrders([rejectedOrder, ...mtfOrders]);
@@ -233,12 +234,12 @@ export default function TradeScreen() {
         if (isConflict) {
           CustomAlert.alert(
             'Scheduling Conflict',
-            err?.response?.data?.message || 'An MTF order is already scheduled for this symbol on the selected target date.'
+            'An MTF order is already scheduled for this symbol on the selected date.'
           );
         } else {
           CustomAlert.alert(
             'Order Failed',
-            `Could not place MTF order: ${errMsg}`
+            `Could not place the MTF order. ${errMsg}`
           );
         }
       }
@@ -400,8 +401,7 @@ export default function TradeScreen() {
       });
     } catch (err: any) {
       console.error('Failed to save strategy order:', err);
-      const errMsg = err?.response?.data?.message || err?.message || 'Network error occurred.';
-      CustomAlert.alert('Order Failed', `Could not save strategy order: ${errMsg}`);
+      CustomAlert.alert('Order Failed', getFriendlyErrorMessage(err, 'Could not save the strategy order. Please try again.'));
     } finally {
       setSubmittingStrategy(false);
     }

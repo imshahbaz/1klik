@@ -9,6 +9,7 @@ import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { zerodhaAPI, rupeezyAPI } from '../../services/api';
+import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { getSafeBottomPadding } from '../../theme/safeArea';
 import { useZerodhaStyles } from '../../theme/zerodhaStyles';
@@ -80,7 +81,7 @@ export default function BrokersConfigScreen() {
       if (payload?.success === true) {
         setZerodhaUser(payload.data);
       } else {
-        setZerodhaError(payload?.message || "Kite Connect session is disconnected.");
+        setZerodhaError("Your Kite session is disconnected. Please reconnect.");
         setIsTokenExpired(true);
         if (typeof payload?.data === 'string') {
           setApiKey(payload.data);
@@ -101,7 +102,7 @@ export default function BrokersConfigScreen() {
         setAutoConnectLoading(true);
         pollGetMe();
       } else if (status === 409) {
-        setZerodhaError(detail || "Kite Connect session conflict.");
+        setZerodhaError("Your Kite session has a conflict. Please reconnect.");
         setIsTokenExpired(true);
       } else {
         setZerodhaError("Kite Connect session is disconnected.");
@@ -133,7 +134,7 @@ export default function BrokersConfigScreen() {
         if (pollingRef.current) clearTimeout(pollingRef.current);
         setAutoConnectLoading(false);
         if (status === 409) {
-          CustomAlert.alert("Auto-Login Failed", detail || "Conflict occurred during login.");
+          CustomAlert.alert("Auto-Login Failed", getFriendlyErrorMessage(err, "Auto-login couldn’t be completed. Please try connecting again."));
         }
         setShowWebView(true);
       }
@@ -169,7 +170,7 @@ export default function BrokersConfigScreen() {
       } else {
         setAutoConnectLoading(false);
         if (status === 409) {
-          CustomAlert.alert("Auto-Login Failed", detail || "Conflict occurred during login.");
+          CustomAlert.alert("Auto-Login Failed", getFriendlyErrorMessage(err, "Auto-login couldn’t be completed. Please try connecting again."));
         }
         setShowWebView(true);
       }
@@ -197,8 +198,7 @@ export default function BrokersConfigScreen() {
             "Your Zerodha Kite session has been successfully established and authenticated!"
           );
         } catch (err: any) {
-          const errMsg = err.response?.data?.message || err.message || "Failed to authenticate session with the backend.";
-          CustomAlert.alert("Authentication Failed", errMsg);
+          CustomAlert.alert("Authentication Failed", getFriendlyErrorMessage(err, "We couldn’t complete the Zerodha connection. Please try again."));
           setIsTokenExpired(true);
         } finally {
           setZerodhaLoading(false);
@@ -245,7 +245,7 @@ export default function BrokersConfigScreen() {
         } }]
       );
     } catch (err: any) {
-      setFormError(err.response?.data?.message || "Failed to update configuration. Please try again.");
+      setFormError(getFriendlyErrorMessage(err, "Could not save your configuration. Please try again."));
     } finally {
       setSavingConfig(false);
     }
@@ -263,7 +263,7 @@ export default function BrokersConfigScreen() {
       if (payload?.success) {
         setRupeezyUser(payload.data);
       } else {
-        setRupeezyError(payload?.message || "Rupeezy session is disconnected.");
+        setRupeezyError("Your Rupeezy session is disconnected. Please reconnect.");
         setIsRupeezyTokenExpired(true);
         if (typeof payload?.data === 'string') {
           setRupeezyAppId(payload.data);
@@ -277,7 +277,7 @@ export default function BrokersConfigScreen() {
         setRupeezyError("No linked Rupeezy account found.");
         setIsRupeezy404Error(true);
       } else if (status >= 500) {
-        setRupeezyError(`Server Error (${status}). Retrying...`);
+        setRupeezyError("Rupeezy is temporarily unavailable. Please try again shortly.");
         setIsRupeezyTokenExpired(true);
       } else {
         setRupeezyError("Rupeezy session is disconnected.");
@@ -309,8 +309,7 @@ export default function BrokersConfigScreen() {
             "Your Rupeezy session has been successfully established and authenticated!"
           );
         } catch (err: any) {
-          const errMsg = err.response?.data?.message || err.message || "Failed to authenticate session with the backend.";
-          CustomAlert.alert("Authentication Failed", errMsg);
+          CustomAlert.alert("Authentication Failed", getFriendlyErrorMessage(err, "We couldn’t complete the Rupeezy connection. Please try again."));
           setIsRupeezyTokenExpired(true);
         } finally {
           setRupeezyLoading(false);
@@ -342,7 +341,7 @@ export default function BrokersConfigScreen() {
         } }]
       );
     } catch (err: any) {
-      setRupeezyError(err.response?.data?.message || "Failed to update configuration. Please try again.");
+      setRupeezyError(getFriendlyErrorMessage(err, "Could not save your configuration. Please try again."));
     } finally {
       setRupeezySaving(false);
     }
