@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useNavigation } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
@@ -67,6 +67,21 @@ export default function BrokersConfigScreen() {
       if (pollingRef.current) clearTimeout(pollingRef.current);
     };
   }, []);
+
+  // Reset transient view state when leaving the tab so a revisit starts fresh:
+  // close any open login WebView, clear form errors, and return to the default
+  // broker tab. Connection status itself is refreshed by the focus fetch above.
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setActiveBrokerTab('zerodha');
+        setShowWebView(false);
+        setShowRupeezyWebView(false);
+        setFormError(null);
+        setRupeezyError(null);
+      };
+    }, [])
+  );
 
   const fetchZerodhaProfile = async () => {
     try {

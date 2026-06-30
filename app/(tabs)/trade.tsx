@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
@@ -96,6 +97,30 @@ export default function TradeScreen() {
   const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
   const [datePickerTarget, setDatePickerTarget] = useState<'execute' | 'strategy'>('execute');
   const [showStrategyBrokerDropdown, setShowStrategyBrokerDropdown] = useState(false);
+
+  // Reset the screen to a fresh state when leaving the tab, so returning shows a
+  // clean form (default sub-tab, no prefilled edit, closed dropdowns) instead of
+  // stale in-progress UI — native-style screen reset.
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setActiveTab('execute');
+        setSearchQuery('');
+        setTradeSymbol('');
+        setTradeQty('10');
+        setTargetDate(new Date());
+        setTradeBroker('ZERODHA');
+        setShowExecuteBrokerDropdown(false);
+        setEditingMtfOrderId(null);
+        setStrategyFormData({ strategyName: '', amount: '', date: '', broker: 'ZERODHA' });
+        setEditingStrategyOrderId(null);
+        setShowStrategyDropdown(false);
+        setShowStrategyBrokerDropdown(false);
+        setShowDatePicker(false);
+        setDatePickerTarget('execute');
+      };
+    }, [])
+  );
 
   const handlePrevMonth = () => {
     const today = new Date();
