@@ -3,24 +3,16 @@
  * trade.tsx so the screen holds orchestration, not data plumbing. No React or
  * component state — safe to unit test and reuse.
  */
+import { formatDateString } from './date';
+
+// Re-exported so Trade-screen modules can keep a single import source.
+export { formatDateString, formatIsoDate } from './date';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const FULL_MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
-
-/** "5 Jan 2026" style display date. */
-export const formatDateString = (date: Date) =>
-  `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
-
-/** "YYYY-MM-DD" wire format. */
-export const formatIsoDate = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
 
 /** Best-effort parse of a target-date string; falls back to "now" on failure. */
 export const parseTargetDate = (dateStr: string): Date => {

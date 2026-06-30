@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { AppState, DeviceEventEmitter } from 'react-native';
-import { authAPI, initializeBaseUrl, notificationAPI } from '../services/api';
+import { authAPI, AppConfig, initializeBaseUrl, notificationAPI } from '../services/api';
 import {
     getFCMToken,
     isFirebaseInitialized,
@@ -10,17 +10,6 @@ import {
     requestUserPermission,
     setupForegroundListener,
 } from '../services/notificationService';
-
-interface AppConfig {
-    auth: {
-        google: boolean;
-        email: boolean;
-        truecaller: boolean;
-    };
-    components: {
-        heatMap: boolean;
-    };
-}
 
 /**
  * Authenticated user as returned by `/auth/me`. Known fields are typed; the
