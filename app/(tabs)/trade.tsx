@@ -6,6 +6,7 @@ import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollVie
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
+import { useOrderHistory } from '../../hooks/useOrderHistory';
 import { useMargins } from '../../context/MarginContext';
 import { useTheme } from '../../context/ThemeContext';
 import { strategyOrderAPI, zerodhaAPI } from '../../services/api';
@@ -18,8 +19,6 @@ import DatePickerModal from '../../components/trade/DatePickerModal';
 import {
   formatDateString,
   formatIsoDate,
-  formatMtfOrders,
-  formatStrategyOrders,
   parseTargetDate,
 } from '../../utils/tradeFormatters';
 
@@ -70,10 +69,17 @@ export default function TradeScreen() {
   const [showExecuteBrokerDropdown, setShowExecuteBrokerDropdown] = useState(false);
 
 
-  // Premium MTF History & Strategy History States
-  const [mtfOrders, setMtfOrders] = useState<any[]>([]);
-  const [strategyOrders, setStrategyOrders] = useState<any[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
+  // Order-history data layer (lists, fetch, deletes) lives in a dedicated hook.
+  const {
+    mtfOrders,
+    setMtfOrders,
+    strategyOrders,
+    setStrategyOrders,
+    loadingHistory,
+    fetchHistoryData,
+    handleDeleteMtfOrder,
+    handleDeleteStrategyOrder,
+  } = useOrderHistory(user);
 
   // Edit Order State
   const [editingMtfOrderId, setEditingMtfOrderId] = useState<string | null>(null);
@@ -101,40 +107,6 @@ export default function TradeScreen() {
 
   const handleNextMonth = () => {
     setPickerDate(new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 1));
-  };
-
-  const fetchHistoryData = async () => {
-    const userId = user?.id || user?.userId;
-    if (!userId) return;
-
-    try {
-      setLoadingHistory(true);
-
-      const [mtfRes, stratRes] = await Promise.allSettled([
-        zerodhaAPI.getUserOrders(userId),
-        strategyOrderAPI.getMyOrders(),
-      ]);
-
-      if (mtfRes.status === 'fulfilled') {
-        const rawData = mtfRes.value.data;
-        const formatted = formatMtfOrders(rawData);
-        setMtfOrders(formatted);
-      } else {
-        setMtfOrders([]);
-      }
-
-      if (stratRes.status === 'fulfilled') {
-        const rawData = stratRes.value.data;
-        const formatted = formatStrategyOrders(rawData);
-        setStrategyOrders(formatted);
-      } else {
-        setStrategyOrders([]);
-      }
-    } catch (err) {
-      console.error('Error fetching history logs:', err);
-    } finally {
-      setLoadingHistory(false);
-    }
   };
 
   const handleTabChange = (tab: 'execute' | 'strategy' | 'history') => {
@@ -341,60 +313,6 @@ export default function TradeScreen() {
           />
         );
     }
-  };
-
-  const handleDeleteMtfOrder = async (orderId: string) => {
-    CustomAlert.alert(
-      'Cancel MTF Order',
-      'Are you sure you want to cancel and delete this scheduled MTF order?',
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const res = await zerodhaAPI.deleteOrder(orderId);
-              if (res.data?.success !== false) {
-                setMtfOrders(prev => prev.filter(o => o.id !== orderId));
-                CustomAlert.alert('Order Cancelled', 'Scheduled MTF order has been successfully cancelled.');
-              }
-            } catch (err: any) {
-              console.error('Failed to delete MTF order:', err);
-              setMtfOrders(prev => prev.filter(o => o.id !== orderId));
-              CustomAlert.alert('Order Cancelled', 'Scheduled MTF order has been cancelled.');
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const handleDeleteStrategyOrder = async (orderId: string) => {
-    CustomAlert.alert(
-      'Delete Strategy Order',
-      'Are you sure you want to delete this Strategy order log?',
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Yes, Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const res = await strategyOrderAPI.deleteOrder(orderId);
-              if (res.data?.success !== false) {
-                setStrategyOrders(prev => prev.filter(o => o.id !== orderId));
-                CustomAlert.alert('Order Deleted', 'Strategy order log has been successfully deleted.');
-              }
-            } catch (err: any) {
-              console.error('Failed to delete Strategy order:', err);
-              setStrategyOrders(prev => prev.filter(o => o.id !== orderId));
-              CustomAlert.alert('Order Deleted', 'Strategy order log has been deleted.');
-            }
-          }
-        }
-      ]
-    );
   };
 
   const handleSaveStrategyOrder = async () => {

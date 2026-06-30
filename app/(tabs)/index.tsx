@@ -130,6 +130,8 @@ export default function HomeScreen() {
                 source={{ uri: user.profile }}
                 contentFit="cover"
                 transition={120}
+                cachePolicy="memory-disk"
+                recyclingKey={user.profile}
                 style={styles.headerAvatar}
               />
             ) : (

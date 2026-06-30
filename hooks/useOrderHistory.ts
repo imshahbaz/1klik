@@ -1,0 +1,115 @@
+import { useCallback, useState } from 'react';
+import { CustomAlert } from '../context/AlertContext';
+import type { User } from '../context/AuthContext';
+import { strategyOrderAPI, zerodhaAPI } from '../services/api';
+import { formatMtfOrders, formatStrategyOrders } from '../utils/tradeFormatters';
+
+/**
+ * Owns the Trade screen's order-history data layer: the MTF and Strategy order
+ * lists, their loading state, the fetch, and the delete handlers. This is the
+ * self-contained data domain — the order *placement* handlers stay in the
+ * screen because they're coupled to its form state.
+ *
+ * The list setters are exposed so the placement handlers can optimistically
+ * update the lists, preserving the screen's existing behavior.
+ */
+export function useOrderHistory(user: User | null) {
+  const [mtfOrders, setMtfOrders] = useState<any[]>([]);
+  const [strategyOrders, setStrategyOrders] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  const fetchHistoryData = useCallback(async () => {
+    const userId = user?.id || user?.userId;
+    if (!userId) return;
+
+    try {
+      setLoadingHistory(true);
+
+      const [mtfRes, stratRes] = await Promise.allSettled([
+        zerodhaAPI.getUserOrders(userId),
+        strategyOrderAPI.getMyOrders(),
+      ]);
+
+      if (mtfRes.status === 'fulfilled') {
+        setMtfOrders(formatMtfOrders(mtfRes.value.data));
+      } else {
+        setMtfOrders([]);
+      }
+
+      if (stratRes.status === 'fulfilled') {
+        setStrategyOrders(formatStrategyOrders(stratRes.value.data));
+      } else {
+        setStrategyOrders([]);
+      }
+    } catch (err) {
+      console.error('Error fetching history logs:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [user]);
+
+  const handleDeleteMtfOrder = useCallback((orderId: string) => {
+    CustomAlert.alert(
+      'Cancel MTF Order',
+      'Are you sure you want to cancel and delete this scheduled MTF order?',
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const res = await zerodhaAPI.deleteOrder(orderId);
+              if (res.data?.success !== false) {
+                setMtfOrders(prev => prev.filter(o => o.id !== orderId));
+                CustomAlert.alert('Order Cancelled', 'Scheduled MTF order has been successfully cancelled.');
+              }
+            } catch (err: any) {
+              console.error('Failed to delete MTF order:', err);
+              setMtfOrders(prev => prev.filter(o => o.id !== orderId));
+              CustomAlert.alert('Order Cancelled', 'Scheduled MTF order has been cancelled.');
+            }
+          }
+        }
+      ]
+    );
+  }, []);
+
+  const handleDeleteStrategyOrder = useCallback((orderId: string) => {
+    CustomAlert.alert(
+      'Delete Strategy Order',
+      'Are you sure you want to delete this Strategy order log?',
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Yes, Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const res = await strategyOrderAPI.deleteOrder(orderId);
+              if (res.data?.success !== false) {
+                setStrategyOrders(prev => prev.filter(o => o.id !== orderId));
+                CustomAlert.alert('Order Deleted', 'Strategy order log has been successfully deleted.');
+              }
+            } catch (err: any) {
+              console.error('Failed to delete Strategy order:', err);
+              setStrategyOrders(prev => prev.filter(o => o.id !== orderId));
+              CustomAlert.alert('Order Deleted', 'Strategy order log has been deleted.');
+            }
+          }
+        }
+      ]
+    );
+  }, []);
+
+  return {
+    mtfOrders,
+    setMtfOrders,
+    strategyOrders,
+    setStrategyOrders,
+    loadingHistory,
+    fetchHistoryData,
+    handleDeleteMtfOrder,
+    handleDeleteStrategyOrder,
+  };
+}

@@ -14,6 +14,11 @@ const months: Record<string, string> = {
   Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'
 };
 
+const TV_COLORS = {
+  up: '#26a69a',
+  down: '#ef5350',
+};
+
 export default function FinancialChart({ rawData, theme, isDarkMode, height = 400 }: ChartProps) {
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
 
@@ -65,6 +70,52 @@ export default function FinancialChart({ rawData, theme, isDarkMode, height = 40
     }
   }, [validData]);
 
+  // Stable chart configuration keyed on the data/theme only. Without this, the
+  // native CandleStickChart receives fresh prop objects on every candle tap
+  // (which only changes `selectedEntry`), forcing it to reprocess the dataset.
+  const chartConfig = useMemo(() => ({
+    data: {
+      dataSets: [{
+        values: candleValues,
+        label: 'Stock Data',
+        config: {
+          highlightColor: processColor(theme.textSecondary),
+          shadowColorSameAsCandle: true,
+          shadowWidth: 1,
+          increasingColor: processColor(TV_COLORS.up),
+          increasingPaintStyle: 'FILL',
+          decreasingColor: processColor(TV_COLORS.down),
+          decreasingPaintStyle: 'FILL',
+          drawValues: false,
+        }
+      }]
+    },
+    xAxis: {
+      drawGridLines: false,
+      textColor: processColor(theme.textSecondary),
+      position: 'BOTTOM' as const,
+      valueFormatter: xDates,
+      granularityEnabled: true,
+      granularity: 1,
+    },
+    yAxis: {
+      left: { enabled: false },
+      right: {
+        textColor: processColor(theme.textSecondary),
+        gridColor: processColor(theme.border),
+        gridLineWidth: 1,
+        drawGridLines: true,
+      }
+    },
+    zoom: {
+      scaleX: Math.max(1, candleValues.length / 40),
+      scaleY: 1,
+      xValue: candleValues.length - 1,
+      yValue: 0,
+      axisDependency: 'RIGHT' as const,
+    },
+  }), [candleValues, xDates, theme]);
+
   if (candleValues.length === 0) {
     return (
       <View style={[styles.emptyContainer, { height }]}>
@@ -72,11 +123,6 @@ export default function FinancialChart({ rawData, theme, isDarkMode, height = 40
       </View>
     );
   }
-
-  const TV_COLORS = {
-    up: '#26a69a',
-    down: '#ef5350',
-  };
 
   const handleSelect = (event: any) => {
     const entry = event.nativeEvent;
@@ -125,48 +171,12 @@ export default function FinancialChart({ rawData, theme, isDarkMode, height = 40
 
       <CandleStickChart
         style={{ flex: 1 }}
-        data={{
-          dataSets: [{
-            values: candleValues,
-            label: 'Stock Data',
-            config: {
-              highlightColor: processColor(theme.textSecondary),
-              shadowColorSameAsCandle: true,
-              shadowWidth: 1,
-              increasingColor: processColor(TV_COLORS.up),
-              increasingPaintStyle: 'FILL',
-              decreasingColor: processColor(TV_COLORS.down),
-              decreasingPaintStyle: 'FILL',
-              drawValues: false,
-            }
-          }]
-        }}
+        data={chartConfig.data}
         chartDescription={{ text: '' }}
         legend={{ enabled: false }}
-        xAxis={{
-          drawGridLines: false,
-          textColor: processColor(theme.textSecondary),
-          position: 'BOTTOM',
-          valueFormatter: xDates,
-          granularityEnabled: true,
-          granularity: 1,
-        }}
-        yAxis={{
-          left: { enabled: false },
-          right: {
-            textColor: processColor(theme.textSecondary),
-            gridColor: processColor(theme.border),
-            gridLineWidth: 1,
-            drawGridLines: true,
-          }
-        }}
-        zoom={{
-          scaleX: Math.max(1, candleValues.length / 40),
-          scaleY: 1,
-          xValue: candleValues.length - 1,
-          yValue: 0,
-          axisDependency: 'RIGHT'
-        }}
+        xAxis={chartConfig.xAxis}
+        yAxis={chartConfig.yAxis}
+        zoom={chartConfig.zoom}
         autoScaleMinMaxEnabled={true}
         onSelect={handleSelect}
       />
