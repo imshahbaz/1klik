@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
+import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { useMargins } from '../../context/MarginContext';
 import { useTheme } from '../../context/ThemeContext';
 import { strategyOrderAPI, zerodhaAPI } from '../../services/api';
@@ -14,84 +14,47 @@ import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 import ExecuteTab from '../../components/trade/ExecuteTab';
 import StrategyTab from '../../components/trade/StrategyTab';
 import HistoryTab from '../../components/trade/HistoryTab';
-
-const formatDateString = (date: Date) => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
-};
-
-const formatMtfOrders = (rawData: any) => {
-  let ordersArray = [];
-  if (Array.isArray(rawData)) {
-    ordersArray = rawData;
-  } else if (Array.isArray(rawData?.data)) {
-    ordersArray = rawData.data;
-  }
-  return ordersArray.map((order: any, idx: number) => ({
-    id: order.id || `m-api-${idx}`,
-    symbol: order.symbol,
-    qty: order.quantity || order.qty || 10,
-    price: order.price || 2845.20,
-    time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    status: order.status || 'COMPLETED',
-    reason: order.reason || undefined,
-    targetDate: order.date ? formatDateString(new Date(order.date)) : 'Today',
-  }));
-};
-
-const formatStrategyOrders = (rawData: any) => {
-  let stratArray = [];
-  if (Array.isArray(rawData)) {
-    stratArray = rawData;
-  } else if (Array.isArray(rawData?.data)) {
-    stratArray = rawData.data;
-  }
-  return stratArray.map((order: any, idx: number) => ({
-    id: order.id || order._id || `s-api-${idx}`,
-    symbol: order.symbol || 'AUTO',
-    qty: order.quantity || order.qty || 1,
-    price: order.price || 0,
-    time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    status: order.status || 'COMPLETED',
-    reason: order.reason || undefined,
-    strategyName: order.strategyName || 'RSI15MIN',
-    amount: order.amount || 0,
-    date: order.date || '',
-  }));
-};
+import DatePickerModal from '../../components/trade/DatePickerModal';
+import {
+  formatDateString,
+  formatIsoDate,
+  formatMtfOrders,
+  formatStrategyOrders,
+  parseTargetDate,
+} from '../../utils/tradeFormatters';
 
 export default function TradeScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
-  const { user, appLoading } = useAuth() as any;
+  const { user, appLoading } = useAuth();
   const { isDarkMode, theme } = useTheme();
   const styles = useZerodhaStyles(isDarkMode);
 
-  useEffect(() => {
-    if (!appLoading && !user) {
-      router.replace('/login');
-    }
-  }, [user, appLoading]);
+  useRequireAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const { margins: marginsData } = useMargins();
 
-  // Filtered Margins helper
-  const filteredMargins = Array.isArray(marginsData) ? marginsData
-    .filter((m: any) => m?.symbol?.toLowerCase().includes(searchQuery.toLowerCase()))
-    .sort((a: any, b: any) => {
-      const q = searchQuery.toLowerCase();
-      const sA = a.symbol.toLowerCase();
-      const sB = b.symbol.toLowerCase();
-      if (sA === q) return -1;
-      if (sB === q) return 1;
-      const startsA = sA.startsWith(q);
-      const startsB = sB.startsWith(q);
-      if (startsA && !startsB) return -1;
-      if (!startsA && startsB) return 1;
-      return sA.localeCompare(sB);
-    }).slice(0, 10) : [];
+  // Top 10 margin matches for the current search, ranked by relevance.
+  // Memoized so the filter/sort only runs when the data or query changes.
+  const filteredMargins = useMemo(() => {
+    if (!Array.isArray(marginsData)) return [];
+    const q = searchQuery.toLowerCase();
+    return marginsData
+      .filter((m: any) => m?.symbol?.toLowerCase().includes(q))
+      .sort((a: any, b: any) => {
+        const sA = a.symbol.toLowerCase();
+        const sB = b.symbol.toLowerCase();
+        if (sA === q) return -1;
+        if (sB === q) return 1;
+        const startsA = sA.startsWith(q);
+        const startsB = sB.startsWith(q);
+        if (startsA && !startsB) return -1;
+        if (!startsA && startsB) return 1;
+        return sA.localeCompare(sB);
+      })
+      .slice(0, 10);
+  }, [marginsData, searchQuery]);
 
   // Tab Navigation State
   const [activeTab, setActiveTab] = useState<'execute' | 'strategy' | 'history'>('execute');
@@ -127,43 +90,6 @@ export default function TradeScreen() {
   const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
   const [datePickerTarget, setDatePickerTarget] = useState<'execute' | 'strategy'>('execute');
   const [showStrategyBrokerDropdown, setShowStrategyBrokerDropdown] = useState(false);
-
-  const parseTargetDate = (dateStr: string) => {
-    try {
-      if (!dateStr) return new Date();
-      const parsed = Date.parse(dateStr);
-      if (!Number.isNaN(parsed)) return new Date(parsed);
-
-      const parts = dateStr.split(' ');
-      if (parts.length === 3) {
-        const day = Number.parseInt(parts[0]);
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const fullMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-        let monthIdx = months.findIndex(m => m.toLowerCase() === parts[1].toLowerCase().substring(0, 3));
-        if (monthIdx === -1) {
-          monthIdx = fullMonths.findIndex(m => m.toLowerCase() === parts[1].toLowerCase());
-        }
-
-        const year = Number.parseInt(parts[2]);
-        if (!Number.isNaN(day) && monthIdx !== -1 && !Number.isNaN(year)) {
-          return new Date(year, monthIdx, day);
-        }
-      }
-      return new Date();
-    } catch {
-      return new Date();
-    }
-  };
-
-
-
-  const formatIsoDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
 
   const handlePrevMonth = () => {
     const today = new Date();
@@ -620,116 +546,27 @@ export default function TradeScreen() {
         </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
 
-      {/* Premium Custom Date Picker Modal */}
-      <Modal
+      <DatePickerModal
+        styles={styles}
+        theme={theme}
         visible={showDatePicker}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowDatePicker(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay as any}
-          activeOpacity={1}
-          onPress={() => setShowDatePicker(false)}
-        >
-          <View style={styles.modalCalendarContainer as any} onStartShouldSetResponder={() => true}>
-            {/* Calendar Header */}
-            <View style={styles.calendarHeader as any}>
-              <TouchableOpacity onPress={handlePrevMonth} style={styles.calendarNavBtn as any}>
-                <Ionicons name="chevron-back" size={18} color={theme.textPrimary} />
-              </TouchableOpacity>
-              <Text style={styles.calendarMonthText as any}>
-                {pickerDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-              </Text>
-              <TouchableOpacity onPress={handleNextMonth} style={styles.calendarNavBtn as any}>
-                <Ionicons name="chevron-forward" size={18} color={theme.textPrimary} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Calendar Grid */}
-            <View style={styles.calendarGrid as any}>
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((label, idx) => (
-                <View key={`wk-${idx}`} style={styles.calendarHeaderDayCell as any}>
-                  <Text style={styles.calendarHeaderDayText as any}>{label}</Text>
-                </View>
-              ))}
-              {(() => {
-                const daysInMonth = new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 0).getDate();
-                const firstDayIndex = new Date(pickerDate.getFullYear(), pickerDate.getMonth(), 1).getDay();
-                const calendarDays = [];
-
-                for (let i = 0; i < firstDayIndex; i++) {
-                  calendarDays.push(null);
-                }
-                for (let i = 1; i <= daysInMonth; i++) {
-                  calendarDays.push(new Date(pickerDate.getFullYear(), pickerDate.getMonth(), i));
-                }
-
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-
-                return calendarDays.map((dayDate, idx) => {
-                  if (!dayDate) {
-                    return <View key={`empty-${idx}`} style={styles.calendarDayCell as any} />;
-                  }
-                  let currentSelectedDate = new Date();
-                  if (datePickerTarget === 'execute') {
-                    currentSelectedDate = targetDate;
-                  } else if (strategyFormData.date) {
-                    currentSelectedDate = new Date(strategyFormData.date);
-                  }
-
-                  const isSelected = currentSelectedDate.getDate() === dayDate.getDate() &&
-                    currentSelectedDate.getMonth() === dayDate.getMonth() &&
-                    currentSelectedDate.getFullYear() === dayDate.getFullYear();
-
-                  const dayDateAtMidnight = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
-                  const isPastDate = dayDateAtMidnight < today;
-
-                  return (
-                    <TouchableOpacity
-                      key={`day-${idx}`}
-                      style={[
-                        styles.calendarDayCell,
-                        isSelected && styles.selectedDayCell,
-                        isPastDate && styles.pastDayCell
-                      ] as any}
-                      onPress={isPastDate ? undefined : () => {
-                        if (datePickerTarget === 'execute') {
-                          setTargetDate(dayDate);
-                        } else {
-                          setStrategyFormData(prev => ({
-                            ...prev,
-                            date: formatIsoDate(dayDate)
-                          }));
-                        }
-                        setShowDatePicker(false);
-                      }}
-                      disabled={isPastDate}
-                      activeOpacity={isPastDate ? 1 : 0.7}
-                    >
-                      <Text style={[
-                        styles.calendarDayText,
-                        isSelected && styles.selectedDayText,
-                        isPastDate && styles.pastDayText
-                      ] as any}>
-                        {dayDate.getDate()}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                });
-              })()}
-            </View>
-
-            <TouchableOpacity
-              style={styles.calendarCloseBtn as any}
-              onPress={() => setShowDatePicker(false)}
-            >
-              <Text style={styles.calendarCloseBtnText as any}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+        pickerDate={pickerDate}
+        selectedDate={
+          datePickerTarget === 'execute'
+            ? targetDate
+            : (strategyFormData.date ? new Date(strategyFormData.date) : new Date())
+        }
+        onPrevMonth={handlePrevMonth}
+        onNextMonth={handleNextMonth}
+        onClose={() => setShowDatePicker(false)}
+        onSelectDate={(dayDate) => {
+          if (datePickerTarget === 'execute') {
+            setTargetDate(dayDate);
+          } else {
+            setStrategyFormData(prev => ({ ...prev, date: formatIsoDate(dayDate) }));
+          }
+        }}
+      />
 
     </View>
   );

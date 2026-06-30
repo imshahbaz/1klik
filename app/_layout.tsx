@@ -9,6 +9,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, DeviceEventEmitter, Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AlertProvider } from '../context/AlertContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { DimensionsProvider } from '../context/DimensionsContext';
@@ -36,7 +37,7 @@ if (isFirebaseInitialized()) {
 
 function AppContent() {
   const { isDarkMode, theme, themeLoaded } = useTheme();
-  const { appLoading, bootProgress } = useAuth() as any;
+  const { appLoading, bootProgress } = useAuth();
   const [updateNeeded, setUpdateNeeded] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
   const [isConnected, setIsConnected] = useState<boolean | null>(true);
@@ -225,8 +226,6 @@ function StyledStatusBar() {
   const { isDarkMode } = useTheme();
   return <StatusBar style={isDarkMode ? "light" : "dark"} />;
 }
-
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function RootLayout() {
   return (

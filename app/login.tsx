@@ -3,12 +3,10 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
-import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { CustomAlert } from '../context/AlertContext';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { authAPI, googleAPI } from '../services/api';
 import { useAdaptiveLayout } from '../theme/layout';
 import { useLoginStyles } from '../theme/loginStyles';
@@ -18,9 +16,8 @@ export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
-  const { login } = useAuth() as any;
-  const { isDarkMode } = useTheme();
-  
+  const { login } = useAuth();
+
   // Force dark mode colors to match the pitch black splash screen background
   const theme = darkColors;
   const styles = useLoginStyles(true);

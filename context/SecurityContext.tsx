@@ -3,7 +3,6 @@ import { Image } from 'expo-image';
 import * as LocalAuthentication from 'expo-local-authentication';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { AppState, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from './AuthContext';
 import { useTheme } from './ThemeContext';
 
@@ -14,14 +13,15 @@ interface SecurityContextType {
 
 const SecurityContext = createContext<SecurityContextType | null>(null);
 
+/** Re-lock the app after this much time spent in the background. */
+const LOCK_TIMEOUT = 10 * 60 * 1000;
+
 export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAppLocked, setIsAppLocked] = useState(true);
   const appState = useRef(AppState.currentState);
   const lastBackgroundTime = useRef<number | null>(null);
-  const { user, appLoading } = useAuth() as any;
+  const { user, appLoading } = useAuth();
   const { theme } = useTheme();
-  const insets = useSafeAreaInsets();
-  const LOCK_TIMEOUT = 10 * 60 * 1000;
 
   const unlockApp = async () => {
     try {

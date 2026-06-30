@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useRef, useMemo } from 'react';
+import React, { createContext, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -75,6 +75,34 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const notificationY = useRef(new Animated.Value(-200)).current;
   const autoDismissTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const hideNotificationBanner = useCallback(() => {
+    Animated.timing(notificationY, {
+      toValue: -200,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setNotificationVisible(false);
+    });
+  }, [notificationY]);
+
+  const showNotificationBanner = useCallback(() => {
+    if (autoDismissTimeout.current) {
+      clearTimeout(autoDismissTimeout.current);
+    }
+
+    setNotificationVisible(true);
+    Animated.spring(notificationY, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 40,
+      friction: 8,
+    }).start();
+
+    autoDismissTimeout.current = setTimeout(() => {
+      hideNotificationBanner();
+    }, 4500);
+  }, [notificationY, hideNotificationBanner]);
+
   // Register listeners
   useEffect(() => {
     const alertSubscription = DeviceEventEmitter.addListener(
@@ -100,35 +128,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         clearTimeout(autoDismissTimeout.current);
       }
     };
-  }, []);
-
-  const showNotificationBanner = () => {
-    if (autoDismissTimeout.current) {
-      clearTimeout(autoDismissTimeout.current);
-    }
-
-    setNotificationVisible(true);
-    Animated.spring(notificationY, {
-      toValue: 0,
-      useNativeDriver: true,
-      tension: 40,
-      friction: 8,
-    }).start();
-
-    autoDismissTimeout.current = setTimeout(() => {
-      hideNotificationBanner();
-    }, 4500);
-  };
-
-  const hideNotificationBanner = () => {
-    Animated.timing(notificationY, {
-      toValue: -200,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      setNotificationVisible(false);
-    });
-  };
+  }, [showNotificationBanner]);
 
   const handleAlertButtonPress = (onPressCallback?: () => void) => {
     setAlertVisible(false);

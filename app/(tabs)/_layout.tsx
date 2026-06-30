@@ -27,7 +27,7 @@ const SettingsIcon = ({ color, focused }: { color: string; focused: boolean }) =
 export default function TabLayout() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth() as any;
+  const { user } = useAuth();
   const router = useRouter();
 
   const requireAuth = (e: any) => {

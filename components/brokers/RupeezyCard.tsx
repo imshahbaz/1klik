@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CustomAlert } from '../../context/AlertContext';
+import FormInput from '../common/FormInput';
+import BrokerConnectionStatus from './BrokerConnectionStatus';
 
 interface RupeezyCardProps {
   readonly styles: any;
@@ -44,35 +46,16 @@ export default function RupeezyCard({
 }: RupeezyCardProps) {
   return (
     <View>
-      {/* Connection Status Card */}
-      <View style={[styles.connectionCard, { borderLeftColor: rupeezyStatusColor }]}>
-        <View style={{ gap: 0 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={[styles.brandContainer, { marginRight: 0 }]}>
-              <View style={styles.kiteLogoPlaceholder}>
-                <Ionicons name="link-outline" size={18} color={theme.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                {rupeezyStatusContent}
-              </View>
-            </View>
-            <TouchableOpacity style={styles.blackCardConfigBtn} onPress={() => setIsRupeezy404Error(!isRupeezy404Error)}>
-              <Ionicons name="settings-outline" size={16} color={theme.textSecondary} />
-            </TouchableOpacity>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.borderLight, paddingTop: 8 }}>
-            <Text style={[styles.connectionSubtitle, { marginTop: 0, flex: 1, marginRight: 12 }]} numberOfLines={2}>
-              {rupeezyError || 'Secured Rupeezy Connection'}
-            </Text>
-            <View style={rupeezyError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
-              <View style={rupeezyError ? styles.inactiveDot : styles.activeDot} />
-              <Text style={rupeezyError ? styles.inactiveStatusText : styles.activeStatusText}>
-                {rupeezyConnectionText}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
+      <BrokerConnectionStatus
+        styles={styles}
+        theme={theme}
+        statusColor={rupeezyStatusColor}
+        statusContent={rupeezyStatusContent}
+        connectionText={rupeezyConnectionText}
+        error={rupeezyError}
+        idleSubtitle="Secured Rupeezy Connection"
+        onToggleConfig={() => setIsRupeezy404Error(!isRupeezy404Error)}
+      />
 
       {/* Login Action Card if disconnected but config exists */}
       {!isRupeezy404Error && isRupeezyTokenExpired && (
@@ -109,21 +92,26 @@ export default function RupeezyCard({
             </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>APP ID *</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="apps-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-              <TextInput style={styles.textInput} placeholder="Enter App ID" placeholderTextColor={theme.placeholder} value={rupeezyAppId} onChangeText={(text) => { setRupeezyAppId(text); setRupeezyError(null); }} autoCapitalize="none" autoCorrect={false} />
-            </View>
-          </View>
+          <FormInput
+            styles={styles}
+            theme={theme}
+            label="APP ID *"
+            icon="apps-outline"
+            placeholder="Enter App ID"
+            value={rupeezyAppId}
+            onChangeText={(text) => { setRupeezyAppId(text); setRupeezyError(null); }}
+          />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>API SECRET *</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-              <TextInput style={styles.textInput} placeholder="Enter API Secret" placeholderTextColor={theme.placeholder} value={rupeezyApiSecret} onChangeText={(text) => { setRupeezyApiSecret(text); setRupeezyError(null); }} autoCapitalize="none" autoCorrect={false} secureTextEntry />
-            </View>
-          </View>
+          <FormInput
+            styles={styles}
+            theme={theme}
+            label="API SECRET *"
+            icon="lock-closed-outline"
+            placeholder="Enter API Secret"
+            value={rupeezyApiSecret}
+            onChangeText={(text) => { setRupeezyApiSecret(text); setRupeezyError(null); }}
+            secureTextEntry
+          />
 
           {rupeezyError && (
             <View style={styles.errorContainer}>

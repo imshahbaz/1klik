@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useNavigation } from 'expo-router';
+import { useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,23 +14,19 @@ import { getSafeBottomPadding } from '../../theme/safeArea';
 import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 import ZerodhaCard from '../../components/brokers/ZerodhaCard';
 import RupeezyCard from '../../components/brokers/RupeezyCard';
+import { useRequireAuth } from '../../hooks/useRequireAuth';
 
 export default function BrokersConfigScreen() {
-  const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
-  const { user, appLoading } = useAuth() as any;
+  const { user, appLoading } = useAuth();
   const { isDarkMode, theme } = useTheme();
   const styles = useZerodhaStyles(isDarkMode);
   
   const [activeBrokerTab, setActiveBrokerTab] = useState<'zerodha' | 'rupeezy'>('zerodha');
 
-  useEffect(() => {
-    if (!appLoading && !user) {
-      router.replace('/login');
-    }
-  }, [user, appLoading]);
+  useRequireAuth();
 
   // Zerodha States
   const [zerodhaUser, setZerodhaUser] = useState<any>(null);
@@ -65,7 +61,6 @@ export default function BrokersConfigScreen() {
   const [rupeezyError, setRupeezyError] = useState<string | null>(null);
 
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasFetchedProfile = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -353,32 +348,25 @@ export default function BrokersConfigScreen() {
     }
   };
 
+  // Fetch the currently-selected broker's profile on mount, whenever the active
+  // tab changes, and when the screen regains focus. The inactive broker is
+  // fetched lazily when its tab is selected (its card isn't rendered until then).
   useEffect(() => {
-    if (activeBrokerTab === 'rupeezy') {
-      fetchRupeezyProfile();
-    } else {
-      fetchZerodhaProfile();
-    }
-  }, [activeBrokerTab]);
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
+    const fetchActiveBroker = () => {
       if (activeBrokerTab === 'rupeezy') {
         fetchRupeezyProfile();
       } else {
         fetchZerodhaProfile();
       }
-    });
-    return unsubscribe;
-  }, [navigation, activeBrokerTab]);
+    };
 
-  useEffect(() => {
-    if (!appLoading && user && !hasFetchedProfile.current) {
-      hasFetchedProfile.current = true;
-      fetchZerodhaProfile();
-      fetchRupeezyProfile();
-    }
-  }, [user?.id, appLoading]);
+    fetchActiveBroker();
+    const unsubscribe = navigation.addListener('focus', fetchActiveBroker);
+    return unsubscribe;
+    // fetchZerodhaProfile/fetchRupeezyProfile only touch state setters and refs,
+    // so they're stable for this effect's purposes; re-running on tab/focus only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBrokerTab, navigation]);
 
   if (appLoading) {
     return (

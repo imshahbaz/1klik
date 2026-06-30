@@ -14,7 +14,7 @@ import { useSettingsStyles } from '../../theme/settingsStyles';
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
-  const { user, refreshUserData } = useAuth() as any;
+  const { user, refreshUserData } = useAuth();
   const { isDarkMode, theme } = useTheme();
   const styles = useSettingsStyles(isDarkMode);
   const [username, setUsername] = useState('');
