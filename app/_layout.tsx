@@ -20,6 +20,7 @@ import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { SecurityProvider } from '../context/SecurityContext';
 import { appUpdateInfo } from '../services/api';
 import { isFirebaseInitialized } from '../services/notificationService';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 // Prevent native splash screen from hiding automatically
 SplashScreen.preventAutoHideAsync().catch(() => { });
@@ -230,25 +231,27 @@ function StyledStatusBar() {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <AuthProvider>
-          <ThemeProvider>
-            <DimensionsProvider>
-              <AlertProvider>
-                <SecurityProvider>
-                  <MarginProvider>
-                    <StrategyProvider>
-                      <AppContent />
-                    </StrategyProvider>
-                  </MarginProvider>
-                </SecurityProvider>
-              </AlertProvider>
-            </DimensionsProvider>
-          </ThemeProvider>
-        </AuthProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <AuthProvider>
+            <ThemeProvider>
+              <DimensionsProvider>
+                <AlertProvider>
+                  <SecurityProvider>
+                    <MarginProvider>
+                      <StrategyProvider>
+                        <AppContent />
+                      </StrategyProvider>
+                    </MarginProvider>
+                  </SecurityProvider>
+                </AlertProvider>
+              </DimensionsProvider>
+            </ThemeProvider>
+          </AuthProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 

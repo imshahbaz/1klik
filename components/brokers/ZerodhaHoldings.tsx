@@ -7,6 +7,7 @@ import { useMargins } from '../../context/MarginContext';
 import { holdingsAPI } from '../../services/api';
 import { formatDateString, formatIsoDate } from '../../utils/date';
 import { getFriendlyErrorMessage } from '../../utils/errorMessage';
+import DatePickerModal from '../common/DatePickerModal';
 import HoldingCard from './HoldingCard';
 
 export default function ZerodhaHoldings({ styles, theme }: any) {
@@ -359,88 +360,19 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Date Picker Modal */}
-      <Modal visible={showDatePicker} transparent={true} animationType="fade" onRequestClose={() => setShowDatePicker(false)}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowDatePicker(false)}>
-          <View style={styles.modalCalendarContainer} onStartShouldSetResponder={() => true}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <TouchableOpacity onPress={handlePrevMonth} style={{ padding: 8 }}>
-                <Ionicons name="chevron-back" size={18} color={theme.textPrimary} />
-              </TouchableOpacity>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: theme.textPrimary }}>
-                {pickerDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-              </Text>
-              <TouchableOpacity onPress={handleNextMonth} style={{ padding: 8 }}>
-                <Ionicons name="chevron-forward" size={18} color={theme.textPrimary} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 }}>
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((label, idx) => (
-                <View key={`wk-${idx}`} style={{ width: '14.28%', alignItems: 'center', marginBottom: 12 }}>
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: theme.textSecondary }}>{label}</Text>
-                </View>
-              ))}
-              {(() => {
-                const daysInMonth = new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 0).getDate();
-                const firstDayIndex = new Date(pickerDate.getFullYear(), pickerDate.getMonth(), 1).getDay();
-                const calendarDays = [];
-
-                for (let i = 0; i < firstDayIndex; i++) {
-                  calendarDays.push(null);
-                }
-                for (let i = 1; i <= daysInMonth; i++) {
-                  calendarDays.push(new Date(pickerDate.getFullYear(), pickerDate.getMonth(), i));
-                }
-
-                return calendarDays.map((dayDate, idx) => {
-                  if (!dayDate) {
-                    return <View key={`empty-${idx}`} style={{ width: '14.28%', height: 40 }} />;
-                  }
-                  const isSelected = newBuyDate && newBuyDate.getDate() === dayDate.getDate() &&
-                    newBuyDate.getMonth() === dayDate.getMonth() &&
-                    newBuyDate.getFullYear() === dayDate.getFullYear();
-
-                  const dayDateAtMidnight = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
-                  const isFutureDate = dayDateAtMidnight > new Date();
-
-                  return (
-                    <TouchableOpacity
-                      key={`day-${idx}`}
-                      style={{
-                        width: '14.28%',
-                        height: 40,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor: isSelected ? theme.primary : 'transparent',
-                        borderRadius: 20
-                      }}
-                      onPress={isFutureDate ? undefined : () => {
-                        setNewBuyDate(dayDate);
-                        setShowDatePicker(false);
-                      }}
-                      disabled={isFutureDate}
-                      activeOpacity={isFutureDate ? 1 : 0.7}
-                    >
-                      <Text style={{
-                        fontSize: 14,
-                        fontWeight: isSelected ? '800' : '500',
-                        color: isSelected ? '#ffffff' : (isFutureDate ? theme.iconMuted : theme.textPrimary)
-                      }}>
-                        {dayDate.getDate()}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                });
-              })()}
-            </View>
-
-            <TouchableOpacity style={{ marginTop: 16, alignItems: 'center', padding: 12 }} onPress={() => setShowDatePicker(false)}>
-              <Text style={{ color: theme.textSecondary, fontSize: 13, fontWeight: '700' }}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {/* Buy-date picker — future dates are disabled (a buy can't be in the future). */}
+      <DatePickerModal
+        styles={styles}
+        theme={theme}
+        visible={showDatePicker}
+        pickerDate={pickerDate}
+        selectedDate={newBuyDate}
+        onPrevMonth={handlePrevMonth}
+        onNextMonth={handleNextMonth}
+        onClose={() => setShowDatePicker(false)}
+        onSelectDate={(date) => setNewBuyDate(date)}
+        isDateDisabled={(date) => date > new Date()}
+      />
     </View>
   );
 }

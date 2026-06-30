@@ -16,6 +16,7 @@ import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 import ZerodhaCard from '../../components/brokers/ZerodhaCard';
 import RupeezyCard from '../../components/brokers/RupeezyCard';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
+import { getBrokerStatusDisplay } from '../../components/brokers/brokerStatus';
 
 export default function BrokersConfigScreen() {
   const navigation = useNavigation();
@@ -440,65 +441,17 @@ export default function BrokersConfigScreen() {
     );
   }
 
-  let zerodhaStatusColor = theme.success;
-  if (zerodhaLoading) zerodhaStatusColor = theme.primary;
-  else if (zerodhaError) zerodhaStatusColor = theme.danger;
+  const {
+    color: zerodhaStatusColor,
+    text: zerodhaConnectionText,
+    content: zerodhaStatusContent,
+  } = getBrokerStatusDisplay(zerodhaLoading, zerodhaError, zerodhaUser, theme, styles);
 
-  let zerodhaConnectionText = 'CONNECTED';
-  if (zerodhaLoading) zerodhaConnectionText = 'LOADING';
-  else if (zerodhaError) zerodhaConnectionText = 'INACTIVE';
-
-  let zerodhaStatusContent = null;
-  if (zerodhaLoading) {
-    zerodhaStatusContent = (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <ActivityIndicator size="small" color={theme.primary} />
-        <Text style={styles.connectionTitle}>Connecting...</Text>
-      </View>
-    );
-  } else if (zerodhaError) {
-    zerodhaStatusContent = (
-      <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
-        Connection Inactive
-      </Text>
-    );
-  } else {
-    zerodhaStatusContent = (
-      <Text style={styles.connectionTitle} numberOfLines={1}>
-        {typeof zerodhaUser === 'string' ? 'Active Session' : (zerodhaUser?.userName || zerodhaUser?.name || 'Active Session')}
-      </Text>
-    );
-  }
-
-  let rupeezyStatusColor = theme.success;
-  if (rupeezyLoading) rupeezyStatusColor = theme.primary;
-  else if (rupeezyError) rupeezyStatusColor = theme.danger;
-
-  let rupeezyConnectionText = 'CONNECTED';
-  if (rupeezyLoading) rupeezyConnectionText = 'LOADING';
-  else if (rupeezyError) rupeezyConnectionText = 'INACTIVE';
-
-  let rupeezyStatusContent = null;
-  if (rupeezyLoading) {
-    rupeezyStatusContent = (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <ActivityIndicator size="small" color={theme.primary} />
-        <Text style={styles.connectionTitle}>Connecting...</Text>
-      </View>
-    );
-  } else if (rupeezyError) {
-    rupeezyStatusContent = (
-      <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
-        Connection Inactive
-      </Text>
-    );
-  } else {
-    rupeezyStatusContent = (
-      <Text style={styles.connectionTitle} numberOfLines={1}>
-        {typeof rupeezyUser === 'string' ? 'Active Session' : (rupeezyUser?.userName || rupeezyUser?.name || 'Active Session')}
-      </Text>
-    );
-  }
+  const {
+    color: rupeezyStatusColor,
+    text: rupeezyConnectionText,
+    content: rupeezyStatusContent,
+  } = getBrokerStatusDisplay(rupeezyLoading, rupeezyError, rupeezyUser, theme, styles);
 
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>

@@ -18,6 +18,9 @@ const REMOTE_CONFIG_TIMEOUT_MS = 5000;
 // eslint-disable-next-line import/no-named-as-default-member
 const api = axios.create({
   withCredentials: true,
+  // Fail fast on flaky mobile networks instead of leaving requests (and their
+  // loading spinners) hanging indefinitely.
+  timeout: 20000,
 });
 
 /**

@@ -27,7 +27,7 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  background: '#0f172a',
+  background: '#000000',
   card: '#1e293b',
   textPrimary: '#f8fafc',
   textSecondary: '#94a3b8',

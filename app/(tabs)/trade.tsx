@@ -16,7 +16,7 @@ import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 import ExecuteTab from '../../components/trade/ExecuteTab';
 import StrategyTab from '../../components/trade/StrategyTab';
 import HistoryTab from '../../components/trade/HistoryTab';
-import DatePickerModal from '../../components/trade/DatePickerModal';
+import DatePickerModal from '../../components/common/DatePickerModal';
 import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import {
   formatDateString,
