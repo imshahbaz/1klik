@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, processColor } from 'react-native';
-import { CandleStickChart } from 'react-native-charts-wrapper';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 
 interface ChartProps {
   readonly rawData: any[];
@@ -9,63 +9,175 @@ interface ChartProps {
   readonly height?: number;
 }
 
-const months: Record<string, string> = {
+interface Candle {
+  time: string; // 'YYYY-MM-DD'
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const MONTH_TO_NUM: Record<string, string> = {
   Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06',
-  Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'
+  Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12',
 };
 
-export default function FinancialChart({ rawData, theme, isDarkMode, height = 400 }: ChartProps) {
-  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+const TV_COLORS = { up: '#26a69a', down: '#ef5350' };
 
-  const { candleValues, xDates, validData } = useMemo(() => {
-    if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
-      return { candleValues: [], xDates: [], validData: [] };
-    }
+/** Pinned to v4 for the stable `addCandlestickSeries` API. */
+const LWC_CDN = 'https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js';
 
-    const parsed = rawData.map(d => {
-      if (!d?.mtimestamp) return null;
+/** "YYYY-MM-DD" → "5 Jan" for the OHLC info bar. */
+const formatDisplayDate = (time?: string): string => {
+  if (!time) return '';
+  const parts = time.split('-');
+  if (parts.length !== 3) return time;
+  const monthIdx = Number(parts[1]) - 1;
+  return `${Number(parts[2])} ${MONTHS_SHORT[monthIdx] || ''}`;
+};
+
+/**
+ * Builds the self-contained chart document. TradingView's `lightweight-charts`
+ * runs inside the WebView, so the chart is fully decoupled from the native
+ * architecture (no Skia / Reanimated dependency). Theme colors are baked in;
+ * candle data is pushed in later via `window.__setData`, and crosshair moves are
+ * posted back to update the React-Native OHLC bar.
+ */
+const buildHtml = (theme: any): string => `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<style>html,body,#chart{margin:0;padding:0;height:100%;width:100%;background:${theme.card};overflow:hidden;}</style>
+<script src="${LWC_CDN}"></script>
+</head>
+<body>
+<div id="chart"></div>
+<script>
+  (function () {
+    var post = function (obj) {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(obj));
+      }
+    };
+    if (typeof LightweightCharts === 'undefined') { post({ type: 'error' }); return; }
+
+    var chart = LightweightCharts.createChart(document.getElementById('chart'), {
+      autoSize: true,
+      layout: { background: { type: 'solid', color: '${theme.card}' }, textColor: '${theme.textSecondary}' },
+      grid: { vertLines: { visible: false }, horzLines: { color: '${theme.border}' } },
+      rightPriceScale: { borderColor: '${theme.border}' },
+      timeScale: { borderColor: '${theme.border}', fixLeftEdge: true, fixRightEdge: true },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      handleScale: { axisPressedMouseMove: true },
+    });
+
+    var series = chart.addCandlestickSeries({
+      upColor: '${TV_COLORS.up}', downColor: '${TV_COLORS.down}',
+      borderUpColor: '${TV_COLORS.up}', borderDownColor: '${TV_COLORS.down}',
+      wickUpColor: '${TV_COLORS.up}', wickDownColor: '${TV_COLORS.down}',
+    });
+
+    window.__setData = function (data) {
+      series.setData(data);
+      chart.timeScale().fitContent();
+    };
+
+    chart.subscribeCrosshairMove(function (param) {
+      if (!param || !param.time || !param.seriesData) { return; }
+      var d = param.seriesData.get(series);
+      if (!d) { return; }
+      var t = param.time;
+      var timeStr = t;
+      if (t && typeof t === 'object') {
+        timeStr = t.year + '-' + String(t.month).padStart(2, '0') + '-' + String(t.day).padStart(2, '0');
+      }
+      post({ type: 'cross', time: timeStr, open: d.open, high: d.high, low: d.low, close: d.close });
+    });
+
+    post({ type: 'ready' });
+  })();
+</script>
+</body>
+</html>`;
+
+export default function FinancialChart({ rawData, theme, height = 400 }: ChartProps) {
+  const webViewRef = useRef<WebView>(null);
+  const [ready, setReady] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<Candle | null>(null);
+
+  // Parse + sort the raw API rows into candlestick data. Memoized so it only
+  // runs when the underlying data changes.
+  const candles = useMemo<Candle[]>(() => {
+    if (!rawData || !Array.isArray(rawData) || rawData.length === 0) return [];
+
+    // Keyed by date so duplicate timestamps collapse (last wins) — lightweight-
+    // charts rejects data with duplicate or unordered times.
+    const byTime = new Map<string, Candle>();
+
+    for (const d of rawData) {
+      if (!d?.mtimestamp) continue;
       const parts = d.mtimestamp.split('-');
-      if (parts.length !== 3) return null;
-      
+      if (parts.length !== 3) continue;
+
       const [day, month, year] = parts;
-      const monthNum = months[month] || '01';
-      const time = `${year}-${monthNum}-${day.padStart(2, '0')}`;
-      
+      const monthNum = MONTH_TO_NUM[month] || '01';
       const open = Number.parseFloat(d.chOpeningPrice);
       const high = Number.parseFloat(d.chTradeHighPrice);
       const low = Number.parseFloat(d.chTradeLowPrice);
       const close = Number.parseFloat(d.chClosingPrice);
 
-      if (Number.isNaN(open) || Number.isNaN(high) || Number.isNaN(low) || Number.isNaN(close) || open === 0 || high === 0 || low === 0 || close === 0) {
-        return null;
+      if (
+        Number.isNaN(open) || Number.isNaN(high) || Number.isNaN(low) || Number.isNaN(close) ||
+        open === 0 || high === 0 || low === 0 || close === 0
+      ) {
+        continue;
       }
 
-      return {
-        date: `${day} ${month}`,
-        open, high, low, close,
-        _timestamp: new Date(`${time}T00:00:00Z`).getTime()
-      };
-    }).filter((d): d is any => d !== null)
-      .sort((a, b) => a._timestamp - b._timestamp);
+      const time = `${year}-${monthNum}-${day.padStart(2, '0')}`;
+      byTime.set(time, { time, open, high, low, close });
+    }
 
-    const candles = parsed.map(d => ({
-      shadowH: d.high,
-      shadowL: d.low,
-      open: d.open,
-      close: d.close,
-    }));
-    const dates = parsed.map(d => d.date);
-
-    return { candleValues: candles, xDates: dates, validData: parsed };
+    return Array.from(byTime.values()).sort((a, b) => a.time.localeCompare(b.time));
   }, [rawData]);
 
+  // Default the OHLC bar to the latest candle.
   useEffect(() => {
-    if (validData.length > 0) {
-      setSelectedEntry(validData[validData.length - 1]);
+    if (candles.length > 0) {
+      setSelectedEntry(candles[candles.length - 1]);
     }
-  }, [validData]);
+  }, [candles]);
 
-  if (candleValues.length === 0) {
+  // Rebuild the document only when the theme changes (otherwise the WebView is
+  // stable). Reset readiness so the reloaded page re-triggers a data push.
+  const html = useMemo(() => buildHtml(theme), [theme]);
+  useEffect(() => {
+    setReady(false);
+  }, [html]);
+
+  // Push candle data once the chart page signals it's ready, and whenever the
+  // data changes thereafter.
+  useEffect(() => {
+    if (ready && candles.length > 0) {
+      webViewRef.current?.injectJavaScript(`window.__setData(${JSON.stringify(candles)}); true;`);
+    }
+  }, [ready, candles]);
+
+  const handleMessage = (event: { nativeEvent: { data: string } }) => {
+    try {
+      const msg = JSON.parse(event.nativeEvent.data);
+      if (msg.type === 'ready') {
+        setReady(true);
+      } else if (msg.type === 'cross') {
+        setSelectedEntry({ time: msg.time, open: msg.open, high: msg.high, low: msg.low, close: msg.close });
+      }
+    } catch {
+      // Ignore malformed messages.
+    }
+  };
+
+  if (candles.length === 0) {
     return (
       <View style={[styles.emptyContainer, { height }]}>
         <Text style={{ color: theme.textSecondary }}>No chart data available</Text>
@@ -73,25 +185,9 @@ export default function FinancialChart({ rawData, theme, isDarkMode, height = 40
     );
   }
 
-  const TV_COLORS = {
-    up: '#26a69a',
-    down: '#ef5350',
-  };
-
-  const handleSelect = (event: any) => {
-    const entry = event.nativeEvent;
-    if (entry?.x !== undefined) {
-      const idx = Math.floor(entry.x);
-      if (idx >= 0 && idx < validData.length) {
-        setSelectedEntry(validData[idx]);
-      }
-    }
-  };
-
-  let selectedColor = theme.textPrimary;
-  if (selectedEntry) {
-    selectedColor = selectedEntry.close >= selectedEntry.open ? TV_COLORS.up : TV_COLORS.down;
-  }
+  const selectedColor = selectedEntry
+    ? (selectedEntry.close >= selectedEntry.open ? TV_COLORS.up : TV_COLORS.down)
+    : theme.textPrimary;
 
   return (
     <View style={{ height, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card }}>
@@ -99,76 +195,33 @@ export default function FinancialChart({ rawData, theme, isDarkMode, height = 40
       <View style={[styles.infoBar, { borderBottomColor: theme.border, backgroundColor: theme.card }]}>
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: theme.textSecondary }]}>O</Text>
-          <Text style={[styles.value, { color: selectedColor }]}>
-            {selectedEntry?.open.toFixed(2) || '--'}
-          </Text>
-          
+          <Text style={[styles.value, { color: selectedColor }]}>{selectedEntry?.open.toFixed(2) ?? '--'}</Text>
+
           <Text style={[styles.label, { color: theme.textSecondary, marginLeft: 8 }]}>H</Text>
-          <Text style={[styles.value, { color: selectedColor }]}>
-            {selectedEntry?.high.toFixed(2) || '--'}
-          </Text>
-          
+          <Text style={[styles.value, { color: selectedColor }]}>{selectedEntry?.high.toFixed(2) ?? '--'}</Text>
+
           <Text style={[styles.label, { color: theme.textSecondary, marginLeft: 8 }]}>L</Text>
-          <Text style={[styles.value, { color: selectedColor }]}>
-            {selectedEntry?.low.toFixed(2) || '--'}
-          </Text>
-          
+          <Text style={[styles.value, { color: selectedColor }]}>{selectedEntry?.low.toFixed(2) ?? '--'}</Text>
+
           <Text style={[styles.label, { color: theme.textSecondary, marginLeft: 8 }]}>C</Text>
-          <Text style={[styles.value, { color: selectedColor }]}>
-            {selectedEntry?.close.toFixed(2) || '--'}
-          </Text>
+          <Text style={[styles.value, { color: selectedColor }]}>{selectedEntry?.close.toFixed(2) ?? '--'}</Text>
         </View>
         <Text style={{ color: theme.textSecondary, fontSize: 10, fontWeight: '700' }}>
-          {selectedEntry?.date || ''}
+          {formatDisplayDate(selectedEntry?.time)}
         </Text>
       </View>
 
-      <CandleStickChart
-        style={{ flex: 1 }}
-        data={{
-          dataSets: [{
-            values: candleValues,
-            label: 'Stock Data',
-            config: {
-              highlightColor: processColor(theme.textSecondary),
-              shadowColorSameAsCandle: true,
-              shadowWidth: 1,
-              increasingColor: processColor(TV_COLORS.up),
-              increasingPaintStyle: 'FILL',
-              decreasingColor: processColor(TV_COLORS.down),
-              decreasingPaintStyle: 'FILL',
-              drawValues: false,
-            }
-          }]
-        }}
-        chartDescription={{ text: '' }}
-        legend={{ enabled: false }}
-        xAxis={{
-          drawGridLines: false,
-          textColor: processColor(theme.textSecondary),
-          position: 'BOTTOM',
-          valueFormatter: xDates,
-          granularityEnabled: true,
-          granularity: 1,
-        }}
-        yAxis={{
-          left: { enabled: false },
-          right: {
-            textColor: processColor(theme.textSecondary),
-            gridColor: processColor(theme.border),
-            gridLineWidth: 1,
-            drawGridLines: true,
-          }
-        }}
-        zoom={{
-          scaleX: Math.max(1, candleValues.length / 40),
-          scaleY: 1,
-          xValue: candleValues.length - 1,
-          yValue: 0,
-          axisDependency: 'RIGHT'
-        }}
-        autoScaleMinMaxEnabled={true}
-        onSelect={handleSelect}
+      <WebView
+        ref={webViewRef}
+        originWhitelist={['*']}
+        source={{ html }}
+        onMessage={handleMessage}
+        javaScriptEnabled
+        domStorageEnabled
+        scrollEnabled={false}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        style={{ flex: 1, backgroundColor: theme.card }}
       />
     </View>
   );

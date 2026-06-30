@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { AppState, DeviceEventEmitter } from 'react-native';
-import { authAPI, initializeBaseUrl, notificationAPI } from '../services/api';
+import { authAPI, AppConfig, initializeBaseUrl, notificationAPI } from '../services/api';
 import {
     getFCMToken,
     isFirebaseInitialized,
@@ -11,20 +11,25 @@ import {
     setupForegroundListener,
 } from '../services/notificationService';
 
-interface AppConfig {
-    auth: {
-        google: boolean;
-        email: boolean;
-        truecaller: boolean;
-    };
-    components: {
-        heatMap: boolean;
-    };
+/**
+ * Authenticated user as returned by `/auth/me`. Known fields are typed; the
+ * index signature tolerates additional backend fields without `any` casts.
+ */
+export interface User {
+    id?: string | number;
+    userId?: string | number;
+    name?: string;
+    username?: string;
+    email?: string;
+    mobile?: string;
+    profile?: string;
+    theme?: string;
+    [key: string]: any;
 }
 
 interface AuthContextType {
-    user: any;
-    login: (userData: any, showLoading?: boolean) => void;
+    user: User | null;
+    login: (userData: User, showLoading?: boolean) => void;
     logout: () => Promise<void>;
     appLoading: boolean;
     authLoading: boolean;
@@ -42,7 +47,7 @@ const CACHE_EXPIRY = 300000;
 // Notification permissions and listener handling is managed within the AuthProvider useEffect below
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [appConfig, setAppConfig] = useState<AppConfig>({
         auth: { google: true, email: true, truecaller: true },
         components: { heatMap: true }

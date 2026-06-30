@@ -82,7 +82,7 @@ export default function ScreenerResults({
         return (
           <FlatList
             data={scanResults}
-            keyExtractor={(item, index) => (item.symbol || item.nsecode || item.name || index.toString()) + index}
+            keyExtractor={(item, index) => String(item.symbol || item.nsecode || item.name || index)}
             renderItem={renderStockResultItem}
             contentContainerStyle={[styles.resultsList, { paddingBottom: layout.tabBarHeight + 24 }]}
             contentInsetAdjustmentBehavior="automatic"

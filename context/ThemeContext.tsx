@@ -19,7 +19,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const systemColorScheme = useColorScheme();
   const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
   const [themeLoaded, setThemeLoaded] = useState(false);
-  const { user, appLoading } = useAuth() as any;
+  const { user, appLoading } = useAuth();
 
   useEffect(() => {
     if (!appLoading) {

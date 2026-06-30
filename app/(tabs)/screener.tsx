@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStrategies } from '../../context/StrategyContext';
@@ -34,20 +34,9 @@ export default function ScreenerScreen() {
   // Dropdown visibility state
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
-  const isNavigatingToChart = useRef(false);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (isNavigatingToChart.current) {
-        // We are returning from the chart page, do not clear data.
-        isNavigatingToChart.current = false;
-        return;
-      }
-      setScanResults([]);
-      setSelectedStrategy(null);
-      setScanError(null);
-    }, [])
-  );
+  // Scan results persist across tab switches and chart drill-downs — the page is
+  // kept as the user left it (Groww-style); a new scan only happens when the
+  // user picks a strategy.
 
   const handleStrategyPress = async (strategyName: string) => {
     setSelectedStrategy(strategyName);
@@ -126,7 +115,6 @@ export default function ScreenerScreen() {
         activeOpacity={0.7}
         onPress={() => {
           if (symbol !== 'N/A') {
-            isNavigatingToChart.current = true;
             router.push(`/chartPage?symbol=${encodeURIComponent(symbol)}`);
           }
         }}

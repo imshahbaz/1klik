@@ -17,7 +17,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
-  const { user, appLoading, logout } = useAuth() as any;
+  const { user, appLoading, logout } = useAuth();
   const { isDarkMode, toggleTheme, theme } = useTheme();
   const styles = useIndexStyles(isDarkMode);
   const [marketData, setMarketData] = useState<any>(null);
@@ -130,6 +130,8 @@ export default function HomeScreen() {
                 source={{ uri: user.profile }}
                 contentFit="cover"
                 transition={120}
+                cachePolicy="memory-disk"
+                recyclingKey={user.profile}
                 style={styles.headerAvatar}
               />
             ) : (

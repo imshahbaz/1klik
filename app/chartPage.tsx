@@ -23,51 +23,58 @@ export default function ChartScreen() {
   const [isChartExpanded, setIsChartExpanded] = useState(false);
 
   useEffect(() => {
+    if (!symbol) return;
+
+    // Guards against a stale-symbol response overwriting newer data and against
+    // setting state after the screen unmounts mid-request.
+    let cancelled = false;
+
     const fetchNews = async () => {
-      if (!symbol) return;
       try {
         setNewsLoading(true);
         const response = await newsApi.getTvNews(symbol);
         const payload = response.data?.data || response.data || [];
-        setNews(payload);
+        if (!cancelled) setNews(payload);
       } catch (error) {
         console.error('Error fetching news:', error);
       } finally {
-        setNewsLoading(false);
+        if (!cancelled) setNewsLoading(false);
       }
     };
 
     const fetchAiAnalysis = async () => {
-      if (!symbol) return;
       try {
         setAiLoading(true);
         const response = await newsApi.getGenAiAnalysis(symbol);
         const payload = response.data?.data || response.data;
-        setAiAnalysis(payload);
+        if (!cancelled) setAiAnalysis(payload);
       } catch (error) {
         console.error('Error fetching AI analysis:', error);
       } finally {
-        setAiLoading(false);
+        if (!cancelled) setAiLoading(false);
       }
     };
 
     const fetchChartHistory = async () => {
-      if (!symbol) return;
       try {
         setChartLoading(true);
         const response = await strategyAPI.fetchChartData(symbol);
         const payload = response.data?.data || response.data || [];
-        setChartData(payload);
+        if (!cancelled) setChartData(payload);
       } catch (error) {
         console.error('Error fetching chart data:', error);
       } finally {
-        setChartLoading(false);
+        if (!cancelled) setChartLoading(false);
       }
     };
 
     fetchChartHistory();
     fetchNews();
     fetchAiAnalysis();
+
+    return () => {
+      cancelled = true;
+    };
   }, [symbol]);
 
   return (

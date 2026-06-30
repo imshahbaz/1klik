@@ -7,6 +7,7 @@ import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { notificationAPI, userPreferenceAPI } from '../../services/api';
+import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import { checkNotificationPermission, getFCMToken, requestUserPermission } from '../../services/notificationService';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { useSettingsStyles } from '../../theme/settingsStyles';
@@ -14,7 +15,7 @@ import { useSettingsStyles } from '../../theme/settingsStyles';
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
-  const { user, refreshUserData } = useAuth() as any;
+  const { user, refreshUserData } = useAuth();
   const { isDarkMode, theme } = useTheme();
   const styles = useSettingsStyles(isDarkMode);
   const [username, setUsername] = useState('');
@@ -100,6 +101,18 @@ export default function SettingsScreen() {
     }
   }, [user]);
 
+  // Auto-dismiss the success/error feedback (toast-style) so it can't linger on
+  // the screen across tab switches. The form itself is left intact — only the
+  // transient notification clears, and the data updates on its own.
+  useEffect(() => {
+    if (!successMessage && !errorMessage) return;
+    const timer = setTimeout(() => {
+      setSuccessMessage(null);
+      setErrorMessage(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [successMessage, errorMessage]);
+
   // Validates username: must start with letter, only letters and numbers
   const validateUsername = (val: string) => {
     if (!val) {
@@ -155,8 +168,7 @@ export default function SettingsScreen() {
       setSuccessMessage('Username updated successfully!');
     } catch (err: any) {
       console.error('Failed to update username:', err);
-      const errMsg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to update username';
-      setErrorMessage(errMsg);
+      setErrorMessage(getFriendlyErrorMessage(err, 'Could not update your username. Please try again.'));
     } finally {
       setLoading(false);
     }

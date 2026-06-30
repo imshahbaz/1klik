@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ActivityIndicator, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Switch, Text, TouchableOpacity, View } from 'react-native';
 import ZerodhaHoldings from './ZerodhaHoldings';
+import FormInput from '../common/FormInput';
+import BrokerConnectionStatus from './BrokerConnectionStatus';
 
 interface ZerodhaCardProps {
   readonly styles: any;
@@ -64,35 +66,16 @@ export default function ZerodhaCard({
 }: ZerodhaCardProps) {
   return (
     <View>
-      {/* Connection Status Card */}
-      <View style={[styles.connectionCard, { borderLeftColor: zerodhaStatusColor }]}>
-        <View style={{ gap: 0 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={[styles.brandContainer, { marginRight: 0 }]}>
-              <View style={styles.kiteLogoPlaceholder}>
-                <Ionicons name="link-outline" size={18} color={theme.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                {zerodhaStatusContent}
-              </View>
-            </View>
-            <TouchableOpacity style={styles.blackCardConfigBtn} onPress={() => setIs404Error(!is404Error)}>
-              <Ionicons name="settings-outline" size={16} color={theme.textSecondary} />
-            </TouchableOpacity>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.borderLight, paddingTop: 8 }}>
-            <Text style={[styles.connectionSubtitle, { marginTop: 0, flex: 1, marginRight: 12 }]} numberOfLines={2}>
-              {zerodhaError || 'Secured Zerodha Connection'}
-            </Text>
-            <View style={zerodhaError ? styles.inactiveStatusBadge : styles.activeStatusBadge}>
-              <View style={zerodhaError ? styles.inactiveDot : styles.activeDot} />
-              <Text style={zerodhaError ? styles.inactiveStatusText : styles.activeStatusText}>
-                {zerodhaConnectionText}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
+      <BrokerConnectionStatus
+        styles={styles}
+        theme={theme}
+        statusColor={zerodhaStatusColor}
+        statusContent={zerodhaStatusContent}
+        connectionText={zerodhaConnectionText}
+        error={zerodhaError}
+        idleSubtitle="Secured Zerodha Connection"
+        onToggleConfig={() => setIs404Error(!is404Error)}
+      />
 
       {/* Login Action Card if disconnected but config exists */}
       {!is404Error && isTokenExpired && (
@@ -126,21 +109,26 @@ export default function ZerodhaCard({
           <Text style={styles.formTitle}>Zerodha Configuration</Text>
           <Text style={styles.formSubtitle}>Enter your Kite Connect API credentials below.</Text>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>KITE API KEY *</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="key-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-              <TextInput style={styles.textInput} placeholder="Enter your Kite API Key" placeholderTextColor={theme.placeholder} value={apiKey} onChangeText={(text) => { setApiKey(text); setFormError(null); }} autoCapitalize="none" autoCorrect={false} />
-            </View>
-          </View>
+          <FormInput
+            styles={styles}
+            theme={theme}
+            label="KITE API KEY *"
+            icon="key-outline"
+            placeholder="Enter your Kite API Key"
+            value={apiKey}
+            onChangeText={(text) => { setApiKey(text); setFormError(null); }}
+          />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>KITE API SECRET *</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-              <TextInput style={styles.textInput} placeholder="Enter your Kite API Secret" placeholderTextColor={theme.placeholder} value={apiSecret} onChangeText={(text) => { setApiSecret(text); setFormError(null); }} autoCapitalize="none" autoCorrect={false} secureTextEntry />
-            </View>
-          </View>
+          <FormInput
+            styles={styles}
+            theme={theme}
+            label="KITE API SECRET *"
+            icon="lock-closed-outline"
+            placeholder="Enter your Kite API Secret"
+            value={apiSecret}
+            onChangeText={(text) => { setApiSecret(text); setFormError(null); }}
+            secureTextEntry
+          />
 
           <View style={[styles.inputGroup, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -152,27 +140,35 @@ export default function ZerodhaCard({
 
           {enableAutoLogin && (
             <>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>USER NAME *</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="person-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                  <TextInput style={styles.textInput} placeholder="Enter your Zerodha User Name" placeholderTextColor={theme.placeholder} value={userName} onChangeText={(text) => { setUserName(text); setFormError(null); }} autoCapitalize="none" autoCorrect={false} />
-                </View>
-              </View>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>PASSWORD *</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                  <TextInput style={styles.textInput} placeholder="Enter your Password" placeholderTextColor={theme.placeholder} value={password} onChangeText={(text) => { setPassword(text); setFormError(null); }} autoCapitalize="none" autoCorrect={false} secureTextEntry />
-                </View>
-              </View>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>TOTP SECRET *</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="keypad-outline" size={18} color={theme.textSecondary} style={styles.inputIcon} />
-                  <TextInput style={styles.textInput} placeholder="Enter your TOTP Secret" placeholderTextColor={theme.placeholder} value={totpSecret} onChangeText={(text) => { setTotpSecret(text); setFormError(null); }} autoCapitalize="none" autoCorrect={false} secureTextEntry />
-                </View>
-              </View>
+              <FormInput
+                styles={styles}
+                theme={theme}
+                label="USER NAME *"
+                icon="person-outline"
+                placeholder="Enter your Zerodha User Name"
+                value={userName}
+                onChangeText={(text) => { setUserName(text); setFormError(null); }}
+              />
+              <FormInput
+                styles={styles}
+                theme={theme}
+                label="PASSWORD *"
+                icon="lock-closed-outline"
+                placeholder="Enter your Password"
+                value={password}
+                onChangeText={(text) => { setPassword(text); setFormError(null); }}
+                secureTextEntry
+              />
+              <FormInput
+                styles={styles}
+                theme={theme}
+                label="TOTP SECRET *"
+                icon="keypad-outline"
+                placeholder="Enter your TOTP Secret"
+                value={totpSecret}
+                onChangeText={(text) => { setTotpSecret(text); setFormError(null); }}
+                secureTextEntry
+              />
             </>
           )}
 

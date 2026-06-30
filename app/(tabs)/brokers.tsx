@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useNavigation } from 'expo-router';
+import { useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,28 +9,26 @@ import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { zerodhaAPI, rupeezyAPI } from '../../services/api';
+import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { getSafeBottomPadding } from '../../theme/safeArea';
 import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 import ZerodhaCard from '../../components/brokers/ZerodhaCard';
 import RupeezyCard from '../../components/brokers/RupeezyCard';
+import { useRequireAuth } from '../../hooks/useRequireAuth';
+import { getBrokerStatusDisplay } from '../../components/brokers/brokerStatus';
 
 export default function BrokersConfigScreen() {
-  const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
-  const { user, appLoading } = useAuth() as any;
+  const { user, appLoading } = useAuth();
   const { isDarkMode, theme } = useTheme();
   const styles = useZerodhaStyles(isDarkMode);
   
   const [activeBrokerTab, setActiveBrokerTab] = useState<'zerodha' | 'rupeezy'>('zerodha');
 
-  useEffect(() => {
-    if (!appLoading && !user) {
-      router.replace('/login');
-    }
-  }, [user, appLoading]);
+  useRequireAuth();
 
   // Zerodha States
   const [zerodhaUser, setZerodhaUser] = useState<any>(null);
@@ -65,7 +63,6 @@ export default function BrokersConfigScreen() {
   const [rupeezyError, setRupeezyError] = useState<string | null>(null);
 
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasFetchedProfile = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -85,7 +82,7 @@ export default function BrokersConfigScreen() {
       if (payload?.success === true) {
         setZerodhaUser(payload.data);
       } else {
-        setZerodhaError(payload?.message || "Kite Connect session is disconnected.");
+        setZerodhaError("Your Kite session is disconnected. Please reconnect.");
         setIsTokenExpired(true);
         if (typeof payload?.data === 'string') {
           setApiKey(payload.data);
@@ -106,7 +103,7 @@ export default function BrokersConfigScreen() {
         setAutoConnectLoading(true);
         pollGetMe();
       } else if (status === 409) {
-        setZerodhaError(detail || "Kite Connect session conflict.");
+        setZerodhaError("Your Kite session has a conflict. Please reconnect.");
         setIsTokenExpired(true);
       } else {
         setZerodhaError("Kite Connect session is disconnected.");
@@ -138,7 +135,7 @@ export default function BrokersConfigScreen() {
         if (pollingRef.current) clearTimeout(pollingRef.current);
         setAutoConnectLoading(false);
         if (status === 409) {
-          CustomAlert.alert("Auto-Login Failed", detail || "Conflict occurred during login.");
+          CustomAlert.alert("Auto-Login Failed", getFriendlyErrorMessage(err, "Auto-login couldn’t be completed. Please try connecting again."));
         }
         setShowWebView(true);
       }
@@ -174,7 +171,7 @@ export default function BrokersConfigScreen() {
       } else {
         setAutoConnectLoading(false);
         if (status === 409) {
-          CustomAlert.alert("Auto-Login Failed", detail || "Conflict occurred during login.");
+          CustomAlert.alert("Auto-Login Failed", getFriendlyErrorMessage(err, "Auto-login couldn’t be completed. Please try connecting again."));
         }
         setShowWebView(true);
       }
@@ -202,8 +199,7 @@ export default function BrokersConfigScreen() {
             "Your Zerodha Kite session has been successfully established and authenticated!"
           );
         } catch (err: any) {
-          const errMsg = err.response?.data?.message || err.message || "Failed to authenticate session with the backend.";
-          CustomAlert.alert("Authentication Failed", errMsg);
+          CustomAlert.alert("Authentication Failed", getFriendlyErrorMessage(err, "We couldn’t complete the Zerodha connection. Please try again."));
           setIsTokenExpired(true);
         } finally {
           setZerodhaLoading(false);
@@ -250,7 +246,7 @@ export default function BrokersConfigScreen() {
         } }]
       );
     } catch (err: any) {
-      setFormError(err.response?.data?.message || "Failed to update configuration. Please try again.");
+      setFormError(getFriendlyErrorMessage(err, "Could not save your configuration. Please try again."));
     } finally {
       setSavingConfig(false);
     }
@@ -268,7 +264,7 @@ export default function BrokersConfigScreen() {
       if (payload?.success) {
         setRupeezyUser(payload.data);
       } else {
-        setRupeezyError(payload?.message || "Rupeezy session is disconnected.");
+        setRupeezyError("Your Rupeezy session is disconnected. Please reconnect.");
         setIsRupeezyTokenExpired(true);
         if (typeof payload?.data === 'string') {
           setRupeezyAppId(payload.data);
@@ -282,7 +278,7 @@ export default function BrokersConfigScreen() {
         setRupeezyError("No linked Rupeezy account found.");
         setIsRupeezy404Error(true);
       } else if (status >= 500) {
-        setRupeezyError(`Server Error (${status}). Retrying...`);
+        setRupeezyError("Rupeezy is temporarily unavailable. Please try again shortly.");
         setIsRupeezyTokenExpired(true);
       } else {
         setRupeezyError("Rupeezy session is disconnected.");
@@ -314,8 +310,7 @@ export default function BrokersConfigScreen() {
             "Your Rupeezy session has been successfully established and authenticated!"
           );
         } catch (err: any) {
-          const errMsg = err.response?.data?.message || err.message || "Failed to authenticate session with the backend.";
-          CustomAlert.alert("Authentication Failed", errMsg);
+          CustomAlert.alert("Authentication Failed", getFriendlyErrorMessage(err, "We couldn’t complete the Rupeezy connection. Please try again."));
           setIsRupeezyTokenExpired(true);
         } finally {
           setRupeezyLoading(false);
@@ -347,38 +342,31 @@ export default function BrokersConfigScreen() {
         } }]
       );
     } catch (err: any) {
-      setRupeezyError(err.response?.data?.message || "Failed to update configuration. Please try again.");
+      setRupeezyError(getFriendlyErrorMessage(err, "Could not save your configuration. Please try again."));
     } finally {
       setRupeezySaving(false);
     }
   };
 
+  // Fetch the currently-selected broker's profile on mount, whenever the active
+  // tab changes, and when the screen regains focus. The inactive broker is
+  // fetched lazily when its tab is selected (its card isn't rendered until then).
   useEffect(() => {
-    if (activeBrokerTab === 'rupeezy') {
-      fetchRupeezyProfile();
-    } else {
-      fetchZerodhaProfile();
-    }
-  }, [activeBrokerTab]);
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
+    const fetchActiveBroker = () => {
       if (activeBrokerTab === 'rupeezy') {
         fetchRupeezyProfile();
       } else {
         fetchZerodhaProfile();
       }
-    });
-    return unsubscribe;
-  }, [navigation, activeBrokerTab]);
+    };
 
-  useEffect(() => {
-    if (!appLoading && user && !hasFetchedProfile.current) {
-      hasFetchedProfile.current = true;
-      fetchZerodhaProfile();
-      fetchRupeezyProfile();
-    }
-  }, [user?.id, appLoading]);
+    fetchActiveBroker();
+    const unsubscribe = navigation.addListener('focus', fetchActiveBroker);
+    return unsubscribe;
+    // fetchZerodhaProfile/fetchRupeezyProfile only touch state setters and refs,
+    // so they're stable for this effect's purposes; re-running on tab/focus only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBrokerTab, navigation]);
 
   if (appLoading) {
     return (
@@ -453,65 +441,17 @@ export default function BrokersConfigScreen() {
     );
   }
 
-  let zerodhaStatusColor = theme.success;
-  if (zerodhaLoading) zerodhaStatusColor = theme.primary;
-  else if (zerodhaError) zerodhaStatusColor = theme.danger;
+  const {
+    color: zerodhaStatusColor,
+    text: zerodhaConnectionText,
+    content: zerodhaStatusContent,
+  } = getBrokerStatusDisplay(zerodhaLoading, zerodhaError, zerodhaUser, theme, styles);
 
-  let zerodhaConnectionText = 'CONNECTED';
-  if (zerodhaLoading) zerodhaConnectionText = 'LOADING';
-  else if (zerodhaError) zerodhaConnectionText = 'INACTIVE';
-
-  let zerodhaStatusContent = null;
-  if (zerodhaLoading) {
-    zerodhaStatusContent = (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <ActivityIndicator size="small" color={theme.primary} />
-        <Text style={styles.connectionTitle}>Connecting...</Text>
-      </View>
-    );
-  } else if (zerodhaError) {
-    zerodhaStatusContent = (
-      <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
-        Connection Inactive
-      </Text>
-    );
-  } else {
-    zerodhaStatusContent = (
-      <Text style={styles.connectionTitle} numberOfLines={1}>
-        {typeof zerodhaUser === 'string' ? 'Active Session' : (zerodhaUser?.userName || zerodhaUser?.name || 'Active Session')}
-      </Text>
-    );
-  }
-
-  let rupeezyStatusColor = theme.success;
-  if (rupeezyLoading) rupeezyStatusColor = theme.primary;
-  else if (rupeezyError) rupeezyStatusColor = theme.danger;
-
-  let rupeezyConnectionText = 'CONNECTED';
-  if (rupeezyLoading) rupeezyConnectionText = 'LOADING';
-  else if (rupeezyError) rupeezyConnectionText = 'INACTIVE';
-
-  let rupeezyStatusContent = null;
-  if (rupeezyLoading) {
-    rupeezyStatusContent = (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <ActivityIndicator size="small" color={theme.primary} />
-        <Text style={styles.connectionTitle}>Connecting...</Text>
-      </View>
-    );
-  } else if (rupeezyError) {
-    rupeezyStatusContent = (
-      <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
-        Connection Inactive
-      </Text>
-    );
-  } else {
-    rupeezyStatusContent = (
-      <Text style={styles.connectionTitle} numberOfLines={1}>
-        {typeof rupeezyUser === 'string' ? 'Active Session' : (rupeezyUser?.userName || rupeezyUser?.name || 'Active Session')}
-      </Text>
-    );
-  }
+  const {
+    color: rupeezyStatusColor,
+    text: rupeezyConnectionText,
+    content: rupeezyStatusContent,
+  } = getBrokerStatusDisplay(rupeezyLoading, rupeezyError, rupeezyUser, theme, styles);
 
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>

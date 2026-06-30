@@ -9,6 +9,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, DeviceEventEmitter, Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AlertProvider } from '../context/AlertContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { DimensionsProvider } from '../context/DimensionsContext';
@@ -19,6 +20,7 @@ import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { SecurityProvider } from '../context/SecurityContext';
 import { appUpdateInfo } from '../services/api';
 import { isFirebaseInitialized } from '../services/notificationService';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 // Prevent native splash screen from hiding automatically
 SplashScreen.preventAutoHideAsync().catch(() => { });
@@ -26,7 +28,8 @@ SplashScreen.preventAutoHideAsync().catch(() => { });
 // Register background message handler
 if (isFirebaseInitialized()) {
   try {
-    setBackgroundMessageHandler(getMessaging(), async (remoteMessage) => {
+    setBackgroundMessageHandler(getMessaging(), async () => {
+      // No-op: background data messages are handled by the OS notification tray.
     });
   } catch (error) {
     console.warn('Firebase background messaging failed to initialize:', error);
@@ -36,7 +39,7 @@ if (isFirebaseInitialized()) {
 
 function AppContent() {
   const { isDarkMode, theme, themeLoaded } = useTheme();
-  const { appLoading, bootProgress } = useAuth() as any;
+  const { appLoading, bootProgress } = useAuth();
   const [updateNeeded, setUpdateNeeded] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
   const [isConnected, setIsConnected] = useState<boolean | null>(true);
@@ -226,29 +229,29 @@ function StyledStatusBar() {
   return <StatusBar style={isDarkMode ? "light" : "dark"} />;
 }
 
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <AuthProvider>
-          <ThemeProvider>
-            <DimensionsProvider>
-              <AlertProvider>
-                <SecurityProvider>
-                  <MarginProvider>
-                    <StrategyProvider>
-                      <AppContent />
-                    </StrategyProvider>
-                  </MarginProvider>
-                </SecurityProvider>
-              </AlertProvider>
-            </DimensionsProvider>
-          </ThemeProvider>
-        </AuthProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <AuthProvider>
+            <ThemeProvider>
+              <DimensionsProvider>
+                <AlertProvider>
+                  <SecurityProvider>
+                    <MarginProvider>
+                      <StrategyProvider>
+                        <AppContent />
+                      </StrategyProvider>
+                    </MarginProvider>
+                  </SecurityProvider>
+                </AlertProvider>
+              </DimensionsProvider>
+            </ThemeProvider>
+          </AuthProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 

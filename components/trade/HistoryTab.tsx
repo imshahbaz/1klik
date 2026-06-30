@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CustomAlert } from '../../context/AlertContext';
+import HistoryRow from './HistoryRow';
 
 interface HistoryTabProps {
   readonly styles: any;
@@ -68,78 +69,36 @@ export default function HistoryTab({
           </View>
         ) : (
           mtfOrders.map((log) => (
-            <View key={log.id} style={styles.historyItem}>
-              <View style={styles.historyHeader}>
-                <View style={styles.historyLeftInfo}>
-                  <View style={[
-                    styles.historyTypeBadge,
-                    styles.historyBuyBadge
-                  ]}>
-                    <Text style={[
-                      styles.historyTypeText,
-                      styles.historyBuyText
-                    ]}>
-                      MTF BUY
-                    </Text>
-                  </View>
-                  <Text style={styles.historySymbolText}>{log.symbol}</Text>
-                  <Text style={styles.historyQtyText}>{log.qty} Shares</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setTradeSymbol(log.symbol);
-                      setTradeQty(log.qty.toString());
-                      const parsedDate = parseTargetDate(log.targetDate);
-                      setTargetDate(parsedDate);
-                      setPickerDate(parsedDate);
-                      setTradeBroker(log.broker || 'ZERODHA');
-                      setEditingMtfOrderId(log.id);
-                      setActiveTab('execute');
-                      CustomAlert.alert(
-                        'Loaded to Execute Tab',
-                        `Order details for ${log.symbol} loaded into execution form.`
-                      );
-                    }}
-                    style={{ padding: 4 }}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="create-outline" size={16} color={theme.textSecondary} />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => handleDeleteMtfOrder(log.id)}
-                    style={{ padding: 4 }}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="trash-outline" size={16} color={theme.danger} />
-                  </TouchableOpacity>
-
-                  {log.status === 'COMPLETED' ? null : (
-                    <View style={[
-                      styles.statusBadge,
-                      log.status === 'CONFLICT' ? styles.statusConflictBadge : styles.statusErrorBadge
-                    ] as any}>
-                      <Text style={[
-                        styles.statusBadgeText,
-                        log.status === 'CONFLICT' ? styles.statusConflictText : styles.statusErrorText
-                      ] as any}>
-                        {log.status}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-
-              <View style={styles.historyFooter}>
-                <Text style={styles.historyPriceText}>
-                  {log.targetDate ? `Target: ${log.targetDate}` : `₹${(log.price * log.qty).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
-                </Text>
-              </View>
-              {log.reason ? (
-                <Text style={styles.historyRejectReason}>Reason: {log.reason}</Text>
-              ) : null}
-            </View>
+            <HistoryRow
+              key={log.id}
+              styles={styles}
+              theme={theme}
+              badgeLabel="MTF BUY"
+              badgeContainerStyle={styles.historyBuyBadge}
+              badgeTextStyle={styles.historyBuyText}
+              title={log.symbol}
+              meta={`${log.qty} Shares`}
+              status={log.status}
+              statusContainerStyle={log.status === 'CONFLICT' ? styles.statusConflictBadge : styles.statusErrorBadge}
+              statusTextStyle={log.status === 'CONFLICT' ? styles.statusConflictText : styles.statusErrorText}
+              footerText={log.targetDate ? `Target: ${log.targetDate}` : `₹${(log.price * log.qty).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+              reason={log.reason}
+              onEdit={() => {
+                setTradeSymbol(log.symbol);
+                setTradeQty(log.qty.toString());
+                const parsedDate = parseTargetDate(log.targetDate);
+                setTargetDate(parsedDate);
+                setPickerDate(parsedDate);
+                setTradeBroker(log.broker || 'ZERODHA');
+                setEditingMtfOrderId(log.id);
+                setActiveTab('execute');
+                CustomAlert.alert(
+                  'Loaded to Execute Tab',
+                  `Order details for ${log.symbol} loaded into execution form.`
+                );
+              }}
+              onDelete={() => handleDeleteMtfOrder(log.id)}
+            />
           ))
         )}
       </View>
@@ -164,78 +123,37 @@ export default function HistoryTab({
           </View>
         ) : (
           strategyOrders.map((log) => (
-            <View key={log.id} style={styles.historyItem}>
-              <View style={styles.historyHeader}>
-                <View style={styles.historyLeftInfo}>
-                  <View style={[
-                    styles.historyTypeBadge,
-                    { backgroundColor: theme.infoBackground }
-                  ]}>
-                    <Text style={[
-                      styles.historyTypeText,
-                      { color: theme.infoText }
-                    ]}>
-                      AUTO-TRADE
-                    </Text>
-                  </View>
-                  <Text style={styles.historySymbolText}>{log.strategyName}</Text>
-                  <Text style={styles.historyQtyText}>₹{log.amount}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setStrategyFormData({
-                        strategyName: log.strategyName || '',
-                        amount: log.amount ? log.amount.toString() : '',
-                        date: log.date || '',
-                        broker: log.broker || 'ZERODHA',
-                      });
-                      setEditingStrategyOrderId(log.id);
-                      setActiveTab('strategy');
-                      CustomAlert.alert(
-                        'Loaded to Strategy Tab',
-                        `Strategy order details loaded into form.`
-                      );
-                    }}
-                    style={{ padding: 4 }}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="create-outline" size={16} color={theme.textSecondary} />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => handleDeleteStrategyOrder(log.id)}
-                    style={{ padding: 4 }}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="trash-outline" size={16} color={theme.danger} />
-                  </TouchableOpacity>
-
-                  {log.status === 'COMPLETED' ? null : (
-                    <View style={[
-                      styles.statusBadge,
-                      styles.statusErrorBadge
-                    ] as any}>
-                      <Text style={[
-                        styles.statusBadgeText,
-                        styles.statusErrorText
-                      ] as any}>
-                        {log.status}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-
-              <View style={styles.historyFooter}>
-                <Text style={[styles.historyPriceText, { color: theme.textSecondary }] as any}>
-                  Date: {log.date}
-                </Text>
-              </View>
-              {log.reason ? (
-                <Text style={styles.historyRejectReason}>Reason: {log.reason}</Text>
-              ) : null}
-            </View>
+            <HistoryRow
+              key={log.id}
+              styles={styles}
+              theme={theme}
+              badgeLabel="AUTO-TRADE"
+              badgeContainerStyle={{ backgroundColor: theme.infoBackground }}
+              badgeTextStyle={{ color: theme.infoText }}
+              title={log.strategyName}
+              meta={`₹${log.amount}`}
+              status={log.status}
+              statusContainerStyle={styles.statusErrorBadge}
+              statusTextStyle={styles.statusErrorText}
+              footerText={`Date: ${log.date}`}
+              footerTextStyle={{ color: theme.textSecondary }}
+              reason={log.reason}
+              onEdit={() => {
+                setStrategyFormData({
+                  strategyName: log.strategyName || '',
+                  amount: log.amount ? log.amount.toString() : '',
+                  date: log.date || '',
+                  broker: log.broker || 'ZERODHA',
+                });
+                setEditingStrategyOrderId(log.id);
+                setActiveTab('strategy');
+                CustomAlert.alert(
+                  'Loaded to Strategy Tab',
+                  `Strategy order details loaded into form.`
+                );
+              }}
+              onDelete={() => handleDeleteStrategyOrder(log.id)}
+            />
           ))
         )}
       </View>
