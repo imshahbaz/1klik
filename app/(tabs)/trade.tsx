@@ -98,30 +98,6 @@ export default function TradeScreen() {
   const [datePickerTarget, setDatePickerTarget] = useState<'execute' | 'strategy'>('execute');
   const [showStrategyBrokerDropdown, setShowStrategyBrokerDropdown] = useState(false);
 
-  // Reset the screen to a fresh state when leaving the tab, so returning shows a
-  // clean form (default sub-tab, no prefilled edit, closed dropdowns) instead of
-  // stale in-progress UI — native-style screen reset.
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        setActiveTab('execute');
-        setSearchQuery('');
-        setTradeSymbol('');
-        setTradeQty('10');
-        setTargetDate(new Date());
-        setTradeBroker('ZERODHA');
-        setShowExecuteBrokerDropdown(false);
-        setEditingMtfOrderId(null);
-        setStrategyFormData({ strategyName: '', amount: '', date: '', broker: 'ZERODHA' });
-        setEditingStrategyOrderId(null);
-        setShowStrategyDropdown(false);
-        setShowStrategyBrokerDropdown(false);
-        setShowDatePicker(false);
-        setDatePickerTarget('execute');
-      };
-    }, [])
-  );
-
   const handlePrevMonth = () => {
     const today = new Date();
     if (pickerDate.getFullYear() > today.getFullYear() ||
@@ -136,10 +112,18 @@ export default function TradeScreen() {
 
   const handleTabChange = (tab: 'execute' | 'strategy' | 'history') => {
     setActiveTab(tab);
-    if (tab === 'history') {
-      fetchHistoryData();
-    }
   };
+
+  // Refresh order history whenever the History sub-tab is shown — both when the
+  // user switches to it and when they return to the Trade tab while it's active.
+  // Keeps the page mounted; only the history data updates.
+  useFocusEffect(
+    useCallback(() => {
+      if (activeTab === 'history') {
+        fetchHistoryData();
+      }
+    }, [activeTab, fetchHistoryData])
+  );
 
   const handleExecuteOrder = async () => {
     if (!tradeSymbol.trim()) {

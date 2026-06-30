@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
@@ -101,19 +100,17 @@ export default function SettingsScreen() {
     }
   }, [user]);
 
-  // Reset transient form feedback when leaving the screen, so returning to the
-  // Profile tab shows a clean state (native-style fresh screen) rather than a
-  // stale "updated successfully" banner or a leftover error / unsaved edit.
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        setSuccessMessage(null);
-        setErrorMessage(null);
-        setValidationError(null);
-        setUsername(user?.username || '');
-      };
-    }, [user])
-  );
+  // Auto-dismiss the success/error feedback (toast-style) so it can't linger on
+  // the screen across tab switches. The form itself is left intact — only the
+  // transient notification clears, and the data updates on its own.
+  useEffect(() => {
+    if (!successMessage && !errorMessage) return;
+    const timer = setTimeout(() => {
+      setSuccessMessage(null);
+      setErrorMessage(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [successMessage, errorMessage]);
 
   // Validates username: must start with letter, only letters and numbers
   const validateUsername = (val: string) => {
