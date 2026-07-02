@@ -115,7 +115,7 @@ export const strategyOrderAPI = {
 
 export const notificationAPI = {
   saveToken: (token: string) => api.patch('/api/user/fcm-token', { token }),
-  removeToken: (token: string) => api.post('/api/fcm-token/remove', { token }),
+  removeToken: (token: string) => api.post('/api/user/fcm-token/remove', { token }),
 };
 
 export const mstockAPI = {
