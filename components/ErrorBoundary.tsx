@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { moderateScale } from 'react-native-size-matters';
 
 interface ErrorBoundaryProps {
   readonly children: React.ReactNode;
@@ -73,13 +74,13 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#ffffff',
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontWeight: '800',
     textAlign: 'center',
   },
   subtitle: {
     color: '#94a3b8',
-    fontSize: 14,
+    fontSize: moderateScale(14),
     fontWeight: '500',
     textAlign: 'center',
     lineHeight: 21,
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: moderateScale(15),
     fontWeight: '800',
   },
 });

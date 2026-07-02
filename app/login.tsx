@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { moderateScale } from 'react-native-size-matters';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { CustomAlert } from '../context/AlertContext';
 import { useAuth } from '../context/AuthContext';
@@ -101,8 +102,8 @@ export default function LoginScreen() {
           <View style={[styles.container, layout.centeredContent]}>
             {/* Title Brand Section */}
             <View style={{ alignItems: 'center', marginBottom: 40 }}>
-              <Text style={[styles.brandName, { color: '#ffffff', fontSize: 26 }]}>Welcome to 1Klik</Text>
-              <Text style={[styles.brandTagline, { color: '#94a3b8', fontSize: 15 }]}>
+              <Text style={[styles.brandName, { color: '#ffffff', fontSize: moderateScale(26) }]}>Welcome to 1Klik</Text>
+              <Text style={[styles.brandTagline, { color: '#94a3b8', fontSize: moderateScale(15) }]}>
                 Sign in to access your trading dashboard
               </Text>
             </View>
