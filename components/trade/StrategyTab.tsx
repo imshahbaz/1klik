@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { moderateScale } from 'react-native-size-matters';
 
 interface StrategyTabProps {
   readonly styles: any;
@@ -63,7 +64,7 @@ const BrokerSelection = ({
           onPress={() => setShowStrategyBrokerDropdown(!showStrategyBrokerDropdown)}
           activeOpacity={0.7}
         >
-          <Text style={[{ fontSize: 14, fontWeight: '600' }, { color: theme.textPrimary }] as any}>
+          <Text style={[{ fontSize: moderateScale(14), fontWeight: '600' }, { color: theme.textPrimary }] as any}>
             {strategyFormData.broker}
           </Text>
           <Ionicons name={showStrategyBrokerDropdown ? "chevron-up" : "chevron-down"} size={16} color={theme.textSecondary} />
@@ -130,7 +131,7 @@ const StrategySelection = ({
           activeOpacity={0.7}
         >
           <Text style={[
-            { fontSize: 14, fontWeight: '600' },
+            { fontSize: moderateScale(14), fontWeight: '600' },
             strategyFormData.strategyName ? { color: theme.textPrimary } : { color: theme.placeholder }
           ] as any}>
             {strategyFormData.strategyName || "Select Strategy"}

@@ -10,12 +10,61 @@ import {
   registerDeviceForRemoteMessages,
   requestPermission,
 } from '@react-native-firebase/messaging';
-import { DeviceEventEmitter, PermissionsAndroid, Platform } from 'react-native';
+import notifee, { AndroidImportance, AndroidVisibility } from '@notifee/react-native';
+import { PermissionsAndroid, Platform } from 'react-native';
 
+export const DEFAULT_CHANNEL_ID = 'default';
 
-/**
- * Helper to check if Firebase native SDK is fully initialized on the platform.
- */
+let channelPromise: Promise<string> | null = null;
+
+export async function ensureDefaultChannel(): Promise<string> {
+  if (Platform.OS !== 'android') return DEFAULT_CHANNEL_ID;
+  if (!channelPromise) {
+    channelPromise = notifee.createChannel({
+      id: DEFAULT_CHANNEL_ID,
+      name: 'General Notifications',
+      importance: AndroidImportance.HIGH,
+      visibility: AndroidVisibility.PUBLIC,
+      sound: 'default',
+      vibration: true,
+      vibrationPattern: [300, 500],
+    });
+  }
+  return channelPromise;
+}
+
+export async function displayNotification(
+  title: string,
+  body: string,
+  data?: Record<string, string | object | number>
+): Promise<void> {
+  try {
+    const channelId = await ensureDefaultChannel();
+    await notifee.displayNotification({
+      title,
+      body,
+      data: data as any,
+      android: {
+        channelId,
+        importance: AndroidImportance.HIGH,
+        pressAction: { id: 'default' },
+        vibrationPattern: [300, 500],
+        sound: 'default',
+      },
+      ios: {
+        sound: 'default',
+        foregroundPresentationOptions: {
+          alert: true,
+          badge: true,
+          sound: true,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error displaying notification:', error);
+  }
+}
+
 export function isFirebaseInitialized(): boolean {
   if (Platform.OS === 'web') return false;
   try {
@@ -26,17 +75,12 @@ export function isFirebaseInitialized(): boolean {
   }
 }
 
-/**
- * Request notification permission from the user.
- * Supports iOS and Android (including Android 13 runtime permissions).
- */
 export async function requestUserPermission(): Promise<boolean> {
   if (!isFirebaseInitialized()) {
     console.log('Firebase is not initialized. Skipping permission request.');
     return false;
   }
   try {
-    // Request Android 13+ POST_NOTIFICATIONS permission
     if (Platform.OS === 'android') {
       const apiLevel = typeof Platform.Version === 'number'
         ? Platform.Version
@@ -66,9 +110,6 @@ export async function requestUserPermission(): Promise<boolean> {
   }
 }
 
-/**
- * Retrieve the FCM registration token for the device.
- */
 export async function getFCMToken(): Promise<string | null> {
   if (!isFirebaseInitialized()) {
     return null;
@@ -76,7 +117,6 @@ export async function getFCMToken(): Promise<string | null> {
   try {
     const messagingInstance = getMessaging();
     if (Platform.OS === 'ios') {
-      // Ensure device is registered for remote notifications on iOS
       if (!isDeviceRegisteredForRemoteMessages(messagingInstance)) {
         await registerDeviceForRemoteMessages(messagingInstance);
       }
@@ -89,10 +129,6 @@ export async function getFCMToken(): Promise<string | null> {
   }
 }
 
-/**
- * Listen to FCM token refreshes.
- * Returns an unsubscribe function.
- */
 export function registerTokenRefresh(onRefresh: (token: string) => void): () => void {
   if (!isFirebaseInitialized()) return () => { };
   try {
@@ -105,14 +141,12 @@ export function registerTokenRefresh(onRefresh: (token: string) => void): () => 
   }
 }
 
-/**
- * Listen to messages received in the foreground.
- * Displays a native Alert when a new message arrives.
- * Returns an unsubscribe function.
- */
 export function setupForegroundListener(): () => void {
   if (!isFirebaseInitialized()) return () => { };
   try {
+    // Make sure the high-importance channel exists before any message arrives.
+    ensureDefaultChannel().catch(() => { });
+
     return onMessage(getMessaging(), async (remoteMessage) => {
       console.log('A new FCM message arrived in the foreground!', JSON.stringify(remoteMessage));
 
@@ -120,7 +154,7 @@ export function setupForegroundListener(): () => void {
       const title = String(remoteMessage.notification?.title || remoteMessage.data?.title || 'Notification');
       const body = String(remoteMessage.notification?.body || remoteMessage.data?.body || '');
 
-      DeviceEventEmitter.emit('show-custom-notification', { title, body, data: remoteMessage.data });
+      await displayNotification(title, body, remoteMessage.data);
     });
   } catch (error) {
     console.error('Error setting up foreground listener:', error);
@@ -128,9 +162,6 @@ export function setupForegroundListener(): () => void {
   }
 }
 
-/**
- * Check if push notification permissions are granted on the device.
- */
 export async function checkNotificationPermission(): Promise<boolean> {
   if (!isFirebaseInitialized()) return false;
   try {

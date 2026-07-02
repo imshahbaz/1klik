@@ -63,9 +63,13 @@ export default function BrokersConfigScreen() {
   const [rupeezyError, setRupeezyError] = useState<string | null>(null);
 
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Guards against setState-after-unmount and unbounded background polling.
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       if (pollingRef.current) clearTimeout(pollingRef.current);
     };
   }, []);
@@ -115,9 +119,11 @@ export default function BrokersConfigScreen() {
   };
 
   const pollGetMe = async () => {
+    if (!isMountedRef.current) return;
     try {
       const res = await zerodhaAPI.getMe();
-      if (res.data?.success) {
+      if (!isMountedRef.current) return;
+      if (res.data?.success === true) {
         if (pollingRef.current) clearTimeout(pollingRef.current);
         setAutoConnectLoading(false);
         fetchZerodhaProfile();
@@ -127,6 +133,7 @@ export default function BrokersConfigScreen() {
         setShowWebView(true);
       }
     } catch (err: any) {
+      if (!isMountedRef.current) return;
       const status = err.response?.status;
       const detail = err.response?.data?.detail || err.response?.data?.message || '';
       if (status === 409 && typeof detail === 'string' && detail.includes('E002')) {
@@ -179,7 +186,9 @@ export default function BrokersConfigScreen() {
   };
 
   const checkZerodhaAuthUrl = async (url: string) => {
-    if (url?.includes('request_token=')) {
+    // Only trust a request_token that arrives over https (the Kite redirect is
+    // always https); ignore tokens on any non-secure/arbitrary navigation.
+    if (url?.startsWith('https://') && url.includes('request_token=')) {
       const tokenMatch = /[?&]request_token=([^&]+)/.exec(url);
       if (tokenMatch?.[1]) {
         const requestToken = tokenMatch[1];
@@ -260,8 +269,8 @@ export default function BrokersConfigScreen() {
       setIsRupeezyTokenExpired(false);
       const res = await rupeezyAPI.getMe();
       const payload = res.data;
-      
-      if (payload?.success) {
+
+      if (payload?.success === true) {
         setRupeezyUser(payload.data);
       } else {
         setRupeezyError("Your Rupeezy session is disconnected. Please reconnect.");
@@ -290,7 +299,8 @@ export default function BrokersConfigScreen() {
   };
 
   const checkRupeezyAuthUrl = async (url: string) => {
-    if (url?.includes('auth=')) {
+    // Only trust an auth token that arrives over https.
+    if (url?.startsWith('https://') && url.includes('auth=')) {
       const tokenMatch = /[?&]auth=([^&]+)/.exec(url);
       if (tokenMatch?.[1]) {
         const auth = tokenMatch[1];

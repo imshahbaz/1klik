@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { moderateScale } from 'react-native-size-matters';
 
 interface ExecuteTabProps {
   readonly styles: any;
@@ -86,7 +87,7 @@ export default function ExecuteTab({
               onPress={() => setShowExecuteBrokerDropdown(!showExecuteBrokerDropdown)}
               activeOpacity={0.7}
             >
-              <Text style={[{ fontSize: 14, fontWeight: '600' }, { color: theme.textPrimary }] as any}>
+              <Text style={[{ fontSize: moderateScale(14), fontWeight: '600' }, { color: theme.textPrimary }] as any}>
                 {tradeBroker}
               </Text>
               <Ionicons name={showExecuteBrokerDropdown ? "chevron-up" : "chevron-down"} size={16} color={theme.textSecondary} />

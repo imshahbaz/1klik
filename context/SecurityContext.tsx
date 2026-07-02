@@ -20,10 +20,15 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isAppLocked, setIsAppLocked] = useState(true);
   const appState = useRef(AppState.currentState);
   const lastBackgroundTime = useRef<number | null>(null);
+  // Guards against firing a second biometric prompt while one is already open
+  // (the unlock effect can re-run before authenticateAsync resolves).
+  const unlockingRef = useRef(false);
   const { user, appLoading } = useAuth();
   const { theme } = useTheme();
 
   const unlockApp = async () => {
+    if (unlockingRef.current) return;
+    unlockingRef.current = true;
     try {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
@@ -45,6 +50,8 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     } catch (err) {
       console.error('Failed to authenticate:', err);
+    } finally {
+      unlockingRef.current = false;
     }
   };
 

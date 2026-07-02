@@ -39,6 +39,22 @@ export interface AppConfig {
   };
 }
 
+/** A single buy entry within a holding (one lot bought on one date). */
+export interface HoldingDetail {
+  id?: number;
+  quantity: number;
+  price: number;
+  buyDate?: string;
+}
+
+/** A portfolio holding for one symbol, with its individual buy entries. */
+export interface Holding {
+  symbol: string;
+  ltp?: number;
+  margin?: number;
+  holdingDetails?: HoldingDetail[];
+}
+
 /** Broker identifiers used across order/holdings endpoints. */
 export type BrokerType = 'ZERODHA' | 'RUPEEZY' | 'MSTOCK';
 

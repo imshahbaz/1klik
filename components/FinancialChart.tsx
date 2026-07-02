@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { moderateScale } from 'react-native-size-matters';
 import { WebView } from 'react-native-webview';
 
 interface ChartProps {
@@ -206,7 +207,7 @@ export default function FinancialChart({ rawData, theme, height = 400 }: ChartPr
           <Text style={[styles.label, { color: theme.textSecondary, marginLeft: 8 }]}>C</Text>
           <Text style={[styles.value, { color: selectedColor }]}>{selectedEntry?.close.toFixed(2) ?? '--'}</Text>
         </View>
-        <Text style={{ color: theme.textSecondary, fontSize: 10, fontWeight: '700' }}>
+        <Text style={{ color: theme.textSecondary, fontSize: moderateScale(10), fontWeight: '700' }}>
           {formatDisplayDate(selectedEntry?.time)}
         </Text>
       </View>
@@ -247,11 +248,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   label: {
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontWeight: '900',
   },
   value: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     fontWeight: '700',
   },
 });

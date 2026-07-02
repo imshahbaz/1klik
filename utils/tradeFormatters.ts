@@ -50,8 +50,8 @@ export const formatMtfOrders = (rawData: any) => {
   return ordersArray.map((order: any, idx: number) => ({
     id: order.id || `m-api-${idx}`,
     symbol: order.symbol,
-    qty: order.quantity || order.qty || 10,
-    price: order.price || 2845.20,
+    qty: order.quantity ?? order.qty ?? 0,
+    price: order.price ?? 0,
     time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     status: order.status || 'COMPLETED',
     reason: order.reason || undefined,
@@ -70,8 +70,8 @@ export const formatStrategyOrders = (rawData: any) => {
   return stratArray.map((order: any, idx: number) => ({
     id: order.id || order._id || `s-api-${idx}`,
     symbol: order.symbol || 'AUTO',
-    qty: order.quantity || order.qty || 1,
-    price: order.price || 0,
+    qty: order.quantity ?? order.qty ?? 0,
+    price: order.price ?? 0,
     time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     status: order.status || 'COMPLETED',
     reason: order.reason || undefined,

@@ -10,6 +10,17 @@ import { useMargins } from '../context/MarginContext';
 import { useTheme } from '../context/ThemeContext';
 import { useCalculatorStyles } from '../theme/calculatorStyles';
 import { useAdaptiveLayout } from '../theme/layout';
+import {
+  BROKERAGE_PER_LEG,
+  STT_DELIVERY_RATE,
+  STT_INTRADAY_SELL_RATE,
+  STAMP_DELIVERY_RATE,
+  STAMP_INTRADAY_RATE,
+  TRANSACTION_RATE,
+  SEBI_RATE,
+  GST_RATE,
+  mtfInterest,
+} from '../utils/charges';
 
 export default function CalculatorScreen() {
   const insets = useSafeAreaInsets();
@@ -175,16 +186,16 @@ export default function CalculatorScreen() {
     const grossProfit = (sp - bp) * shares;
     const turnover = (bp + sp) * shares;
 
-    const brokerage = 40;
-    const STT = days > 0 ? turnover * 0.001 : shares * sp * 0.00025;
-    const stampCharges = shares * bp * (days > 0 ? 0.00015 : 0.00003);
-    const transCharges = turnover * 0.0000345;
-    const sebiCharges = turnover * 0.000001;
-    const gst = 0.18 * (sebiCharges + brokerage + transCharges);
+    const brokerage = 2 * BROKERAGE_PER_LEG; // buy + sell legs
+    const STT = days > 0 ? turnover * STT_DELIVERY_RATE : shares * sp * STT_INTRADAY_SELL_RATE;
+    const stampCharges = shares * bp * (days > 0 ? STAMP_DELIVERY_RATE : STAMP_INTRADAY_RATE);
+    const transCharges = turnover * TRANSACTION_RATE;
+    const sebiCharges = turnover * SEBI_RATE;
+    const gst = GST_RATE * (sebiCharges + brokerage + transCharges);
     const totalCharges = brokerage + STT + transCharges + stampCharges + gst + sebiCharges;
 
-    const mtfInterest = (fundedAmt * 0.15 * days) / 365;
-    const netProfit = grossProfit - mtfInterest - totalCharges;
+    const interest = mtfInterest(fundedAmt, days);
+    const netProfit = grossProfit - interest - totalCharges;
 
     const f = (n: number) => {
       return n.toLocaleString('en-IN', {
@@ -197,7 +208,7 @@ export default function CalculatorScreen() {
       totalValue: f(totalValue),
       margin: f(marginUsed),
       funding: f(fundedAmt),
-      interest: f(mtfInterest),
+      interest: f(interest),
       gross: f(grossProfit),
       charges: f(totalCharges),
       net: f(netProfit),

@@ -171,11 +171,15 @@ export default function TradeScreen() {
         const response = await zerodhaAPI.placeMTFOrder(payload);
 
         const newOrder = {
-          id: (mtfOrders.length + 1).toString(),
+          // Creating an order does NOT require an id — the backend generates it.
+          // This is only a temporary, unique key for the optimistic list row;
+          // the real id arrives on the next history refresh. An id is sent to
+          // the backend solely when editing an existing order (editingMtfOrderId).
+          id: `m-${Date.now()}`,
           symbol: tradeSymbol.toUpperCase().trim(),
           type: 'BUY',
           qty: Number.parseInt(tradeQty),
-          price: response.data?.price || 2845.20,
+          price: response.data?.data?.price ?? response.data?.price ?? 0,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: 'COMPLETED',
           reason: undefined,
@@ -219,7 +223,7 @@ export default function TradeScreen() {
         }
       } else {
         const rejectedOrder = {
-          id: (mtfOrders.length + 1).toString(),
+          id: `m-${Date.now()}`,
           symbol: tradeSymbol.toUpperCase().trim(),
           type: 'BUY',
           qty: Number.parseInt(tradeQty),

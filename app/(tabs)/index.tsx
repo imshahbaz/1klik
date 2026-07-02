@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { moderateScale } from 'react-native-size-matters';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { angelOneApi } from '../../services/api';
@@ -166,16 +167,16 @@ export default function HomeScreen() {
         <View style={{ backgroundColor: theme.card, borderRadius: 24, padding: 20, marginTop: 20, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 4 }}>
           {/* Quick Actions Header */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: '800' }}>Quick Actions</Text>
+            <Text style={{ color: theme.textPrimary, fontSize: moderateScale(18), fontWeight: '800' }}>Quick Actions</Text>
           </View>
 
           {/* Quick Actions Grid */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/screener')} activeOpacity={0.7}>
-              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(59, 130, 246, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="filter" size={30} color={theme.primary || '#3b82f6'} />
+              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: 'rgba(59, 130, 246, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                <Ionicons name="filter" size={moderateScale(30)} color={theme.primary || '#3b82f6'} />
               </View>
-              <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: '600', textAlign: 'center' }}>Screener</Text>
+              <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Screener</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => {
@@ -185,17 +186,17 @@ export default function HomeScreen() {
                 router.push('/trade');
               }
             }} activeOpacity={0.7}>
-              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(16, 185, 129, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="pulse" size={30} color={theme.success || '#10b981'} />
+              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: 'rgba(16, 185, 129, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                <Ionicons name="pulse" size={moderateScale(30)} color={theme.success || '#10b981'} />
               </View>
-              <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: '600', textAlign: 'center' }}>Trade</Text>
+              <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Trade</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/calculator')} activeOpacity={0.7}>
-              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(245, 158, 11, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="calculator" size={30} color="#f59e0b" />
+              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: 'rgba(245, 158, 11, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                <Ionicons name="calculator" size={moderateScale(30)} color="#f59e0b" />
               </View>
-              <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: '600', textAlign: 'center' }}>Calculator</Text>
+              <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Calculator</Text>
             </TouchableOpacity>
           </View>
         </View>

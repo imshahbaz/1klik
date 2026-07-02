@@ -9,6 +9,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, DeviceEventEmitter, Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { moderateScale } from 'react-native-size-matters';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AlertProvider } from '../context/AlertContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
@@ -19,17 +20,23 @@ import { StrategyProvider } from '../context/StrategyContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { SecurityProvider } from '../context/SecurityContext';
 import { appUpdateInfo } from '../services/api';
-import { isFirebaseInitialized } from '../services/notificationService';
+import { displayNotification, ensureDefaultChannel, isFirebaseInitialized } from '../services/notificationService';
 import ErrorBoundary from '../components/ErrorBoundary';
 
-// Prevent native splash screen from hiding automatically
 SplashScreen.preventAutoHideAsync().catch(() => { });
 
-// Register background message handler
 if (isFirebaseInitialized()) {
   try {
-    setBackgroundMessageHandler(getMessaging(), async () => {
-      // No-op: background data messages are handled by the OS notification tray.
+    ensureDefaultChannel().catch(() => { });
+
+    setBackgroundMessageHandler(getMessaging(), async (remoteMessage) => {
+      if (remoteMessage.notification) return;
+
+      const title = String(remoteMessage.data?.title || 'Notification');
+      const body = String(remoteMessage.data?.body || '');
+      if (!body && !remoteMessage.data?.title) return;
+
+      await displayNotification(title, body, remoteMessage.data);
     });
   } catch (error) {
     console.warn('Firebase background messaging failed to initialize:', error);
@@ -77,7 +84,7 @@ function AppContent() {
       }).start(() => {
         setSplashVisible(false);
       });
-    } else if (isConnected === false && splashVisible === false) {
+    } else if (isConnected === false && !splashVisible) {
       // Re-show splash if internet disconnects? Optional, but let's just stick to the modal.
     }
   }, [appLoading, splashOpacity, themeLoaded, isConnected, splashVisible]);
@@ -285,13 +292,13 @@ const modalStyles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontSize: 22,
+    fontSize: moderateScale(22),
     fontWeight: '900',
     textAlign: 'center',
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     fontWeight: '500',
     textAlign: 'center',
     lineHeight: 21,
@@ -313,7 +320,7 @@ const modalStyles = StyleSheet.create({
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: moderateScale(15),
     fontWeight: '800',
     letterSpacing: 0.2,
   },
