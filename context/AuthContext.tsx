@@ -88,7 +88,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const refreshUserData = useCallback(async () => {
         try {
             const res = await authAPI.getMe();
-            setUser(res.data.data);
+            // A 401 on /auth/me is resolved by the interceptor as `{ data: null }`,
+            // so guard against null before reading `.data` (avoids a TypeError that
+            // would otherwise be silently swallowed by the catch below).
+            setUser(res.data?.data ?? null);
         } catch (err: any) {
             if (err.response?.status === 401 || err.response?.status === 403) {
                 setUser(null);
@@ -140,6 +143,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
 
         const handleExpiry = async () => {
+            try {
+                const token = await getFCMToken();
+                if (token) {
+                    await notificationAPI.removeToken(token);
+                }
+            } catch (fcmErr) {
+                console.warn("Failed to remove FCM token during expiry:", fcmErr);
+            }
+
             try {
                 await GoogleSignin.signOut();
             } catch (googleErr) {
@@ -214,10 +226,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = useCallback(async () => {
         setAuthLoading(true);
         try {
-            // 1. Call backend API to destroy session cookie on the server
+            // 1. Remove this device's FCM token so notifications stop targeting it.
+            //    Best-effort — must not block the rest of logout.
+            try {
+                const token = await getFCMToken();
+                if (token) {
+                    await notificationAPI.removeToken(token);
+                }
+            } catch (fcmErr) {
+                console.warn("Failed to remove FCM token on logout:", fcmErr);
+            }
+
+            // 2. Call backend API to destroy session cookie on the server
             await authAPI.logout();
 
-            // 2. Safely call native Google SDK sign-out if active
+            // 3. Safely call native Google SDK sign-out if active
             try {
                 await GoogleSignin.signOut();
             } catch (googleErr) {
