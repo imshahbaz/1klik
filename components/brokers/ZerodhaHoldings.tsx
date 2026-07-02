@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from 'react-native';
+import { moderateScale } from 'react-native-size-matters';
 import { CustomAlert } from '../../context/AlertContext';
 import { useMargins } from '../../context/MarginContext';
 import { holdingsAPI } from '../../services/api';
@@ -244,12 +245,15 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
   return (
     <View>
       {holdings.length === 0 ? renderEmptyState() : (
-        <View style={[styles.formCard, { marginTop: 16 }]}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        // No outer card here: each HoldingCard is already its own card, so
+        // wrapping them in a formCard double-pads and wastes horizontal width.
+        // The header sits as a plain row aligned to the screen padding.
+        <View style={{ marginTop: 16 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: moderateScale(4) }}>
             <Text style={styles.formTitle}>Portfolio Holdings</Text>
             <TouchableOpacity onPress={openAddModal} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Ionicons name="add-circle" size={20} color={theme.primary} />
-              <Text style={{ color: theme.primary, fontSize: 13, fontWeight: '700' }}>Add</Text>
+              <Text style={{ color: theme.primary, fontSize: moderateScale(13), fontWeight: '700' }}>Add</Text>
             </TouchableOpacity>
           </View>
 
