@@ -1849,6 +1849,11 @@
   resolved "https://registry.yarnpkg.com/@nolyfill/is-core-module/-/is-core-module-1.0.39.tgz#3dc35ba0f1e66b403c00b39344f870298ebb1c8e"
   integrity sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==
 
+"@notifee/react-native@^9.1.8":
+  version "9.1.8"
+  resolved "https://registry.yarnpkg.com/@notifee/react-native/-/react-native-9.1.8.tgz#3d55cb3fbcc21f9e35931e366afdf64b294da891"
+  integrity sha512-Az/dueoPerJsbbjRxu8a558wKY+gONUrfoy3Hs++5OqbeMsR0dYe6P+4oN6twrLFyzAhEA1tEoZRvQTFDRmvQg==
+
 "@protobufjs/aspromise@^1.1.1", "@protobufjs/aspromise@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@protobufjs/aspromise/-/aspromise-1.1.2.tgz#9b8b0cc663d669a7d8f6f5d0893a14d348f30fbf"
@@ -2383,11 +2388,6 @@
   version "0.81.5"
   resolved "https://registry.yarnpkg.com/@react-native/js-polyfills/-/js-polyfills-0.81.5.tgz#2ca68188c8fff9b951f507b1dec7efe928848274"
   integrity sha512-fB7M1CMOCIUudTRuj7kzxIBTVw2KXnsgbQ6+4cbqSxo8NmRRhA0Ul4ZUzZj3rFd3VznTL4Brmocv1oiN0bWZ8w==
-
-"@react-native/normalize-color@*":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@react-native/normalize-color/-/normalize-color-2.1.0.tgz#939b87a9849e81687d3640c5efa2a486ac266f91"
-  integrity sha512-Z1jQI2NpdFJCVgpY+8Dq/Bt3d+YUi1928Q+/CZm/oh66fzM0RUl54vvuXlPJKybH4pdCZey1eDTPaLHkMPNgWA==
 
 "@react-native/normalize-colors@0.81.5":
   version "0.81.5"
@@ -3916,15 +3916,6 @@ depd@2.0.0, depd@~2.0.0:
   resolved "https://registry.yarnpkg.com/depd/-/depd-2.0.0.tgz#b696163cc757560d09cf22cc8fad1571b79e76df"
   integrity sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==
 
-deprecated-react-native-prop-types@^2.3.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/deprecated-react-native-prop-types/-/deprecated-react-native-prop-types-2.3.0.tgz#c10c6ee75ff2b6de94bb127f142b814e6e08d9ab"
-  integrity sha512-pWD0voFtNYxrVqvBMYf5gq3NA2GCpfodS1yNynTPc93AYA/KEMGeWDqqeUB6R2Z9ZofVhks2aeJXiuQqKNpesA==
-  dependencies:
-    "@react-native/normalize-color" "*"
-    invariant "*"
-    prop-types "*"
-
 destroy@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/destroy/-/destroy-1.2.0.tgz#4803735509ad8be552934c67df614f94e66fa015"
@@ -4500,11 +4491,6 @@ expo-font@~14.0.12:
   dependencies:
     fontfaceobserver "^2.1.0"
 
-expo-haptics@~15.0.8:
-  version "15.0.8"
-  resolved "https://registry.yarnpkg.com/expo-haptics/-/expo-haptics-15.0.8.tgz#f93f895ac5d76fe0c5ac26b3644e1dbb097833f3"
-  integrity sha512-lftutojy8Qs8zaDzzjwM3gKHFZ8bOOEZDCkmh2Ddpe95Ra6kt2izeOfOfKuP/QEh0MZ1j9TfqippyHdRd1ZM9g==
-
 expo-image@~3.0.11:
   version "3.0.11"
   resolved "https://registry.yarnpkg.com/expo-image/-/expo-image-3.0.11.tgz#54195565dc710e632c10414c3609deebb7149ac5"
@@ -4601,13 +4587,6 @@ expo-status-bar@~3.0.9:
   dependencies:
     react-native-is-edge-to-edge "^1.2.1"
 
-expo-symbols@~1.0.8:
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/expo-symbols/-/expo-symbols-1.0.8.tgz#a46ae8fb46eb07ae9974c445595d2f342ed4dd30"
-  integrity sha512-7bNjK350PaQgxBf0owpmSYkdZIpdYYmaPttDBb2WIp6rIKtcEtdzdfmhsc2fTmjBURHYkg36+eCxBFXO25/1hw==
-  dependencies:
-    sf-symbols-typescript "^2.0.0"
-
 expo-system-ui@~6.0.9:
   version "6.0.9"
   resolved "https://registry.yarnpkg.com/expo-system-ui/-/expo-system-ui-6.0.9.tgz#09b4a4301ab25ec594ae39beb7d24197c231a30c"
@@ -4615,11 +4594,6 @@ expo-system-ui@~6.0.9:
   dependencies:
     "@react-native/normalize-colors" "0.81.5"
     debug "^4.3.2"
-
-expo-web-browser@~15.0.10:
-  version "15.0.11"
-  resolved "https://registry.yarnpkg.com/expo-web-browser/-/expo-web-browser-15.0.11.tgz#6a8134e2398031ef79c89f516b15a18103903ef5"
-  integrity sha512-r2LS4Ro6DgUPZkcaEfgt8mp9eJuoA93x11Jh7S6utFe0FEzvUNn2yFhxg8XVwESaaHGt2k5V8LuK36rsp0BeIw==
 
 expo@~54.0.35:
   version "54.0.35"
@@ -5289,7 +5263,7 @@ internal-slot@^1.1.0:
     hasown "^2.0.2"
     side-channel "^1.1.0"
 
-invariant@*, invariant@2.2.4, invariant@^2.2.4:
+invariant@2.2.4, invariant@^2.2.4:
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/invariant/-/invariant-2.2.4.tgz#610f3c92c9359ce1db616e538008d23ff35158e6"
   integrity sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==
@@ -7059,7 +7033,7 @@ prompts@^2.3.2, prompts@^2.4.2:
     kleur "^3.0.3"
     sisteransi "^1.0.5"
 
-prop-types@*, prop-types@^15.8.1:
+prop-types@^15.8.1:
   version "15.8.1"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
   integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
@@ -7193,14 +7167,6 @@ react-is@^19.1.0:
   version "19.2.7"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-19.2.7.tgz#57668ee86a78574a542b0a539455212b2c086df2"
   integrity sha512-kZFnouyVv7eP/Phmrlo9FK+zcAdriZJvzxXHF1Sl1P377WSGe2G/JxVolhTrB/jeV47lKImhNUsijjHAAbcl/A==
-
-react-native-charts-wrapper@^0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/react-native-charts-wrapper/-/react-native-charts-wrapper-0.7.0.tgz#e246f30ae95aee9b8634db5187a6e346445cfdd0"
-  integrity sha512-YTltvLPlYn2M6y5LRFWm/IsNqhgd2tWozyK5Wv33O8OiqXBf5OHX1aWIZxNOX90q5wH0XQe9hBMf9CZn6XuBIw==
-  dependencies:
-    deprecated-react-native-prop-types "^2.3.0"
-    prop-types "^15.8.1"
 
 react-native-gesture-handler@~2.28.0:
   version "2.28.0"
@@ -7710,7 +7676,7 @@ setprototypeof@~1.2.0:
   resolved "https://registry.yarnpkg.com/setprototypeof/-/setprototypeof-1.2.0.tgz#66c9a24a73f9fc28cbe66b09fed3d33dcaf1b424"
   integrity sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==
 
-sf-symbols-typescript@^2.0.0, sf-symbols-typescript@^2.1.0:
+sf-symbols-typescript@^2.1.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/sf-symbols-typescript/-/sf-symbols-typescript-2.2.0.tgz#926d6e0715e3d8784cadf7658431e36581254208"
   integrity sha512-TPbeg0b7ylrswdGCji8FRGFAKuqbpQlLbL8SOle3j1iHSs5Ob5mhvMAxWN2UItOjgALAB5Zp3fmMfj8mbWvXKw==

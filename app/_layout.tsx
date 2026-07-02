@@ -19,17 +19,23 @@ import { StrategyProvider } from '../context/StrategyContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { SecurityProvider } from '../context/SecurityContext';
 import { appUpdateInfo } from '../services/api';
-import { isFirebaseInitialized } from '../services/notificationService';
+import { displayNotification, ensureDefaultChannel, isFirebaseInitialized } from '../services/notificationService';
 import ErrorBoundary from '../components/ErrorBoundary';
 
-// Prevent native splash screen from hiding automatically
 SplashScreen.preventAutoHideAsync().catch(() => { });
 
-// Register background message handler
 if (isFirebaseInitialized()) {
   try {
-    setBackgroundMessageHandler(getMessaging(), async () => {
-      // No-op: background data messages are handled by the OS notification tray.
+    ensureDefaultChannel().catch(() => { });
+
+    setBackgroundMessageHandler(getMessaging(), async (remoteMessage) => {
+      if (remoteMessage.notification) return;
+
+      const title = String(remoteMessage.data?.title || 'Notification');
+      const body = String(remoteMessage.data?.body || '');
+      if (!body && !remoteMessage.data?.title) return;
+
+      await displayNotification(title, body, remoteMessage.data);
     });
   } catch (error) {
     console.warn('Firebase background messaging failed to initialize:', error);
@@ -77,7 +83,7 @@ function AppContent() {
       }).start(() => {
         setSplashVisible(false);
       });
-    } else if (isConnected === false && splashVisible === false) {
+    } else if (isConnected === false && !splashVisible) {
       // Re-show splash if internet disconnects? Optional, but let's just stick to the modal.
     }
   }, [appLoading, splashOpacity, themeLoaded, isConnected, splashVisible]);
