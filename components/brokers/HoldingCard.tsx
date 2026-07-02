@@ -2,9 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { ScaledSheet, moderateScale } from 'react-native-size-matters';
+import { buyCharges, sellCharges, mtfInterest, breakEvenSellAmount } from '../../utils/charges';
+import type { Holding } from '../../services/api/types';
 
 interface HoldingCardProps {
-  readonly holding: any;
+  readonly holding: Holding;
   readonly theme: any;
   readonly isExpanded: boolean;
   readonly onToggle: (symbol: string) => void;
@@ -264,36 +266,36 @@ function HoldingCardBase({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const metrics = useMemo(() => {
-    const totalQty = holding.holdingDetails?.reduce((acc: number, detail: any) => acc + detail.quantity, 0) || 0;
-    const totalCost = holding.holdingDetails?.reduce((acc: number, detail: any) => acc + (detail.quantity * detail.price), 0) || 0;
+    // Coerce every backend field to a number: a missing/non-numeric quantity or
+    // price would otherwise turn every derived value (avg, P&L, break-even) into
+    // NaN and render literal "NaN" in the UI.
+    const details = (holding.holdingDetails ?? []).map((d: any) => ({
+      ...d,
+      quantity: Number(d?.quantity) || 0,
+      price: Number(d?.price) || 0,
+    }));
+
+    const totalQty = details.reduce((acc: number, detail: any) => acc + detail.quantity, 0);
+    const totalCost = details.reduce((acc: number, detail: any) => acc + (detail.quantity * detail.price), 0);
     const avgPrice = totalQty > 0 ? totalCost / totalQty : 0;
 
-    const ltp = holding.ltp || 0;
+    const ltp = Number(holding.ltp) || 0;
     const pnl = (ltp - avgPrice) * totalQty;
     const pnlPercent = avgPrice > 0 ? (pnl / (avgPrice * totalQty)) * 100 : 0;
 
-    const leverage = holding.margin || 1;
+    const leverage = Number(holding.margin) || 1;
     let totalInterest = 0;
     let totalMarginUsed = 0;
     let totalBuyCharges = 0;
 
-    const detailsWithInterest = holding.holdingDetails?.map((detail: any) => {
+    const detailsWithInterest = details.map((detail: any) => {
       const totalValue = detail.quantity * detail.price;
       const marginUsed = totalValue / leverage;
       const fundedAmt = totalValue - marginUsed;
 
       totalMarginUsed += marginUsed;
 
-      // Calculate Buy Side Charges
-      const buyBrokerage = 20;
-      const pledgeCharge = 15;
-      const buySTT = totalValue * 0.001;
-      const buyStamp = totalValue * 0.00015;
-      const buyTrans = totalValue * 0.0000345;
-      const buySebi = totalValue * 0.000001;
-      const buyGst = 0.18 * (buyBrokerage + pledgeCharge + buyTrans + buySebi);
-      const detailBuyCharges = buyBrokerage + pledgeCharge + buySTT + buyStamp + buyTrans + buySebi + buyGst;
-
+      const detailBuyCharges = buyCharges(totalValue);
       totalBuyCharges += detailBuyCharges;
 
       let days = 0;
@@ -305,28 +307,17 @@ function HoldingCardBase({
         const diffTime = today.getTime() - buyDate.getTime();
         days = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
       }
-      const interest = (fundedAmt * 0.15 * days) / 365;
+      const interest = mtfInterest(fundedAmt, days);
       totalInterest += interest;
 
       return { ...detail, interest, days, detailBuyCharges };
-    }) || [];
+    });
 
-    // Calculate Estimated Sell Charges (based on current LTP)
-    const currentSellAmount = totalQty * ltp;
-    const sellBrokerage = 20;
-    const unpledgeCharge = 15;
-    const sellSTT = currentSellAmount * 0.001;
-    const sellTrans = currentSellAmount * 0.0000345;
-    const sellSebi = currentSellAmount * 0.000001;
-    const sellGst = 0.18 * (sellBrokerage + unpledgeCharge + sellTrans + sellSebi);
-    const estSellCharges = sellBrokerage + unpledgeCharge + sellSTT + sellTrans + sellSebi + sellGst;
-
-    // Calculate Break-Even Target Price
-    // Net = SellAmt - totalCost - totalInterest - totalBuyCharges - sellCharges
-    // sellCharges = 41.3 + SellAmt * 0.00104189
-    const totalFixedCosts = totalCost + totalInterest + totalBuyCharges + 41.3;
-    const breakEvenSellAmount = totalFixedCosts / 0.99895811;
-    const breakEvenPrice = totalQty > 0 ? breakEvenSellAmount / totalQty : 0;
+    // Estimated sell charges (based on current LTP) and the break-even sell price
+    // that covers cost + accrued interest + buy charges + sell charges.
+    const estSellCharges = sellCharges(totalQty * ltp);
+    const breakEven = breakEvenSellAmount(totalCost + totalInterest + totalBuyCharges);
+    const breakEvenPrice = totalQty > 0 ? breakEven / totalQty : 0;
 
     return {
       totalQty,

@@ -60,14 +60,16 @@ export function useOrderHistory(user: User | null) {
           onPress: async () => {
             try {
               const res = await zerodhaAPI.deleteOrder(orderId);
-              if (res.data?.success !== false) {
-                setMtfOrders(prev => prev.filter(o => o.id !== orderId));
-                CustomAlert.alert('Order Cancelled', 'Scheduled MTF order has been successfully cancelled.');
+              if (res.data?.success === false) {
+                throw new Error(res.data?.message || 'Backend reported failure.');
               }
+              // Only drop the row once the server confirms the cancellation.
+              setMtfOrders(prev => prev.filter(o => o.id !== orderId));
+              CustomAlert.alert('Order Cancelled', 'Scheduled MTF order has been successfully cancelled.');
             } catch (err: any) {
               console.error('Failed to delete MTF order:', err);
-              setMtfOrders(prev => prev.filter(o => o.id !== orderId));
-              CustomAlert.alert('Order Cancelled', 'Scheduled MTF order has been cancelled.');
+              // Keep the row — the order still exists server-side.
+              CustomAlert.alert('Cancellation Failed', 'Could not cancel the MTF order. Please try again.');
             }
           }
         }
@@ -87,14 +89,16 @@ export function useOrderHistory(user: User | null) {
           onPress: async () => {
             try {
               const res = await strategyOrderAPI.deleteOrder(orderId);
-              if (res.data?.success !== false) {
-                setStrategyOrders(prev => prev.filter(o => o.id !== orderId));
-                CustomAlert.alert('Order Deleted', 'Strategy order log has been successfully deleted.');
+              if (res.data?.success === false) {
+                throw new Error(res.data?.message || 'Backend reported failure.');
               }
+              // Only drop the row once the server confirms the deletion.
+              setStrategyOrders(prev => prev.filter(o => o.id !== orderId));
+              CustomAlert.alert('Order Deleted', 'Strategy order log has been successfully deleted.');
             } catch (err: any) {
               console.error('Failed to delete Strategy order:', err);
-              setStrategyOrders(prev => prev.filter(o => o.id !== orderId));
-              CustomAlert.alert('Order Deleted', 'Strategy order log has been deleted.');
+              // Keep the row — the log still exists server-side.
+              CustomAlert.alert('Deletion Failed', 'Could not delete the Strategy order log. Please try again.');
             }
           }
         }

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStrategies } from '../../context/StrategyContext';
@@ -38,7 +38,7 @@ export default function ScreenerScreen() {
   // kept as the user left it (Groww-style); a new scan only happens when the
   // user picks a strategy.
 
-  const handleStrategyPress = async (strategyName: string) => {
+  const handleStrategyPress = useCallback(async (strategyName: string) => {
     setSelectedStrategy(strategyName);
     setDropdownVisible(false); // close dropdown modal
     setScanLoading(true);
@@ -59,7 +59,7 @@ export default function ScreenerScreen() {
     } finally {
       setScanLoading(false);
     }
-  };
+  }, []);
 
 
 
@@ -86,7 +86,7 @@ export default function ScreenerScreen() {
     return { iconName, badgeText };
   };
 
-  const renderStockResultItem = ({ item }: { item: any }) => {
+  const renderStockResultItem = useCallback(({ item }: { item: any }) => {
     const symbol = item.symbol || item.nsecode || item.nseCode || item.stockName || item.name || 'N/A';
     const companyName = item.name || item.companyName || item.stockDescription || '';
 
@@ -137,7 +137,7 @@ export default function ScreenerScreen() {
         </View>
       </TouchableOpacity>
     );
-  };
+  }, [styles, router]);
 
   const renderStockSkeletons = () => (
     <View style={styles.skeletonRow}>

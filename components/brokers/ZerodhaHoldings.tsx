@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from 'react-native';
 import { moderateScale } from 'react-native-size-matters';
 import { CustomAlert } from '../../context/AlertContext';
@@ -92,20 +92,22 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
     setPickerDate(new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 1));
   };
 
-  const filteredMargins = margins.filter((item: any) =>
-    item?.symbol?.toLowerCase().includes(searchQuery.toLowerCase())
-  ).sort((a: any, b: any) => {
+  const filteredMargins = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    const sA = a.symbol.toLowerCase();
-    const sB = b.symbol.toLowerCase();
-    if (sA === q) return -1;
-    if (sB === q) return 1;
-    const startsA = sA.startsWith(q);
-    const startsB = sB.startsWith(q);
-    if (startsA && !startsB) return -1;
-    if (!startsA && startsB) return 1;
-    return sA.localeCompare(sB);
-  });
+    return margins.filter((item: any) =>
+      item?.symbol?.toLowerCase().includes(q)
+    ).sort((a: any, b: any) => {
+      const sA = a.symbol.toLowerCase();
+      const sB = b.symbol.toLowerCase();
+      if (sA === q) return -1;
+      if (sB === q) return 1;
+      const startsA = sA.startsWith(q);
+      const startsB = sB.startsWith(q);
+      if (startsA && !startsB) return -1;
+      if (!startsA && startsB) return 1;
+      return sA.localeCompare(sB);
+    });
+  }, [margins, searchQuery]);
 
   const handleAddHolding = async () => {
     try {
