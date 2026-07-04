@@ -2,6 +2,15 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+function formatSuccessRate(rate: unknown): string | null {
+  const num = typeof rate === 'string' ? parseFloat(rate) : rate;
+  if (typeof num !== 'number' || !isFinite(num)) return null;
+  if (num <= 0) return null;
+  const rounded = Math.round(num * 100) / 100;
+  const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+  return `${text}%`;
+}
+
 interface StrategyModalProps {
   readonly styles: any;
   readonly theme: any;
@@ -54,6 +63,7 @@ export default function StrategyModal({
             {strategies.map((item, index) => {
               const isSelected = selectedStrategy === item.name;
               const metadata = getStrategyMetadata(item.name);
+              const successRateText = formatSuccessRate(item.successRate);
               return (
                 <TouchableOpacity
                   key={item.name + index}
@@ -90,6 +100,13 @@ export default function StrategyModal({
                       </Text>
                     </View>
                   </View>
+
+                  {successRateText && (
+                    <View style={styles.successRateBadge}>
+                      <Text style={styles.successRateValue}>{successRateText}</Text>
+                      <Text style={styles.successRateLabel}>Success Rate</Text>
+                    </View>
+                  )}
 
                   {isSelected && (
                     <Ionicons name="checkmark" size={16} color={theme.primary} />
