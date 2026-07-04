@@ -22,6 +22,7 @@ interface HistoryTabProps {
   readonly setEditingStrategyOrderId: (id: string | null) => void;
   readonly handleDeleteStrategyOrder: (id: string) => void;
   readonly parseTargetDate: (dateStr: string) => Date;
+  readonly formatIsoDate: (date: Date) => string;
 }
 
 export default function HistoryTab({
@@ -41,7 +42,8 @@ export default function HistoryTab({
   setStrategyFormData,
   setEditingStrategyOrderId,
   handleDeleteStrategyOrder,
-  parseTargetDate
+  parseTargetDate,
+  formatIsoDate
 }: HistoryTabProps) {
   return (
     <View style={styles.tabCard}>
@@ -135,7 +137,9 @@ export default function HistoryTab({
                 setStrategyFormData({
                   strategyName: log.strategyName || '',
                   amount: log.amount ? log.amount.toString() : '',
-                  date: log.date || '',
+                  // Convert the display date back to ISO for the form/payload,
+                  // the same way the MTF edit flow uses parseTargetDate.
+                  date: log.date ? formatIsoDate(parseTargetDate(log.date)) : '',
                   broker: log.broker || 'ZERODHA',
                 });
                 setEditingStrategyOrderId(log.id);
