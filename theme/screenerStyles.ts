@@ -207,7 +207,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     gap: '10@ms',
   },
   selectedDropdownOptionRow: {
-    backgroundColor: theme.primaryBackground,
+    backgroundColor: theme.borderLight,
   },
   optionLeft: {
     flexDirection: 'row',
@@ -223,7 +223,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   selectedOptionNameText: {
     fontWeight: '700',
-    color: theme.primary,
+    color: theme.textPrimary,
   },
   optionIntervalText: {
     fontSize: '9@ms',
@@ -232,7 +232,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     marginTop: '1@vs',
   },
   selectedOptionIntervalText: {
-    color: theme.primary,
+    color: theme.textSecondary,
     opacity: 0.8,
   },
   successRateBadge: {
