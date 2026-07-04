@@ -239,12 +239,12 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     alignItems: 'flex-end',
   },
   successRateValue: {
-    fontSize: '13@ms',
+    fontSize: '11@ms',
     fontWeight: '800',
     color: theme.success ?? '#16a34a',
   },
   successRateLabel: {
-    fontSize: '8@ms',
+    fontSize: '7@ms',
     fontWeight: '600',
     color: theme.textSecondary,
     textTransform: 'uppercase',
