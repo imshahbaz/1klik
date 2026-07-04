@@ -77,6 +77,9 @@ export const formatStrategyOrders = (rawData: any) => {
     reason: order.reason || undefined,
     strategyName: order.strategyName || 'RSI15MIN',
     amount: order.amount || 0,
-    date: order.date || '',
+    // Display string ("6 Jul 2026"), same as the MTF section's targetDate. The
+    // edit flow converts it back to ISO via parseTargetDate before it re-enters
+    // the form, mirroring how MTF handles its date.
+    date: order.date ? formatDateString(new Date(order.date)) : '',
   }));
 };
