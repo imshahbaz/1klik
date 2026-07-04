@@ -75,14 +75,11 @@ export default function StrategyModal({
                   onPress={() => handleStrategyPress(item.name)}
                 >
                   <View style={styles.optionLeft}>
-                    <View style={[
-                      styles.iconCircleSmall,
-                      isSelected && styles.selectedIconCircleSmall
-                    ]}>
+                    <View style={styles.iconCircleSmall}>
                       <Ionicons
                         name={metadata.iconName}
                         size={14}
-                        color={isSelected ? '#ffffff' : theme.textSecondary}
+                        color={theme.textSecondary}
                       />
                     </View>
                     <View style={{ flex: 1 }}>
@@ -109,7 +106,7 @@ export default function StrategyModal({
                   )}
 
                   {isSelected && (
-                    <Ionicons name="checkmark" size={16} color={theme.primary} />
+                    <Ionicons name="checkmark" size={16} color={theme.success} />
                   )}
                 </TouchableOpacity>
               );

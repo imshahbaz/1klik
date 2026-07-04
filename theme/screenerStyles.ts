@@ -99,8 +99,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     elevation: 1,
   },
   selectedDropdownTrigger: {
-    borderColor: theme.primary,
-    backgroundColor: theme.primaryBackground,
+    borderColor: theme.border,
+    backgroundColor: theme.card,
   },
   dropdownLeft: {
     flexDirection: 'row',
@@ -127,7 +127,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   selectedDropdownTriggerText: {
     fontWeight: '800',
-    color: theme.primary,
+    color: theme.textPrimary,
     flexShrink: 1,
     minWidth: 0,
   },
@@ -149,8 +149,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     marginLeft: '6@ms',
   },
   selectedDropdownTriggerInterval: {
-    backgroundColor: theme.primary + '18',
-    color: theme.primary,
+    backgroundColor: theme.border,
+    color: theme.textSecondary,
   },
 
   // Dropdown Overlay Menu Card
@@ -207,7 +207,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     gap: '10@ms',
   },
   selectedDropdownOptionRow: {
-    backgroundColor: theme.primaryBackground,
+    backgroundColor: theme.borderLight,
   },
   optionLeft: {
     flexDirection: 'row',
@@ -223,7 +223,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   selectedOptionNameText: {
     fontWeight: '700',
-    color: theme.primary,
+    color: theme.textPrimary,
   },
   optionIntervalText: {
     fontSize: '9@ms',
@@ -232,19 +232,19 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     marginTop: '1@vs',
   },
   selectedOptionIntervalText: {
-    color: theme.primary,
+    color: theme.textSecondary,
     opacity: 0.8,
   },
   successRateBadge: {
     alignItems: 'flex-end',
   },
   successRateValue: {
-    fontSize: '13@ms',
+    fontSize: '11@ms',
     fontWeight: '800',
     color: theme.success ?? '#16a34a',
   },
   successRateLabel: {
-    fontSize: '8@ms',
+    fontSize: '7@ms',
     fontWeight: '600',
     color: theme.textSecondary,
     textTransform: 'uppercase',
