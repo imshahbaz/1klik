@@ -68,7 +68,6 @@ export default function TradeScreen() {
   const [pickerDate, setPickerDate] = useState(new Date());
   const [executingTrade, setExecutingTrade] = useState(false);
   const [tradeBroker, setTradeBroker] = useState<'ZERODHA' | 'RUPEEZY'>('ZERODHA');
-  const [showExecuteBrokerDropdown, setShowExecuteBrokerDropdown] = useState(false);
 
 
   // Order-history data layer (lists, fetch, deletes) lives in a dedicated hook.
@@ -76,7 +75,6 @@ export default function TradeScreen() {
     mtfOrders,
     setMtfOrders,
     strategyOrders,
-    setStrategyOrders,
     loadingHistory,
     fetchHistoryData,
     handleDeleteMtfOrder,
@@ -95,9 +93,7 @@ export default function TradeScreen() {
   });
   const [editingStrategyOrderId, setEditingStrategyOrderId] = useState<string | null>(null);
   const [submittingStrategy, setSubmittingStrategy] = useState(false);
-  const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
   const [datePickerTarget, setDatePickerTarget] = useState<'execute' | 'strategy'>('execute');
-  const [showStrategyBrokerDropdown, setShowStrategyBrokerDropdown] = useState(false);
 
   const handlePrevMonth = () => {
     const today = new Date();
@@ -152,15 +148,9 @@ export default function TradeScreen() {
 
       if (editingMtfOrderId) {
         await zerodhaAPI.updateOrder(editingMtfOrderId, payload);
-
-        setMtfOrders(prev => prev.map(o => o.id === editingMtfOrderId ? {
-          ...o,
-          symbol: tradeSymbol.toUpperCase().trim(),
-          qty: Number.parseInt(tradeQty),
-          targetDate: formatDateString(targetDate),
-          status: 'COMPLETED',
-          reason: undefined,
-        } : o));
+        // Pull the authoritative list from the server rather than patching the
+        // row locally — avoids showing a stale/duplicate row before the refresh.
+        await fetchHistoryData();
 
         CustomAlert.alert(
           'Order Updated Successfully',
@@ -168,25 +158,11 @@ export default function TradeScreen() {
         );
         setEditingMtfOrderId(null);
       } else {
-        const response = await zerodhaAPI.placeMTFOrder(payload);
+        await zerodhaAPI.placeMTFOrder(payload);
+        // Fetch the real order from history instead of inserting an optimistic
+        // dummy row — the dummy + the fetched real order briefly showed as two rows.
+        await fetchHistoryData();
 
-        const newOrder = {
-          // Creating an order does NOT require an id — the backend generates it.
-          // This is only a temporary, unique key for the optimistic list row;
-          // the real id arrives on the next history refresh. An id is sent to
-          // the backend solely when editing an existing order (editingMtfOrderId).
-          id: `m-${Date.now()}`,
-          symbol: tradeSymbol.toUpperCase().trim(),
-          type: 'BUY',
-          qty: Number.parseInt(tradeQty),
-          price: response.data?.data?.price ?? response.data?.price ?? 0,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          status: 'COMPLETED',
-          reason: undefined,
-          targetDate: formatDateString(targetDate),
-        };
-
-        setMtfOrders([newOrder, ...mtfOrders]);
         CustomAlert.alert(
           'Order Placed Successfully',
           `Successfully registered MTF order for ${tradeQty} shares of ${tradeSymbol.toUpperCase()} target date: ${formatDateString(targetDate)}.`
@@ -261,8 +237,6 @@ export default function TradeScreen() {
             theme={theme}
             tradeBroker={tradeBroker}
             setTradeBroker={setTradeBroker}
-            showExecuteBrokerDropdown={showExecuteBrokerDropdown}
-            setShowExecuteBrokerDropdown={setShowExecuteBrokerDropdown}
             tradeSymbol={tradeSymbol}
             setTradeSymbol={setTradeSymbol}
             setSearchQuery={setSearchQuery}
@@ -289,10 +263,6 @@ export default function TradeScreen() {
             theme={theme}
             strategyFormData={strategyFormData}
             setStrategyFormData={setStrategyFormData}
-            showStrategyBrokerDropdown={showStrategyBrokerDropdown}
-            setShowStrategyBrokerDropdown={setShowStrategyBrokerDropdown}
-            showStrategyDropdown={showStrategyDropdown}
-            setShowStrategyDropdown={setShowStrategyDropdown}
             setDatePickerTarget={setDatePickerTarget}
             setPickerDate={setPickerDate}
             setShowDatePicker={setShowDatePicker}
@@ -364,14 +334,8 @@ export default function TradeScreen() {
 
       if (editingStrategyOrderId) {
         await strategyOrderAPI.updateOrder(editingStrategyOrderId, payload);
-
-        setStrategyOrders(prev => prev.map(o => o.id === editingStrategyOrderId ? {
-          ...o,
-          strategyName: payload.strategyName,
-          amount: payload.amount,
-          date: payload.date,
-          status: 'COMPLETED',
-        } : o));
+        // Refresh from the server instead of patching the row locally.
+        await fetchHistoryData();
 
         CustomAlert.alert(
           'Order Updated Successfully',
@@ -379,17 +343,9 @@ export default function TradeScreen() {
         );
         setEditingStrategyOrderId(null);
       } else {
-        const res = await strategyOrderAPI.placeOrder(payload);
-
-        const newOrder = {
-          id: res.data?.data?.id || res.data?.id || `s-api-${Date.now()}`,
-          strategyName: payload.strategyName,
-          amount: payload.amount,
-          date: payload.date,
-          status: 'COMPLETED',
-          reason: undefined,
-        };
-        setStrategyOrders(prev => [newOrder, ...prev]);
+        await strategyOrderAPI.placeOrder(payload);
+        // Fetch the real order from history instead of inserting an optimistic dummy row.
+        await fetchHistoryData();
 
         CustomAlert.alert(
           'Order Placed Successfully',
