@@ -131,7 +131,7 @@ export default function HistoryTab({
               badgeTextStyle={{ color: theme.infoText }}
               title={log.strategyName}
               meta={`₹${log.amount}`}
-              footerText={`Date: ${log.date}`}
+              footerText={`Target: ${log.date}`}
               reason={log.reason}
               onEdit={() => {
                 setStrategyFormData({
