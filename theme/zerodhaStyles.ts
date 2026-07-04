@@ -1364,22 +1364,6 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     color: theme.textPrimary,
     flexShrink: 1,
   },
-  ohStatusWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '5@ms',
-    flexShrink: 0,
-  },
-  ohStatusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  ohStatusText: {
-    fontSize: '10@ms',
-    fontWeight: '800',
-    letterSpacing: 0.4,
-  },
   ohSubRow: {
     flexDirection: 'row',
     alignItems: 'center',

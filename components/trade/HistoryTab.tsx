@@ -78,7 +78,6 @@ export default function HistoryTab({
               badgeTextStyle={styles.historyBuyText}
               title={log.symbol}
               meta={`${log.qty} Qty`}
-              status={log.status}
               footerText={log.targetDate ? `Target: ${log.targetDate}` : `₹${(log.price * log.qty).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
               reason={log.reason}
               onEdit={() => {
@@ -130,7 +129,6 @@ export default function HistoryTab({
               badgeTextStyle={{ color: theme.infoText }}
               title={log.strategyName}
               meta={`₹${log.amount}`}
-              status={log.status}
               footerText={`Date: ${log.date}`}
               reason={log.reason}
               onEdit={() => {

@@ -16,6 +16,7 @@ interface ExecuteTabProps {
   readonly tradeQty: string;
   readonly setTradeQty: (qty: string) => void;
   readonly targetDate: Date;
+  readonly setDatePickerTarget: (target: 'execute' | 'strategy') => void;
   readonly setPickerDate: (date: Date) => void;
   readonly setShowDatePicker: (show: boolean) => void;
   readonly editingMtfOrderId: string | null;
@@ -41,6 +42,7 @@ export default function ExecuteTab({
   tradeQty,
   setTradeQty,
   targetDate,
+  setDatePickerTarget,
   setPickerDate,
   setShowDatePicker,
   editingMtfOrderId,
@@ -154,6 +156,7 @@ export default function ExecuteTab({
             <TouchableOpacity
               style={styles.orderInput}
               onPress={() => {
+                setDatePickerTarget('execute');
                 setPickerDate(new Date(targetDate));
                 setShowDatePicker(true);
               }}

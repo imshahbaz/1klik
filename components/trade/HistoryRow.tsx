@@ -13,8 +13,6 @@ interface HistoryRowProps {
   readonly title: string;
   /** Secondary metric shown at the right — share count or amount. */
   readonly meta: string;
-  /** Order status (COMPLETED / CONFLICT / REJECTED / …). */
-  readonly status?: string;
   /** Grey meta line under the title (target date / order date). */
   readonly footerText: string;
   readonly reason?: string;
@@ -22,25 +20,11 @@ interface HistoryRowProps {
   readonly onDelete: () => void;
 }
 
-/** Maps an order status to a Kite-style label + colour. */
-const resolveStatus = (theme: any, status?: string) => {
-  switch (status) {
-    case 'COMPLETED':
-      return { label: 'COMPLETE', color: theme.success };
-    case 'CONFLICT':
-      return { label: 'CONFLICT', color: theme.warningText };
-    case 'REJECTED':
-      return { label: 'REJECTED', color: theme.danger };
-    default:
-      return { label: status || 'PENDING', color: theme.textSecondary };
-  }
-};
-
 /**
  * One order-history row, styled after the Zerodha Kite orders list: a coloured
- * side tag + bold symbol with a status dot/label on the right, a grey meta line
- * with the quantity/amount aligned right, and subtle Edit / Cancel actions.
- * Shared between the MTF and Strategy sections of HistoryTab.
+ * side tag + bold symbol, a grey meta line with the quantity/amount aligned
+ * right, and subtle Edit / Cancel actions. Shared between the MTF and Strategy
+ * sections of HistoryTab.
  */
 export default function HistoryRow({
   styles,
@@ -50,14 +34,11 @@ export default function HistoryRow({
   badgeTextStyle,
   title,
   meta,
-  status,
   footerText,
   reason,
   onEdit,
   onDelete,
 }: HistoryRowProps) {
-  const st = resolveStatus(theme, status);
-
   return (
     <View style={styles.ohRow}>
       <View style={styles.ohTopRow}>
@@ -66,11 +47,6 @@ export default function HistoryRow({
             <Text style={[styles.ohSideTagText, badgeTextStyle]}>{badgeLabel}</Text>
           </View>
           <Text style={styles.ohSymbol} numberOfLines={1}>{title}</Text>
-        </View>
-
-        <View style={styles.ohStatusWrap}>
-          <View style={[styles.ohStatusDot, { backgroundColor: st.color }]} />
-          <Text style={[styles.ohStatusText, { color: st.color }]}>{st.label}</Text>
         </View>
       </View>
 
