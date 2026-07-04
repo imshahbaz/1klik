@@ -93,9 +93,7 @@ export default function TradeScreen() {
   });
   const [editingStrategyOrderId, setEditingStrategyOrderId] = useState<string | null>(null);
   const [submittingStrategy, setSubmittingStrategy] = useState(false);
-  const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
   const [datePickerTarget, setDatePickerTarget] = useState<'execute' | 'strategy'>('execute');
-  const [showStrategyBrokerDropdown, setShowStrategyBrokerDropdown] = useState(false);
 
   const handlePrevMonth = () => {
     const today = new Date();
@@ -265,10 +263,6 @@ export default function TradeScreen() {
             theme={theme}
             strategyFormData={strategyFormData}
             setStrategyFormData={setStrategyFormData}
-            showStrategyBrokerDropdown={showStrategyBrokerDropdown}
-            setShowStrategyBrokerDropdown={setShowStrategyBrokerDropdown}
-            showStrategyDropdown={showStrategyDropdown}
-            setShowStrategyDropdown={setShowStrategyDropdown}
             setDatePickerTarget={setDatePickerTarget}
             setPickerDate={setPickerDate}
             setShowDatePicker={setShowDatePicker}

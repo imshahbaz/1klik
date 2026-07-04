@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import SwipeButton from '../common/SwipeButton';
 
 interface ExecuteTabProps {
   readonly styles: any;
@@ -60,24 +61,6 @@ export default function ExecuteTab({
 
   return (
     <View style={styles.orderPadCard}>
-      {/* Order pad header — side tag + instrument */}
-      <View style={styles.orderPadHeader}>
-        <View style={styles.orderPadHeaderLeft}>
-          <View style={styles.orderPadSideTag}>
-            <Text style={styles.orderPadSideTagText}>BUY</Text>
-          </View>
-          <Text
-            style={tradeSymbol ? styles.orderPadHeaderSymbol : styles.orderPadHeaderSymbolMuted}
-            numberOfLines={1}
-          >
-            {tradeSymbol ? tradeSymbol.toUpperCase() : 'Select a stock'}
-          </Text>
-        </View>
-        <Text style={styles.orderPadExchange} numberOfLines={1}>
-          MTF · {tradeBroker}
-        </Text>
-      </View>
-
       {/* Order pad body */}
       <View style={styles.orderPadBody}>
         {/* Broker — segmented toggle */}
@@ -184,61 +167,23 @@ export default function ExecuteTab({
         </View>
       </View>
 
-      {/* Footer action bar */}
-      <View style={styles.orderPadFooter}>
+      {/* Swipe-to-confirm action bar */}
+      <View style={styles.orderPadActionBar}>
+        <SwipeButton
+          styles={styles}
+          theme={theme}
+          label={editingMtfOrderId ? 'Swipe to update order' : 'Swipe to place order'}
+          loadingLabel={editingMtfOrderId ? 'Updating order…' : 'Placing order…'}
+          icon={editingMtfOrderId ? 'checkmark-done' : 'flash'}
+          loading={executingTrade}
+          onSwipeSuccess={handleExecuteOrder}
+        />
+
         {editingMtfOrderId ? (
-          <>
-            <TouchableOpacity
-              style={[styles.orderCancelBtn, { flex: 1 }]}
-              onPress={resetForm}
-              disabled={executingTrade}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.orderCancelBtnText}>CANCEL</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.orderSubmitBtn, { flex: 1, minWidth: 0 }, executingTrade && styles.disabledButton]}
-              onPress={handleExecuteOrder}
-              disabled={executingTrade}
-              activeOpacity={0.85}
-            >
-              {executingTrade ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <Ionicons name="checkmark-circle" size={16} color="#ffffff" />
-                  <Text style={styles.orderSubmitBtnText}>UPDATE</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <View style={styles.orderPadFooterHint}>
-              <Text style={styles.orderPadFooterHintLabel}>ORDER TYPE</Text>
-              <Text style={styles.orderPadFooterHintValue} numberOfLines={1}>
-                MTF · Delivery
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.orderSubmitBtn, executingTrade && styles.disabledButton]}
-              onPress={handleExecuteOrder}
-              disabled={executingTrade}
-              activeOpacity={0.85}
-            >
-              {executingTrade ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <Ionicons name="flash" size={16} color="#ffffff" />
-                  <Text style={styles.orderSubmitBtnText}>PLACE ORDER</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </>
-        )}
+          <TouchableOpacity style={styles.orderCancelLink} onPress={resetForm} disabled={executingTrade} activeOpacity={0.7}>
+            <Text style={styles.orderCancelLinkText}>Cancel edit</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </View>
   );
