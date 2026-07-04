@@ -221,8 +221,8 @@ export default function ScreenerScreen() {
               <View style={styles.dropdownLeft}>
                 {selectedStrategy && activeMetadata ? (
                   <>
-                    <View style={[styles.iconCircleSmall, styles.selectedIconCircleSmall]}>
-                      <Ionicons name={activeMetadata.iconName} size={14} color="#ffffff" />
+                    <View style={styles.iconCircleSmall}>
+                      <Ionicons name={activeMetadata.iconName} size={14} color={theme.textSecondary} />
                     </View>
                     <Text style={styles.selectedDropdownTriggerText} numberOfLines={1}>
                       {selectedStrategy}
@@ -245,7 +245,7 @@ export default function ScreenerScreen() {
               <Ionicons
                 name="chevron-down"
                 size={18}
-                color={selectedStrategy ? theme.primary : theme.iconMuted}
+                color={theme.iconMuted}
               />
             </TouchableOpacity>
             );

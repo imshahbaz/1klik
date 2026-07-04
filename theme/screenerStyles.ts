@@ -127,7 +127,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   },
   selectedDropdownTriggerText: {
     fontWeight: '800',
-    color: theme.primary,
+    color: theme.textPrimary,
     flexShrink: 1,
     minWidth: 0,
   },
@@ -149,8 +149,8 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     marginLeft: '6@ms',
   },
   selectedDropdownTriggerInterval: {
-    backgroundColor: theme.primary + '18',
-    color: theme.primary,
+    backgroundColor: theme.border,
+    color: theme.textSecondary,
   },
 
   // Dropdown Overlay Menu Card
