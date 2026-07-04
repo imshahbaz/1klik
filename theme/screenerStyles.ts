@@ -235,6 +235,22 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     color: theme.primary,
     opacity: 0.8,
   },
+  successRateBadge: {
+    alignItems: 'flex-end',
+  },
+  successRateValue: {
+    fontSize: '13@ms',
+    fontWeight: '800',
+    color: theme.success ?? '#16a34a',
+  },
+  successRateLabel: {
+    fontSize: '8@ms',
+    fontWeight: '600',
+    color: theme.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginTop: '1@vs',
+  },
 
   // Results UI
   resultsSection: {

@@ -6,6 +6,7 @@ export interface Strategy {
   name: string;
   scanClause: string;
   active: boolean;
+  successRate?: number;
 }
 
 interface StrategyContextType {
