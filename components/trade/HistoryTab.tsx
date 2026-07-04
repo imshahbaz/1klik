@@ -77,10 +77,7 @@ export default function HistoryTab({
               badgeContainerStyle={styles.historyBuyBadge}
               badgeTextStyle={styles.historyBuyText}
               title={log.symbol}
-              meta={`${log.qty} Shares`}
-              status={log.status}
-              statusContainerStyle={log.status === 'CONFLICT' ? styles.statusConflictBadge : styles.statusErrorBadge}
-              statusTextStyle={log.status === 'CONFLICT' ? styles.statusConflictText : styles.statusErrorText}
+              meta={`${log.qty} Qty`}
               footerText={log.targetDate ? `Target: ${log.targetDate}` : `₹${(log.price * log.qty).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
               reason={log.reason}
               onEdit={() => {
@@ -127,16 +124,12 @@ export default function HistoryTab({
               key={log.id}
               styles={styles}
               theme={theme}
-              badgeLabel="AUTO-TRADE"
+              badgeLabel="AUTO"
               badgeContainerStyle={{ backgroundColor: theme.infoBackground }}
               badgeTextStyle={{ color: theme.infoText }}
               title={log.strategyName}
               meta={`₹${log.amount}`}
-              status={log.status}
-              statusContainerStyle={styles.statusErrorBadge}
-              statusTextStyle={styles.statusErrorText}
               footerText={`Date: ${log.date}`}
-              footerTextStyle={{ color: theme.textSecondary }}
               reason={log.reason}
               onEdit={() => {
                 setStrategyFormData({

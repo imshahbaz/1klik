@@ -107,7 +107,26 @@ export default function TradeScreen() {
     setPickerDate(new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 1));
   };
 
+  const resetExecuteForm = () => {
+    setTradeSymbol('');
+    setSearchQuery('');
+    setTradeQty('10');
+    setTargetDate(new Date());
+    setTradeBroker('ZERODHA');
+    setEditingMtfOrderId(null);
+  };
+
+  const resetStrategyForm = () => {
+    setStrategyFormData({ strategyName: '', amount: '', date: '', broker: 'ZERODHA' });
+    setEditingStrategyOrderId(null);
+  };
+
+  // Reset whichever order form the user is leaving, so a half-filled Execute or
+  // Strategy form isn't preserved after switching away. Edit-from-history uses
+  // setActiveTab directly (not this handler), so loading an order to edit is safe.
   const handleTabChange = (tab: 'execute' | 'strategy' | 'history') => {
+    if (activeTab === 'execute') resetExecuteForm();
+    else if (activeTab === 'strategy') resetStrategyForm();
     setActiveTab(tab);
   };
 
@@ -245,6 +264,7 @@ export default function TradeScreen() {
             tradeQty={tradeQty}
             setTradeQty={setTradeQty}
             targetDate={targetDate}
+            setDatePickerTarget={setDatePickerTarget}
             setPickerDate={setPickerDate}
             setShowDatePicker={setShowDatePicker}
             editingMtfOrderId={editingMtfOrderId}

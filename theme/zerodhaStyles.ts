@@ -1174,98 +1174,11 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   historyList: {
     marginTop: '4@vs',
   },
-  historyItem: {
-    paddingVertical: '9@vs',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.borderLight,
-  },
-  historyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '8@ms',
-  },
-  historyLeftInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '8@ms',
-    flex: 1,
-    minWidth: 0,
-  },
-  historyTypeBadge: {
-    paddingHorizontal: '6@ms',
-    paddingVertical: '2@ms',
-    borderRadius: 6,
-  },
   historyBuyBadge: {
     backgroundColor: theme.successBackground,
   },
-  historySellBadge: {
-    backgroundColor: theme.dangerBackground,
-  },
-  historyTypeText: {
-    fontSize: '9@ms',
-    fontWeight: '800',
-  },
   historyBuyText: {
     color: theme.success,
-  },
-  historySellText: {
-    color: theme.danger,
-  },
-  historySymbolText: {
-    fontSize: '12@ms',
-    fontWeight: '700',
-    color: theme.textPrimary,
-  },
-  historyQtyText: {
-    fontSize: '11@ms',
-    fontWeight: '600',
-    color: theme.textSecondary,
-  },
-  statusBadge: {
-    paddingHorizontal: '8@ms',
-    paddingVertical: '3@ms',
-    borderRadius: 20,
-  },
-  statusSuccessBadge: {
-    backgroundColor: theme.successBackground,
-  },
-  statusConflictBadge: {
-    backgroundColor: theme.warningBackground,
-  },
-  statusErrorBadge: {
-    backgroundColor: theme.dangerBackground,
-  },
-  statusBadgeText: {
-    fontSize: '9@ms',
-    fontWeight: '700',
-    letterSpacing: 0.2,
-  },
-  statusSuccessText: {
-    color: theme.success,
-  },
-  statusConflictText: {
-    color: theme.warningText,
-  },
-  statusErrorText: {
-    color: theme.danger,
-  },
-  historyTimestamp: {
-    fontSize: '10@ms',
-    color: theme.textSecondary,
-    fontWeight: '500',
-  },
-  historyPriceText: {
-    fontSize: '12@ms',
-    fontWeight: '700',
-    color: theme.textPrimary,
-  },
-  historyRejectReason: {
-    fontSize: '9@ms',
-    color: theme.danger,
-    fontWeight: '600',
-    marginTop: '4@vs',
   },
 
   // ── Order Pad (Zerodha Kite style) ─────────────────────────────
@@ -1413,6 +1326,83 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '12@ms',
     fontWeight: '700',
     letterSpacing: 0.3,
+  },
+
+  // ── Order History row (Zerodha Kite style) ─────────────────────
+  ohRow: {
+    paddingVertical: '12@vs',
+    borderBottomWidth: 1,
+    borderBottomColor: theme.borderLight,
+    gap: '7@vs',
+  },
+  ohTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8@ms',
+  },
+  ohLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: '8@ms',
+    flex: 1,
+    minWidth: 0,
+  },
+  ohSideTag: {
+    paddingHorizontal: '7@ms',
+    paddingVertical: '3@ms',
+    borderRadius: 5,
+  },
+  ohSideTagText: {
+    fontSize: '9@ms',
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  ohSymbol: {
+    fontSize: '14@ms',
+    fontWeight: '800',
+    color: theme.textPrimary,
+    flexShrink: 1,
+  },
+  ohSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '10@ms',
+  },
+  ohMeta: {
+    fontSize: '11@ms',
+    fontWeight: '500',
+    color: theme.textSecondary,
+    flexShrink: 1,
+  },
+  ohQty: {
+    fontSize: '12@ms',
+    fontWeight: '700',
+    color: theme.textPrimary,
+    flexShrink: 0,
+  },
+  ohReason: {
+    fontSize: '10@ms',
+    fontWeight: '600',
+    color: theme.danger,
+  },
+  ohActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: '18@ms',
+    marginTop: '1@vs',
+  },
+  ohActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: '5@ms',
+  },
+  ohActionText: {
+    fontSize: '11@ms',
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
 });
 
