@@ -99,7 +99,7 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     elevation: 1,
   },
   selectedDropdownTrigger: {
-    borderColor: theme.primary,
+    borderColor: theme.border,
     backgroundColor: theme.primaryBackground,
   },
   dropdownLeft: {
