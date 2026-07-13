@@ -88,9 +88,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const refreshUserData = useCallback(async () => {
         try {
             const res = await authAPI.getMe();
-            // A 401 on /auth/me is resolved by the interceptor as `{ data: null }`,
-            // so guard against null before reading `.data` (avoids a TypeError that
-            // would otherwise be silently swallowed by the catch below).
             setUser(res.data?.data ?? null);
         } catch (err: any) {
             if (err.response?.status === 401 || err.response?.status === 403) {

@@ -18,13 +18,19 @@ export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout(insets);
-  const { login } = useAuth();
+  const { refreshUserData, user } = useAuth();
 
   // Force dark mode colors to match the pitch black splash screen background
   const theme = darkColors;
   const styles = useLoginStyles(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      router.replace('/');
+    }
+  }, [user]);
 
   useEffect(() => {
     // Retrieve the Google Client ID configured in your .env file
@@ -53,17 +59,11 @@ export default function LoginScreen() {
       // 2. Validate the native token with your Spring Boot backend validation endpoint
       await googleAPI.googleTokenValidation(idToken);
 
-      // 3. Fetch the full user details using the secure session cookie
-      const meResponse = await authAPI.getMe();
-      const meData = meResponse.data?.data || meResponse.data;
+      // 3. Fetch the full user details using the secure session cookie (this handles cookie sync lag)
+      await getMeWithRetry(2, 100);
 
-      if (!meData) {
-        throw new Error("Failed to load user profile from validation context.");
-      }
-
-      // 5. Update global AuthContext state & redirect home
-      login(meData);
-      router.replace('/');
+      // 5. Update global AuthContext state & wait for useEffect to redirect
+      await refreshUserData();
 
     } catch (err: any) {
       console.error('Native Google Sign-In Error Details:', err);
@@ -79,6 +79,29 @@ export default function LoginScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const getMeWithRetry = async (retries = 2, delayMs = 100) => {
+    let finalErr = null;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const response = await authAPI.getMe();
+        return response;
+      } catch (error) {
+        const err = error as any;
+        const is401 = err.response?.status === 401;
+
+        if (is401 && attempt < retries) {
+          await delay(delayMs);
+          continue;
+        }
+
+        finalErr = err;
+      }
+    }
+    throw finalErr;
   };
 
   return (
