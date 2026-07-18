@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, TextInput, ActivityIndicator, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface CalculatorStepOneProps {
   readonly styles: any;
@@ -70,32 +70,40 @@ const SymbolSearch = ({
       {showDropdown && searchQuery && filteredMargins.length > 0 && !loadingMargins ? (
         <View style={styles.verticalDropdownContainer}>
           <ScrollView style={{ maxHeight: 200 }} keyboardShouldPersistTaps="handled">
-            {filteredMargins.slice(0, 10).map((marginItem: any, idx: number) => (
-              <TouchableOpacity
-                key={marginItem.symbol || idx}
-                style={styles.suggestionRow}
-                onPress={() => {
-                  setSelectedSymbol(marginItem.symbol);
-                  setSelectedLeverage(String(marginItem.requiredMargin));
-                  setSearchQuery('');
-                  setShowDropdown(false);
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, marginRight: 8 }}>
-                  <Ionicons name="trending-up" size={14} color={theme.primary} />
-                  <Text style={styles.suggestionRowSymbol} numberOfLines={1} adjustsFontSizeToFit>{marginItem.symbol}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  {marginItem.requiredMargin ? (
+            {filteredMargins.slice(0, 10).map((marginItem: any, idx: number) => {
+              const rawMargin = marginItem.requiredMargin || marginItem.leverage || '';
+              const parsedMargin = parseFloat(rawMargin.toString().trim());
+              let uiMarginStr = '1x';
+
+              if (!isNaN(parsedMargin) && parsedMargin > 0) {
+                uiMarginStr = `${parsedMargin.toFixed(2)}x`;
+              }
+
+              return (
+                <TouchableOpacity
+                  key={marginItem.symbol || idx}
+                  style={styles.suggestionRow}
+                  onPress={() => {
+                    setSelectedSymbol(marginItem.symbol);
+                    setSelectedLeverage(String(rawMargin || 1));
+                    setSearchQuery('');
+                    setShowDropdown(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, marginRight: 8 }}>
+                    <Ionicons name="trending-up" size={14} color={theme.primary} />
+                    <Text style={styles.suggestionRowSymbol} numberOfLines={1} adjustsFontSizeToFit>{marginItem.symbol}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={styles.suggestionRowBadge}>
-                      {marginItem.requiredMargin}x
+                      {uiMarginStr}
                     </Text>
-                  ) : null}
-                  <Ionicons name="chevron-forward" size={14} color={theme.iconMuted} />
-                </View>
-              </TouchableOpacity>
-            ))}
+                    <Ionicons name="chevron-forward" size={14} color={theme.iconMuted} />
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
       ) : null}
@@ -106,7 +114,12 @@ const SymbolSearch = ({
         <Ionicons name="shield-checkmark-outline" size={18} color={theme.success} />
         <Text style={styles.leverageIndicatorText}>
           Leverage for <Text style={{ fontWeight: '700' }}>{selectedSymbol}</Text> is{' '}
-          <Text style={{ fontWeight: '700', color: theme.success }}>{selectedLeverage}x</Text>
+          <Text style={{ fontWeight: '700', color: theme.success }}>
+            {(() => {
+              const parsedMargin = parseFloat(selectedLeverage?.toString().trim());
+              return !isNaN(parsedMargin) && parsedMargin > 0 ? `${parsedMargin.toFixed(2)}x` : '1x';
+            })()}
+          </Text>
         </Text>
       </View>
     ) : null}
