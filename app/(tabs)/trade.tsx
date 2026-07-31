@@ -80,7 +80,7 @@ export default function TradeScreen() {
 
   // Strategy Order Form State
   const [strategyFormData, setStrategyFormData] = useState({
-    strategyName: '',
+    strategyName: 'RSI15MIN',
     amount: '',
     date: '',
     broker: 'ZERODHA' as 'ZERODHA' | 'RUPEEZY',
@@ -111,7 +111,7 @@ export default function TradeScreen() {
   };
 
   const resetStrategyForm = () => {
-    setStrategyFormData({ strategyName: '', amount: '', date: '', broker: 'ZERODHA' });
+    setStrategyFormData({ strategyName: 'RSI15MIN', amount: '', date: '', broker: 'ZERODHA' });
     setEditingStrategyOrderId(null);
   };
 
@@ -370,7 +370,7 @@ export default function TradeScreen() {
       }
 
       setStrategyFormData({
-        strategyName: '',
+        strategyName: 'RSI15MIN',
         amount: '',
         date: '',
         broker: 'ZERODHA',
