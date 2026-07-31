@@ -148,49 +148,6 @@ const styles = ScaledSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    paddingHorizontal: '16@ms',
-    paddingVertical: '12@ms',
-    borderBottomWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    zIndex: 10,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '16@ms',
-  },
-  backBtn: {
-    height: '40@ms',
-    width: '40@ms',
-    borderRadius: '12@ms',
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '8@ms',
-  },
-  headerTitle: {
-    fontSize: '20@ms',
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
-  liveBadge: {
-    paddingHorizontal: '6@ms',
-    paddingVertical: '2@ms',
-    borderRadius: '4@ms',
-  },
-  liveBadgeText: {
-    color: '#3b82f6',
-    fontSize: '10@ms',
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
   content: {
     flex: 1,
   },

@@ -22,7 +22,7 @@ interface StrategyTabProps {
   readonly formatDateString: (date: Date) => string;
 }
 
-const BROKERS: Array<'ZERODHA' | 'RUPEEZY'> = ['ZERODHA', 'RUPEEZY'];
+const BROKERS: ('ZERODHA' | 'RUPEEZY')[] = ['ZERODHA', 'RUPEEZY'];
 const STRATEGIES = ['RSI15MIN', 'MACD15MIN'];
 
 /** Renders a segmented single-choice control. */

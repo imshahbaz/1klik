@@ -23,6 +23,7 @@ import {
   formatIsoDate,
   parseTargetDate,
 } from '../../utils/tradeFormatters';
+import { rankMarginSymbols } from '../../utils/margins';
 
 export default function TradeScreen() {
   const insets = useSafeAreaInsets();
@@ -38,24 +39,10 @@ export default function TradeScreen() {
 
   // Top 10 margin matches for the current search, ranked by relevance.
   // Memoized so the filter/sort only runs when the data or query changes.
-  const filteredMargins = useMemo(() => {
-    if (!Array.isArray(marginsData)) return [];
-    const q = searchQuery.toLowerCase();
-    return marginsData
-      .filter((m: any) => m?.symbol?.toLowerCase().includes(q))
-      .sort((a: any, b: any) => {
-        const sA = a.symbol.toLowerCase();
-        const sB = b.symbol.toLowerCase();
-        if (sA === q) return -1;
-        if (sB === q) return 1;
-        const startsA = sA.startsWith(q);
-        const startsB = sB.startsWith(q);
-        if (startsA && !startsB) return -1;
-        if (!startsA && startsB) return 1;
-        return sA.localeCompare(sB);
-      })
-      .slice(0, 10);
-  }, [marginsData, searchQuery]);
+  const filteredMargins = useMemo(
+    () => rankMarginSymbols(marginsData, searchQuery, 10),
+    [marginsData, searchQuery]
+  );
 
   // Tab Navigation State
   const [activeTab, setActiveTab] = useState<'execute' | 'strategy' | 'history'>('execute');

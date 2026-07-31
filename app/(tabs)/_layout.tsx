@@ -31,7 +31,7 @@ export default function TabLayout() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const requireAuth = (e: any) => {
+  const requireAuth = (e: { preventDefault: () => void }) => {
     if (!user) {
       e.preventDefault();
       router.push('/login');

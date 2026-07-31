@@ -148,8 +148,6 @@ export function setupForegroundListener(): () => void {
     ensureDefaultChannel().catch(() => { });
 
     return onMessage(getMessaging(), async (remoteMessage) => {
-      console.log('A new FCM message arrived in the foreground!', JSON.stringify(remoteMessage));
-
       // Get title and body from either notification object or custom data fields sent from backend
       const title = String(remoteMessage.notification?.title || remoteMessage.data?.title || 'Notification');
       const body = String(remoteMessage.notification?.body || remoteMessage.data?.body || '');

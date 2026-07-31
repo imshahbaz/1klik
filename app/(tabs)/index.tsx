@@ -25,9 +25,9 @@ export default function HomeScreen() {
   const [cardLoading, setCardLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const refreshIntervalRef = useRef<any>(null);
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const fetchMarketStatus = async (showLoader = false) => {
+  const fetchMarketStatus = useCallback(async (showLoader = false) => {
     try {
       if (showLoader) setCardLoading(true);
       setError(null);
@@ -56,7 +56,7 @@ export default function HomeScreen() {
     } finally {
       setCardLoading(false);
     }
-  };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -76,7 +76,7 @@ export default function HomeScreen() {
           refreshIntervalRef.current = null;
         }
       };
-    }, [appLoading])
+    }, [appLoading, fetchMarketStatus])
   );
 
   if (appLoading) {

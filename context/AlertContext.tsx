@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -57,8 +57,15 @@ export const CustomNotification = {
   }
 };
 
-const AlertContext = createContext<any>(null);
-
+/**
+ * Global alert + notification banner host.
+ *
+ * Alerts are triggered imperatively from anywhere (including outside React)
+ * via `CustomAlert.alert` / `CustomNotification.show`, which emit through a
+ * DeviceEventEmitter bus. This provider simply mounts the themed Modal and the
+ * in-app notification banner that listen to that bus — there is no context
+ * value to consume.
+ */
 export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { theme, isDarkMode } = useTheme();
   const insets = useSafeAreaInsets();
@@ -201,12 +208,9 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
-  const contextValue = useMemo(() => ({}), []);
-
   return (
-    <AlertContext.Provider value={contextValue}>
+    <>
       {children}
-
       {/* Global Theme-compliant Alert Modal */}
       <Modal
         visible={alertVisible}
@@ -297,7 +301,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           </TouchableOpacity>
         </Animated.View>
       ) : null}
-    </AlertContext.Provider>
+    </>
   );
 };
 

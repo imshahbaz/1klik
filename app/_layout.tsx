@@ -13,7 +13,6 @@ import { moderateScale } from 'react-native-size-matters';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AlertProvider } from '../context/AlertContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
-import { DimensionsProvider } from '../context/DimensionsContext';
 import { MarginProvider } from '../context/MarginContext';
 import NetInfo from '@react-native-community/netinfo';
 import { StrategyProvider } from '../context/StrategyContext';
@@ -243,17 +242,15 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <AuthProvider>
             <ThemeProvider>
-              <DimensionsProvider>
-                <AlertProvider>
-                  <SecurityProvider>
-                    <MarginProvider>
-                      <StrategyProvider>
-                        <AppContent />
-                      </StrategyProvider>
-                    </MarginProvider>
-                  </SecurityProvider>
-                </AlertProvider>
-              </DimensionsProvider>
+              <AlertProvider>
+                <SecurityProvider>
+                  <MarginProvider>
+                    <StrategyProvider>
+                      <AppContent />
+                    </StrategyProvider>
+                  </MarginProvider>
+                </SecurityProvider>
+              </AlertProvider>
             </ThemeProvider>
           </AuthProvider>
         </SafeAreaProvider>

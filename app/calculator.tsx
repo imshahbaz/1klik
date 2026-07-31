@@ -21,6 +21,7 @@ import {
   GST_RATE,
   mtfInterest,
 } from '../utils/charges';
+import { rankMarginSymbols } from '../utils/margins';
 
 export default function CalculatorScreen() {
   const insets = useSafeAreaInsets();
@@ -97,23 +98,7 @@ export default function CalculatorScreen() {
   }, [entryDate, exitDate]);
 
   // Filter and sort stocks list
-  const filteredMargins = margins.filter((item) =>
-    item?.symbol?.toLowerCase().includes(searchQuery.toLowerCase())
-  ).sort((a, b) => {
-    const q = searchQuery.toLowerCase();
-    const sA = a.symbol.toLowerCase();
-    const sB = b.symbol.toLowerCase();
-
-    if (sA === q) return -1;
-    if (sB === q) return 1;
-
-    const startsA = sA.startsWith(q);
-    const startsB = sB.startsWith(q);
-    if (startsA && !startsB) return -1;
-    if (!startsA && startsB) return 1;
-
-    return sA.localeCompare(sB);
-  });
+  const filteredMargins = rankMarginSymbols(margins, searchQuery);
 
   const validateStep = (stepNum: 1 | 2) => {
     const newErrors: Record<string, string> = {};
