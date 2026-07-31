@@ -29,11 +29,7 @@ export const StrategyProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchByTimeFrame = useCallback(async (timeFrame: 'DAILY' | 'FIFTEEN_MINUTE') => {
     const res = await strategyAPI.getStrategies(timeFrame);
-    const payload = res.data?.data || res.data;
-    if (!Array.isArray(payload)) {
-      throw new Error('Invalid response structure');
-    }
-    return payload as Strategy[];
+    return res.data.data as Strategy[];
   }, []);
 
   const refreshStrategies = useCallback(async () => {

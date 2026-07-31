@@ -71,7 +71,7 @@ const SymbolSearch = ({
         <View style={styles.verticalDropdownContainer}>
           <ScrollView style={{ maxHeight: 200 }} keyboardShouldPersistTaps="handled">
             {filteredMargins.slice(0, 10).map((marginItem: any, idx: number) => {
-              const rawMargin = marginItem.requiredMargin || marginItem.leverage || '';
+              const rawMargin = marginItem.requiredMargin ?? '';
               const parsedMargin = parseFloat(rawMargin.toString().trim());
               let uiMarginStr = '1x';
 

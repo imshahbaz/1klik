@@ -275,11 +275,7 @@ export default function BrokersConfigScreen() {
       } else {
         setRupeezyError("Your Rupeezy session is disconnected. Please reconnect.");
         setIsRupeezyTokenExpired(true);
-        if (typeof payload?.data === 'string') {
-          setRupeezyAppId(payload.data);
-        } else if (payload?.data?.appId) {
-          setRupeezyAppId(payload.data.appId);
-        }
+        setRupeezyAppId(payload.data);
       }
     } catch (err: any) {
       const status = err.response?.status;

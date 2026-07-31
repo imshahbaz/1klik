@@ -3,6 +3,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { AppState, DeviceEventEmitter } from 'react-native';
 import { authAPI, AppConfig, initializeBaseUrl, notificationAPI } from '../services/api';
+import type { User } from '../services/api';
 import {
     getFCMToken,
     isFirebaseInitialized,
@@ -10,22 +11,6 @@ import {
     requestUserPermission,
     setupForegroundListener,
 } from '../services/notificationService';
-
-/**
- * Authenticated user as returned by `/auth/me`. Known fields are typed; the
- * index signature tolerates additional backend fields without `any` casts.
- */
-export interface User {
-    id?: string | number;
-    userId?: string | number;
-    name?: string;
-    username?: string;
-    email?: string;
-    mobile?: string;
-    profile?: string;
-    theme?: string;
-    [key: string]: any;
-}
 
 interface AuthContextType {
     user: User | null;

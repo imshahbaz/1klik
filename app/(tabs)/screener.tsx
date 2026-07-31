@@ -47,7 +47,7 @@ export default function ScreenerScreen() {
 
     try {
       const res = await strategyAPI.fetchWithMargin(strategyName);
-      const payload = res.data?.data || res.data;
+      const payload = res.data.data;
       if (Array.isArray(payload)) {
         setScanResults(payload);
       } else {
