@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import SwipeButton from '../common/SwipeButton';
 
 interface ExecuteTabProps {
@@ -104,35 +104,46 @@ export default function ExecuteTab({
           {/* Autocomplete suggestions from margins */}
           {searchQuery && filteredMargins.length > 0 ? (
             <View style={styles.verticalDropdownContainer}>
-              {filteredMargins.map((marginItem: any, idx: number) => (
-                <TouchableOpacity
-                  key={marginItem.symbol || idx}
-                  style={styles.suggestionRow}
-                  onPress={() => {
-                    setTradeSymbol(marginItem.symbol);
-                    setSearchQuery(''); // Close recommendations on tap
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="trending-up" size={14} color={theme.primary} />
-                    <Text style={styles.suggestionRowSymbol}>{marginItem.symbol}</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    {marginItem.requiredMargin || marginItem.leverage ? (
+              {filteredMargins.map((marginItem: any, idx: number) => {
+                const rawMargin = marginItem.requiredMargin || marginItem.leverage || '';
+                let marginStr = rawMargin.toString().trim();
+
+                const parsedMargin = parseFloat(marginStr);
+                if (isNaN(parsedMargin) || parsedMargin <= 0) {
+                  marginStr = '1x';
+                } else {
+                  const suffix = marginStr.toLowerCase().endsWith('x') ? 'x' : marginStr.endsWith('%') ? '%' : 'x';
+                  marginStr = `${parsedMargin.toFixed(2)}${suffix}`;
+                }
+
+                return (
+                  <TouchableOpacity
+                    key={marginItem.symbol || idx}
+                    style={styles.suggestionRow}
+                    onPress={() => {
+                      setTradeSymbol(marginItem.symbol);
+                      setSearchQuery('');
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Ionicons name="trending-up" size={14} color={theme.primary} />
+                      <Text style={styles.suggestionRowSymbol}>{marginItem.symbol}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text style={styles.suggestionRowBadge}>
-                        {marginItem.requiredMargin || marginItem.leverage}
+                        {marginStr}
                       </Text>
-                    ) : null}
-                    {marginItem.price || marginItem.ltp ? (
-                      <Text style={styles.suggestionRowPrice}>
-                        ₹{marginItem.price || marginItem.ltp}
-                      </Text>
-                    ) : null}
-                    <Ionicons name="chevron-forward" size={14} color={theme.iconMuted} />
-                  </View>
-                </TouchableOpacity>
-              ))}
+                      {marginItem.price || marginItem.ltp ? (
+                        <Text style={styles.suggestionRowPrice}>
+                          ₹{marginItem.price || marginItem.ltp}
+                        </Text>
+                      ) : null}
+                      <Ionicons name="chevron-forward" size={14} color={theme.iconMuted} />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           ) : null}
         </View>

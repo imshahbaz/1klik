@@ -101,13 +101,17 @@ export default function ScreenerScreen() {
 
     // Parse margin value
     const rawMargin = item.margin || item.leverage || item.marginAllowed || '';
-    const marginStr = rawMargin.toString().trim();
-    const hasMargin = marginStr &&
-      marginStr !== '0' &&
-      marginStr !== '0%' &&
-      marginStr !== '0.0%' &&
-      marginStr !== '0.0' &&
-      marginStr.toLowerCase() !== '1x';
+    let marginStr = rawMargin.toString().trim();
+    
+    const parsedMargin = parseFloat(marginStr);
+    if (isNaN(parsedMargin) || parsedMargin <= 0) {
+      marginStr = '1x';
+    } else {
+      const suffix = marginStr.toLowerCase().endsWith('x') ? 'x' : marginStr.endsWith('%') ? '%' : 'x';
+      marginStr = `${parsedMargin.toFixed(2)}${suffix}`;
+    }
+
+    const hasMargin = true;
 
     return (
       <TouchableOpacity
