@@ -5,6 +5,7 @@ import SwipeButton from '../common/SwipeButton';
 interface StrategyTabProps {
   readonly styles: any;
   readonly theme: any;
+  readonly strategyOptions: string[];
   readonly strategyFormData: {
     readonly strategyName: string;
     readonly amount: string;
@@ -23,7 +24,6 @@ interface StrategyTabProps {
 }
 
 const BROKERS: ('ZERODHA' | 'RUPEEZY')[] = ['ZERODHA', 'RUPEEZY'];
-const STRATEGIES = ['RSI15MIN', 'MACD15MIN'];
 
 /** Renders a segmented single-choice control. */
 const Segmented = ({ styles, options, value, onSelect }: any) => (
@@ -47,6 +47,7 @@ const Segmented = ({ styles, options, value, onSelect }: any) => (
 export default function StrategyTab({
   styles,
   theme,
+  strategyOptions,
   strategyFormData,
   setStrategyFormData,
   setDatePickerTarget,
@@ -78,12 +79,16 @@ export default function StrategyTab({
         {/* Strategy */}
         <View style={styles.orderFieldGroup}>
           <Text style={styles.orderFieldLabel}>STRATEGY</Text>
-          <Segmented
-            styles={styles}
-            options={STRATEGIES}
-            value={strategyFormData.strategyName}
-            onSelect={(strategyName: string) => setStrategyFormData({ ...strategyFormData, strategyName })}
-          />
+          {strategyOptions.length > 0 ? (
+            <Segmented
+              styles={styles}
+              options={strategyOptions}
+              value={strategyFormData.strategyName}
+              onSelect={(strategyName: string) => setStrategyFormData({ ...strategyFormData, strategyName })}
+            />
+          ) : (
+            <Text style={[styles.orderFieldLabel, { color: theme.placeholder }]}>No strategies available</Text>
+          )}
         </View>
 
         {/* Amount + Date, side by side */}

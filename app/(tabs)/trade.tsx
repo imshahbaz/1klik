@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { useOrderHistory } from '../../hooks/useOrderHistory';
 import { useMargins } from '../../context/MarginContext';
+import { useStrategies } from '../../context/StrategyContext';
 import { useTheme } from '../../context/ThemeContext';
 import { strategyOrderAPI, zerodhaAPI } from '../../services/api';
 import { useAdaptiveLayout } from '../../theme/layout';
@@ -36,6 +37,12 @@ export default function TradeScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const { margins: marginsData } = useMargins();
+  const { fifteenMinuteStrategies } = useStrategies();
+
+  const strategyOptions = useMemo(
+    () => fifteenMinuteStrategies.map((s) => s.name),
+    [fifteenMinuteStrategies]
+  );
 
   // Top 10 margin matches for the current search, ranked by relevance.
   // Memoized so the filter/sort only runs when the data or query changes.
@@ -268,6 +275,7 @@ export default function TradeScreen() {
           <StrategyTab
             styles={styles}
             theme={theme}
+            strategyOptions={strategyOptions}
             strategyFormData={strategyFormData}
             setStrategyFormData={setStrategyFormData}
             setDatePickerTarget={setDatePickerTarget}

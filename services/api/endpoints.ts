@@ -16,7 +16,7 @@ export const userPreferenceAPI = {
 };
 
 export const strategyAPI = {
-  getStrategies: () => api.get('/api/strategy'),
+  getStrategies: (timeFrame?: string) => api.get('/api/strategy', { params: { timeFrame } }),
   fetchWithMargin: (strategyName: string) =>
     api.get(`/api/chartink/fetchWithMargin?strategy=${encodeURIComponent(strategyName)}`),
   fetchChartData: (symbol: string) =>
