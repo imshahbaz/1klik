@@ -30,7 +30,7 @@ export default function LoginScreen() {
     if (user) {
       router.replace('/');
     }
-  }, [user]);
+  }, [user, router]);
 
   useEffect(() => {
     // Retrieve the Google Client ID configured in your .env file

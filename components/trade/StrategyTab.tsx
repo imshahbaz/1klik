@@ -1,10 +1,12 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import SwipeButton from '../common/SwipeButton';
 
 interface StrategyTabProps {
   readonly styles: any;
   readonly theme: any;
+  readonly strategyOptions: string[];
   readonly strategyFormData: {
     readonly strategyName: string;
     readonly amount: string;
@@ -22,8 +24,7 @@ interface StrategyTabProps {
   readonly formatDateString: (date: Date) => string;
 }
 
-const BROKERS: Array<'ZERODHA' | 'RUPEEZY'> = ['ZERODHA', 'RUPEEZY'];
-const STRATEGIES = ['RSI15MIN', 'MACD15MIN'];
+const BROKERS: ('ZERODHA' | 'RUPEEZY')[] = ['ZERODHA', 'RUPEEZY'];
 
 /** Renders a segmented single-choice control. */
 const Segmented = ({ styles, options, value, onSelect }: any) => (
@@ -47,6 +48,7 @@ const Segmented = ({ styles, options, value, onSelect }: any) => (
 export default function StrategyTab({
   styles,
   theme,
+  strategyOptions,
   strategyFormData,
   setStrategyFormData,
   setDatePickerTarget,
@@ -58,9 +60,11 @@ export default function StrategyTab({
   handleSaveStrategyOrder,
   formatDateString,
 }: StrategyTabProps) {
+  const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
+
   const resetForm = () => {
     setEditingStrategyOrderId(null);
-    setStrategyFormData({ strategyName: '', amount: '', date: '', broker: 'ZERODHA' });
+    setStrategyFormData({ strategyName: 'RSI15MIN', amount: '', date: '', broker: 'ZERODHA' });
   };
 
   return (
@@ -78,12 +82,20 @@ export default function StrategyTab({
         {/* Strategy */}
         <View style={styles.orderFieldGroup}>
           <Text style={styles.orderFieldLabel}>STRATEGY</Text>
-          <Segmented
-            styles={styles}
-            options={STRATEGIES}
-            value={strategyFormData.strategyName}
-            onSelect={(strategyName: string) => setStrategyFormData({ ...strategyFormData, strategyName })}
-          />
+          <TouchableOpacity
+            style={[styles.orderInput, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
+            onPress={() => setShowStrategyDropdown(true)}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[styles.orderInputText, !strategyFormData.strategyName && { color: theme.placeholder }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {strategyFormData.strategyName || 'Select strategy'}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={theme.iconMuted} />
+          </TouchableOpacity>
         </View>
 
         {/* Amount + Date, side by side */}
@@ -141,6 +153,63 @@ export default function StrategyTab({
           </TouchableOpacity>
         ) : null}
       </View>
+
+      {/* Strategy dropdown picker */}
+      <Modal
+        visible={showStrategyDropdown}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowStrategyDropdown(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowStrategyDropdown(false)}
+        >
+          <View
+            style={[styles.editModalContainer, { maxHeight: 420 }]}
+            onStartShouldSetResponder={() => true}
+          >
+            <View style={styles.editModalHeader}>
+              <Text style={styles.editModalTitle}>Select Strategy</Text>
+              <TouchableOpacity
+                style={styles.editModalCloseBtn}
+                onPress={() => setShowStrategyDropdown(false)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={18} color={theme.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {strategyOptions.length > 0 ? (
+                strategyOptions.map((name: string) => {
+                  const isSelected = strategyFormData.strategyName === name;
+                  return (
+                    <TouchableOpacity
+                      key={name}
+                      style={[styles.suggestionRow, isSelected && { backgroundColor: theme.primaryBackground }]}
+                      onPress={() => {
+                        setStrategyFormData({ ...strategyFormData, strategyName: name });
+                        setShowStrategyDropdown(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.suggestionRowSymbol, isSelected && { color: theme.primary }]}>
+                        {name}
+                      </Text>
+                      {isSelected ? <Ionicons name="checkmark" size={16} color={theme.primary} /> : null}
+                    </TouchableOpacity>
+                  );
+                })
+              ) : (
+                <Text style={[styles.orderFieldLabel, { color: theme.placeholder, marginBottom: 0 }]}>
+                  No strategies available
+                </Text>
+              )}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }

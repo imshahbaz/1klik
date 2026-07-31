@@ -27,7 +27,7 @@ interface ExecuteTabProps {
   readonly formatDateString: (date: Date) => string;
 }
 
-const BROKERS: Array<'ZERODHA' | 'RUPEEZY'> = ['ZERODHA', 'RUPEEZY'];
+const BROKERS: ('ZERODHA' | 'RUPEEZY')[] = ['ZERODHA', 'RUPEEZY'];
 
 export default function ExecuteTab({
   styles,

@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { useOrderHistory } from '../../hooks/useOrderHistory';
 import { useMargins } from '../../context/MarginContext';
+import { useStrategies } from '../../context/StrategyContext';
 import { useTheme } from '../../context/ThemeContext';
 import { strategyOrderAPI, zerodhaAPI } from '../../services/api';
 import { useAdaptiveLayout } from '../../theme/layout';
@@ -23,6 +24,7 @@ import {
   formatIsoDate,
   parseTargetDate,
 } from '../../utils/tradeFormatters';
+import { rankMarginSymbols } from '../../utils/margins';
 
 export default function TradeScreen() {
   const insets = useSafeAreaInsets();
@@ -35,27 +37,19 @@ export default function TradeScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const { margins: marginsData } = useMargins();
+  const { fifteenMinuteStrategies } = useStrategies();
+
+  const strategyOptions = useMemo(
+    () => fifteenMinuteStrategies.map((s) => s.name),
+    [fifteenMinuteStrategies]
+  );
 
   // Top 10 margin matches for the current search, ranked by relevance.
   // Memoized so the filter/sort only runs when the data or query changes.
-  const filteredMargins = useMemo(() => {
-    if (!Array.isArray(marginsData)) return [];
-    const q = searchQuery.toLowerCase();
-    return marginsData
-      .filter((m: any) => m?.symbol?.toLowerCase().includes(q))
-      .sort((a: any, b: any) => {
-        const sA = a.symbol.toLowerCase();
-        const sB = b.symbol.toLowerCase();
-        if (sA === q) return -1;
-        if (sB === q) return 1;
-        const startsA = sA.startsWith(q);
-        const startsB = sB.startsWith(q);
-        if (startsA && !startsB) return -1;
-        if (!startsA && startsB) return 1;
-        return sA.localeCompare(sB);
-      })
-      .slice(0, 10);
-  }, [marginsData, searchQuery]);
+  const filteredMargins = useMemo(
+    () => rankMarginSymbols(marginsData, searchQuery, 10),
+    [marginsData, searchQuery]
+  );
 
   // Tab Navigation State
   const [activeTab, setActiveTab] = useState<'execute' | 'strategy' | 'history'>('execute');
@@ -86,7 +80,7 @@ export default function TradeScreen() {
 
   // Strategy Order Form State
   const [strategyFormData, setStrategyFormData] = useState({
-    strategyName: '',
+    strategyName: 'RSI15MIN',
     amount: '',
     date: '',
     broker: 'ZERODHA' as 'ZERODHA' | 'RUPEEZY',
@@ -117,7 +111,7 @@ export default function TradeScreen() {
   };
 
   const resetStrategyForm = () => {
-    setStrategyFormData({ strategyName: '', amount: '', date: '', broker: 'ZERODHA' });
+    setStrategyFormData({ strategyName: 'RSI15MIN', amount: '', date: '', broker: 'ZERODHA' });
     setEditingStrategyOrderId(null);
   };
 
@@ -281,6 +275,7 @@ export default function TradeScreen() {
           <StrategyTab
             styles={styles}
             theme={theme}
+            strategyOptions={strategyOptions}
             strategyFormData={strategyFormData}
             setStrategyFormData={setStrategyFormData}
             setDatePickerTarget={setDatePickerTarget}
@@ -375,7 +370,7 @@ export default function TradeScreen() {
       }
 
       setStrategyFormData({
-        strategyName: '',
+        strategyName: 'RSI15MIN',
         amount: '',
         date: '',
         broker: 'ZERODHA',

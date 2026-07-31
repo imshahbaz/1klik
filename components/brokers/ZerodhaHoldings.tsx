@@ -7,6 +7,7 @@ import { CustomAlert } from '../../context/AlertContext';
 import { useMargins } from '../../context/MarginContext';
 import { holdingsAPI } from '../../services/api';
 import { formatDateString, formatIsoDate } from '../../utils/date';
+import { rankMarginSymbols } from '../../utils/margins';
 import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import DatePickerModal from '../common/DatePickerModal';
 import HoldingCard from './HoldingCard';
@@ -92,22 +93,10 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
     setPickerDate(new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 1));
   };
 
-  const filteredMargins = useMemo(() => {
-    const q = searchQuery.toLowerCase();
-    return margins.filter((item: any) =>
-      item?.symbol?.toLowerCase().includes(q)
-    ).sort((a: any, b: any) => {
-      const sA = a.symbol.toLowerCase();
-      const sB = b.symbol.toLowerCase();
-      if (sA === q) return -1;
-      if (sB === q) return 1;
-      const startsA = sA.startsWith(q);
-      const startsB = sB.startsWith(q);
-      if (startsA && !startsB) return -1;
-      if (!startsA && startsB) return 1;
-      return sA.localeCompare(sB);
-    });
-  }, [margins, searchQuery]);
+  const filteredMargins = useMemo(
+    () => rankMarginSymbols(margins, searchQuery),
+    [margins, searchQuery]
+  );
 
   const handleAddHolding = async () => {
     try {

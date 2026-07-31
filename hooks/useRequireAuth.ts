@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
  */
 export function useRequireAuth(): void {
   const router = useRouter();
-  const { user, appLoading } = useAuth() as any;
+  const { user, appLoading } = useAuth();
 
   useEffect(() => {
     if (!appLoading && !user) {

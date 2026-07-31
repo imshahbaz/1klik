@@ -29,14 +29,12 @@ export interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (userData: User, showLoading?: boolean) => void;
+    login: (userData: User) => void;
     logout: () => Promise<void>;
     appLoading: boolean;
-    authLoading: boolean;
     refreshUserData: () => Promise<void>;
     configLoading: boolean;
     appConfig: AppConfig;
-    setAuthLoading: React.Dispatch<React.SetStateAction<boolean>>;
     bootProgress: number;
 }
 
@@ -54,7 +52,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     const [appLoading, setAppLoading] = useState(true);
-    const [authLoading, setAuthLoading] = useState(false);
     const [configLoading, setConfigLoading] = useState(true);
     const [bootProgress, setBootProgress] = useState(0);
 
@@ -214,14 +211,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, [user]);
 
-    const login = useCallback((userData: any, showLoading = true) => {
-        if (showLoading) { setAuthLoading(true) }
+    const login = useCallback((userData: User) => {
         setUser(userData);
-        if (showLoading) { setAuthLoading(false) }
     }, []);
 
     const logout = useCallback(async () => {
-        setAuthLoading(true);
         try {
             // 1. Remove this device's FCM token so notifications stop targeting it.
             //    Best-effort — must not block the rest of logout.
@@ -247,7 +241,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error("Logout API execution failed:", err);
         } finally {
             setUser(null);
-            setAuthLoading(false);
         }
     }, []);
 
@@ -256,13 +249,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         logout,
         appLoading,
-        authLoading,
         refreshUserData,
         configLoading,
         appConfig,
-        setAuthLoading,
         bootProgress
-    }), [user, login, logout, appLoading, authLoading, refreshUserData, configLoading, appConfig, setAuthLoading, bootProgress]);
+    }), [user, login, logout, appLoading, refreshUserData, configLoading, appConfig, bootProgress]);
 
     return (
         <AuthContext.Provider value={value}>
