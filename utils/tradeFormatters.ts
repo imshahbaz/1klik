@@ -51,6 +51,11 @@ export const formatMtfOrders = (rawData: any) => {
     status: order.status || order.orderStatus || 'COMPLETED',
     reason: order.reason || undefined,
     targetDate: order.date ? formatDateString(new Date(order.date)) : 'Today',
+    strategyName: order.strategyName || 'TRAILING PROFIT',
+    targetPercentage:
+      order.targetPercentage !== undefined && order.targetPercentage !== null
+        ? order.targetPercentage.toString()
+        : '',
   }));
 };
 

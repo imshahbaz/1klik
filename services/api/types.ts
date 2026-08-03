@@ -115,6 +115,8 @@ export interface MtfOrder {
   quantity?: number;
   date?: string;
   broker?: string;
+  strategyName?: string;
+  targetPercentage?: number;
   orderStatus?: string;
   statusLabel?: string;
   statusColor?: string;

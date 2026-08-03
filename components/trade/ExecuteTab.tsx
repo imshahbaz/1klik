@@ -1,13 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import SwipeButton from '../common/SwipeButton';
+
+// Fixed strategy choices for the Execute order pad. Sent to the backend as `strategyName`.
+export const EXECUTE_STRATEGIES = ['TARGET PROFIT', 'TRAILING PROFIT'] as const;
+export type ExecuteStrategy = (typeof EXECUTE_STRATEGIES)[number];
 
 interface ExecuteTabProps {
   readonly styles: any;
   readonly theme: any;
   readonly tradeBroker: 'ZERODHA' | 'RUPEEZY';
   readonly setTradeBroker: (broker: 'ZERODHA' | 'RUPEEZY') => void;
+  readonly tradeStrategyName: ExecuteStrategy;
+  readonly setTradeStrategyName: (name: ExecuteStrategy) => void;
+  readonly tradeTargetPercentage: string;
+  readonly setTradeTargetPercentage: (value: string) => void;
   readonly tradeSymbol: string;
   readonly setTradeSymbol: (symbol: string) => void;
   readonly setSearchQuery: (query: string) => void;
@@ -34,6 +42,10 @@ export default function ExecuteTab({
   theme,
   tradeBroker,
   setTradeBroker,
+  tradeStrategyName,
+  setTradeStrategyName,
+  tradeTargetPercentage,
+  setTradeTargetPercentage,
   tradeSymbol,
   setTradeSymbol,
   setSearchQuery,
@@ -52,6 +64,8 @@ export default function ExecuteTab({
   handleExecuteOrder,
   formatDateString,
 }: ExecuteTabProps) {
+  const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
+
   const resetForm = () => {
     setEditingMtfOrderId(null);
     setTradeSymbol('');
@@ -59,6 +73,8 @@ export default function ExecuteTab({
     setTradeQty('10');
     setTargetDate(new Date());
     setTradeBroker('ZERODHA');
+    setTradeStrategyName('TRAILING PROFIT');
+    setTradeTargetPercentage('');
   };
 
   return (
@@ -84,6 +100,36 @@ export default function ExecuteTab({
             );
           })}
         </View>
+
+        {/* Strategy */}
+        <View style={styles.orderFieldGroup}>
+          <Text style={styles.orderFieldLabel}>STRATEGY</Text>
+          <TouchableOpacity
+            style={[styles.orderInput, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
+            onPress={() => setShowStrategyDropdown(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.orderInputText} numberOfLines={1} adjustsFontSizeToFit>
+              {tradeStrategyName}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={theme.iconMuted} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Target percentage — required only for TARGET PROFIT */}
+        {tradeStrategyName === 'TARGET PROFIT' ? (
+          <View style={styles.orderFieldGroup}>
+            <Text style={styles.orderFieldLabel}>TARGET %</Text>
+            <TextInput
+              style={styles.orderInput}
+              value={tradeTargetPercentage}
+              onChangeText={setTradeTargetPercentage}
+              keyboardType="numeric"
+              placeholder="0.4 – 20"
+              placeholderTextColor={theme.placeholder}
+            />
+          </View>
+        ) : null}
 
         {/* Symbol */}
         <View style={styles.orderFieldGroup}>
@@ -199,6 +245,57 @@ export default function ExecuteTab({
           </TouchableOpacity>
         ) : null}
       </View>
+
+      {/* Strategy dropdown picker */}
+      <Modal
+        visible={showStrategyDropdown}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowStrategyDropdown(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowStrategyDropdown(false)}
+        >
+          <View
+            style={[styles.editModalContainer, { maxHeight: 420 }]}
+            onStartShouldSetResponder={() => true}
+          >
+            <View style={styles.editModalHeader}>
+              <Text style={styles.editModalTitle}>Select Strategy</Text>
+              <TouchableOpacity
+                style={styles.editModalCloseBtn}
+                onPress={() => setShowStrategyDropdown(false)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={18} color={theme.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {EXECUTE_STRATEGIES.map((name) => {
+                const isSelected = tradeStrategyName === name;
+                return (
+                  <TouchableOpacity
+                    key={name}
+                    style={[styles.suggestionRow, isSelected && { backgroundColor: theme.primaryBackground }]}
+                    onPress={() => {
+                      setTradeStrategyName(name);
+                      setShowStrategyDropdown(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.suggestionRowSymbol, isSelected && { color: theme.primary }]}>
+                      {name}
+                    </Text>
+                    {isSelected ? <Ionicons name="checkmark" size={16} color={theme.primary} /> : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
