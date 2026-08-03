@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { CustomAlert } from '../context/AlertContext';
-import type { User } from '../context/AuthContext';
+import type { User } from '../services/api';
 import { strategyOrderAPI, zerodhaAPI } from '../services/api';
 import { formatMtfOrders, formatStrategyOrders } from '../utils/tradeFormatters';
 
@@ -31,13 +31,13 @@ export function useOrderHistory(user: User | null) {
       ]);
 
       if (mtfRes.status === 'fulfilled') {
-        setMtfOrders(formatMtfOrders(mtfRes.value.data));
+        setMtfOrders(formatMtfOrders(mtfRes.value.data.data));
       } else {
         setMtfOrders([]);
       }
 
       if (stratRes.status === 'fulfilled') {
-        setStrategyOrders(formatStrategyOrders(stratRes.value.data));
+        setStrategyOrders(formatStrategyOrders(stratRes.value.data.data));
       } else {
         setStrategyOrders([]);
       }

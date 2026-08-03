@@ -41,32 +41,27 @@ export const parseTargetDate = (dateStr: string): Date => {
 
 /** Normalizes the MTF orders API payload into the shape the UI renders. */
 export const formatMtfOrders = (rawData: any) => {
-  let ordersArray = [];
-  if (Array.isArray(rawData)) {
-    ordersArray = rawData;
-  } else if (Array.isArray(rawData?.data)) {
-    ordersArray = rawData.data;
-  }
+  const ordersArray = Array.isArray(rawData) ? rawData : [];
   return ordersArray.map((order: any, idx: number) => ({
     id: order.id || `m-api-${idx}`,
     symbol: order.symbol,
     qty: order.quantity ?? order.qty ?? 0,
     price: order.price ?? 0,
     time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    status: order.status || 'COMPLETED',
+    status: order.status || order.orderStatus || 'COMPLETED',
     reason: order.reason || undefined,
     targetDate: order.date ? formatDateString(new Date(order.date)) : 'Today',
+    strategyName: order.strategyName || 'TRAILING PROFIT',
+    targetPercentage:
+      order.targetPercentage !== undefined && order.targetPercentage !== null
+        ? order.targetPercentage.toString()
+        : '',
   }));
 };
 
 /** Normalizes the strategy orders API payload into the shape the UI renders. */
 export const formatStrategyOrders = (rawData: any) => {
-  let stratArray = [];
-  if (Array.isArray(rawData)) {
-    stratArray = rawData;
-  } else if (Array.isArray(rawData?.data)) {
-    stratArray = rawData.data;
-  }
+  const stratArray = Array.isArray(rawData) ? rawData : [];
   return stratArray.map((order: any, idx: number) => ({
     id: order.id || order._id || `s-api-${idx}`,
     symbol: order.symbol || 'AUTO',

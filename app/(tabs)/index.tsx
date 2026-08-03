@@ -36,7 +36,7 @@ export default function HomeScreen() {
       const res = await angelOneApi.getLtp(token);
 
       // Axios response returns wrapped in res.data, backend returns { data: ... }
-      const data = res.data?.data || res.data;
+      const data = res.data.data;
       if (data) {
         setMarketData(data);
       } else {

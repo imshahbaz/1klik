@@ -34,7 +34,7 @@ export default function ChartScreen() {
       try {
         setNewsLoading(true);
         const response = await newsApi.getTvNews(symbol);
-        const payload = response.data?.data || response.data || [];
+        const payload = response.data.data;
         if (!cancelled) setNews(payload);
       } catch (error) {
         console.error('Error fetching news:', error);
@@ -47,7 +47,7 @@ export default function ChartScreen() {
       try {
         setAiLoading(true);
         const response = await newsApi.getGenAiAnalysis(symbol);
-        const payload = response.data?.data || response.data;
+        const payload = response.data.data;
         if (!cancelled) setAiAnalysis(payload);
       } catch (error) {
         console.error('Error fetching AI analysis:', error);
@@ -60,7 +60,7 @@ export default function ChartScreen() {
       try {
         setChartLoading(true);
         const response = await strategyAPI.fetchChartData(symbol);
-        const payload = response.data?.data || response.data || [];
+        const payload = response.data.data;
         if (!cancelled) setChartData(payload);
       } catch (error) {
         console.error('Error fetching chart data:', error);

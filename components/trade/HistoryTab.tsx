@@ -15,6 +15,8 @@ interface HistoryTabProps {
   readonly setTargetDate: (date: Date) => void;
   readonly setPickerDate: (date: Date) => void;
   readonly setTradeBroker: (broker: 'ZERODHA' | 'RUPEEZY') => void;
+  readonly setTradeStrategyName: (name: 'TARGET PROFIT' | 'TRAILING PROFIT') => void;
+  readonly setTradeTargetPercentage: (value: string) => void;
   readonly setEditingMtfOrderId: (id: string | null) => void;
   readonly setActiveTab: (tab: 'execute' | 'strategy' | 'history') => void;
   readonly handleDeleteMtfOrder: (id: string) => void;
@@ -36,6 +38,8 @@ export default function HistoryTab({
   setTargetDate,
   setPickerDate,
   setTradeBroker,
+  setTradeStrategyName,
+  setTradeTargetPercentage,
   setEditingMtfOrderId,
   setActiveTab,
   handleDeleteMtfOrder,
@@ -89,6 +93,8 @@ export default function HistoryTab({
                 setTargetDate(parsedDate);
                 setPickerDate(parsedDate);
                 setTradeBroker(log.broker || 'ZERODHA');
+                setTradeStrategyName(log.strategyName === 'TARGET PROFIT' ? 'TARGET PROFIT' : 'TRAILING PROFIT');
+                setTradeTargetPercentage(log.targetPercentage || '');
                 setEditingMtfOrderId(log.id);
                 setActiveTab('execute');
                 CustomAlert.alert(

@@ -14,7 +14,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { strategyOrderAPI, zerodhaAPI } from '../../services/api';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { useZerodhaStyles } from '../../theme/zerodhaStyles';
-import ExecuteTab from '../../components/trade/ExecuteTab';
+import ExecuteTab, { ExecuteStrategy } from '../../components/trade/ExecuteTab';
 import StrategyTab from '../../components/trade/StrategyTab';
 import HistoryTab from '../../components/trade/HistoryTab';
 import DatePickerModal from '../../components/common/DatePickerModal';
@@ -62,6 +62,8 @@ export default function TradeScreen() {
   const [pickerDate, setPickerDate] = useState(new Date());
   const [executingTrade, setExecutingTrade] = useState(false);
   const [tradeBroker, setTradeBroker] = useState<'ZERODHA' | 'RUPEEZY'>('ZERODHA');
+  const [tradeStrategyName, setTradeStrategyName] = useState<ExecuteStrategy>('TRAILING PROFIT');
+  const [tradeTargetPercentage, setTradeTargetPercentage] = useState('');
 
 
   // Order-history data layer (lists, fetch, deletes) lives in a dedicated hook.
@@ -107,6 +109,8 @@ export default function TradeScreen() {
     setTradeQty('10');
     setTargetDate(new Date());
     setTradeBroker('ZERODHA');
+    setTradeStrategyName('TRAILING PROFIT');
+    setTradeTargetPercentage('');
     setEditingMtfOrderId(null);
   };
 
@@ -145,6 +149,13 @@ export default function TradeScreen() {
       return;
     }
 
+    const isTargetProfit = tradeStrategyName === 'TARGET PROFIT';
+    const targetPercentageVal = Number.parseFloat(tradeTargetPercentage);
+    if (isTargetProfit && (Number.isNaN(targetPercentageVal) || targetPercentageVal < 0.4 || targetPercentageVal > 20)) {
+      CustomAlert.alert('Execution Alert', 'Target % is required and must be between 0.4 and 20.');
+      return;
+    }
+
     const parsedUserId = Number(user?.id || user?.userId || 1);
     const isoDateString = formatIsoDate(targetDate);
 
@@ -154,6 +165,8 @@ export default function TradeScreen() {
       quantity: Number.parseInt(tradeQty),
       date: isoDateString,
       broker: tradeBroker,
+      strategyName: tradeStrategyName,
+      ...(isTargetProfit ? { targetPercentage: targetPercentageVal } : {}),
     };
 
     try {
@@ -186,6 +199,8 @@ export default function TradeScreen() {
       setSearchQuery('');
       setTradeQty('10');
       setTargetDate(new Date());
+      setTradeStrategyName('TRAILING PROFIT');
+      setTradeTargetPercentage('');
     } catch (err: any) {
       console.error('Failed to process MTF order:', err);
 
@@ -250,6 +265,10 @@ export default function TradeScreen() {
             theme={theme}
             tradeBroker={tradeBroker}
             setTradeBroker={setTradeBroker}
+            tradeStrategyName={tradeStrategyName}
+            setTradeStrategyName={setTradeStrategyName}
+            tradeTargetPercentage={tradeTargetPercentage}
+            setTradeTargetPercentage={setTradeTargetPercentage}
             tradeSymbol={tradeSymbol}
             setTradeSymbol={setTradeSymbol}
             setSearchQuery={setSearchQuery}
@@ -302,6 +321,8 @@ export default function TradeScreen() {
             setTargetDate={setTargetDate}
             setPickerDate={setPickerDate}
             setTradeBroker={setTradeBroker}
+            setTradeStrategyName={setTradeStrategyName}
+            setTradeTargetPercentage={setTradeTargetPercentage}
             setEditingMtfOrderId={setEditingMtfOrderId}
             setActiveTab={setActiveTab}
             handleDeleteMtfOrder={handleDeleteMtfOrder}

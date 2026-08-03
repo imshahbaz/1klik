@@ -35,7 +35,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
       setLoading(true);
       setError(null);
       const res = await holdingsAPI.getHoldings();
-      const data = res.data?.data || res.data || [];
+      const data = res.data.data;
       if (Array.isArray(data)) {
         setHoldings(data);
       } else {

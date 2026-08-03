@@ -1,18 +1,10 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { marginAPI } from '../services/api';
+import type { Margin } from '../services/api';
 import { useAuth } from './AuthContext';
 
-export interface MarginData {
-  symbol: string;
-  requiredMargin?: string | number;
-  leverage?: string | number;
-  price?: string | number;
-  ltp?: string | number;
-  [key: string]: any;
-}
-
 interface MarginContextType {
-  margins: MarginData[];
+  margins: Margin[];
   loadingMargins: boolean;
   refreshMargins: () => Promise<void>;
 }
@@ -21,7 +13,7 @@ const MarginContext = createContext<MarginContextType | null>(null);
 
 export const MarginProvider = ({ children }: { children: ReactNode }) => {
   const { appLoading } = useAuth();
-  const [margins, setMargins] = useState<MarginData[]>([]);
+  const [margins, setMargins] = useState<Margin[]>([]);
   const [loadingMargins, setLoadingMargins] = useState(true);
   const [hasLoadedMargins, setHasLoadedMargins] = useState(false);
 
@@ -29,8 +21,7 @@ export const MarginProvider = ({ children }: { children: ReactNode }) => {
     setLoadingMargins(true);
     try {
       const response = await marginAPI.getAllMargins();
-      const data = response?.data?.data || response?.data || [];
-      setMargins(Array.isArray(data) ? data : []);
+      setMargins(response.data.data);
       setHasLoadedMargins(true);
     } catch (err) {
       console.error('Error fetching margins:', err);
