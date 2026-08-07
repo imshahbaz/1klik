@@ -60,6 +60,12 @@ export function getOrderResult(
           message: 'We could not find margin details for this symbol. Please pick another stock and try again.',
         };
       }
+      if (hasDetail(problem, 'user not found')) {
+        return {
+          title: 'Account Not Found',
+          message: 'We could not find your account. Please sign out and sign back in, then try again.',
+        };
+      }
       return {
         title: 'Not Found',
         message: 'We could not find what you were looking for. Please try again.',
