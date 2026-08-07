@@ -4,6 +4,10 @@ import {
   AppConfig,
   ApiResponse,
   BrokerType,
+  CreateOrderPayload,
+  CreateOrderResponse,
+  CreateStrategyOrderPayload,
+  CreateStrategyOrderResponse,
   Holding,
   Id,
   MarketQuote,
@@ -61,6 +65,16 @@ export const newsApi = {
     api.get<ApiResponse<AiAnalysis>>(`/api/news/ai/${symbol}`),
 };
 
+export const orderAPI = {
+  createOrder: (orderData: CreateOrderPayload) =>
+    api.post<CreateOrderResponse>('/api/order', orderData),
+  getUserOrders: (userId: Id) =>
+    api.get<ApiResponse<MtfOrder[]>>(`/api/order/user/${userId}`),
+  updateOrder: (id: Id, orderData: CreateOrderPayload) =>
+    api.put<CreateOrderResponse>(`/api/order/${id}`, orderData),
+  deleteOrder: (id: Id) => api.delete<ApiResponse<string>>(`/api/order/${id}`),
+};
+
 export const zerodhaAPI = {
   login: (requestToken: string, userId: Id) =>
     api.post<ApiResponse<string>>('/api/zerodha/login', {
@@ -68,20 +82,16 @@ export const zerodhaAPI = {
       user_id: userId,
     }),
   getMe: () => api.get<ApiResponse<string>>('/api/zerodha/me'),
-  placeMTFOrder: (orderData: unknown) => api.post('/api/order', orderData),
-  getUserOrders: (userId: Id) =>
-    api.get<ApiResponse<MtfOrder[]>>(`/api/order/user/${userId}`),
-  updateOrder: (id: Id, orderData: unknown) => api.put(`/api/order/${id}`, orderData),
-  deleteOrder: (id: Id) => api.delete<ApiResponse<string>>(`/api/order/${id}`),
   saveConfig: (configData: unknown) => api.post('/api/zerodha/config', configData),
   autoConnect: () => api.post<ApiResponse<boolean>>('/api/session-manager/zerodha-auto-connect'),
 };
 
 export const strategyOrderAPI = {
-  placeOrder: (orderData: unknown) => api.post('/api/strategy-order', orderData),
+  placeOrder: (orderData: CreateStrategyOrderPayload) =>
+    api.post<CreateStrategyOrderResponse>('/api/strategy-order', orderData),
   getMyOrders: () => api.get<ApiResponse<StrategyOrder[]>>('/api/strategy-order/my'),
-  updateOrder: (id: Id, orderData: unknown) =>
-    api.put(`/api/strategy-order/${id}`, orderData),
+  updateOrder: (id: Id, orderData: CreateStrategyOrderPayload) =>
+    api.put<CreateStrategyOrderResponse>(`/api/strategy-order/${id}`, orderData),
   deleteOrder: (id: Id) => api.delete<ApiResponse<string>>(`/api/strategy-order/${id}`),
 };
 
