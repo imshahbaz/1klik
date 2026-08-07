@@ -84,6 +84,8 @@ export default function TradeScreen() {
     handleDeleteStrategyOrder,
     deleteResult,
     setDeleteResult,
+    fetchResult,
+    setFetchResult,
   } = useOrderHistory(user);
 
   // Edit Order State
@@ -212,7 +214,7 @@ export default function TradeScreen() {
         await orderAPI.updateOrder(editingMtfOrderId, payload);
         // Pull the authoritative list from the server rather than patching the
         // row locally — avoids showing a stale/duplicate row before the refresh.
-        await fetchHistoryData();
+        await fetchHistoryData({ silent: true });
 
         setOrderResult({
           variant: 'success',
@@ -224,7 +226,7 @@ export default function TradeScreen() {
         await orderAPI.createOrder(payload);
         // Fetch the real order from history instead of inserting an optimistic
         // dummy row — the dummy + the fetched real order briefly showed as two rows.
-        await fetchHistoryData();
+        await fetchHistoryData({ silent: true });
 
         setOrderResult({
           variant: 'success',
@@ -371,7 +373,7 @@ export default function TradeScreen() {
       if (editingStrategyOrderId) {
         await strategyOrderAPI.updateOrder(editingStrategyOrderId, payload);
         // Refresh from the server instead of patching the row locally.
-        await fetchHistoryData();
+        await fetchHistoryData({ silent: true });
 
         setOrderResult({
           variant: 'success',
@@ -382,7 +384,7 @@ export default function TradeScreen() {
       } else {
         await strategyOrderAPI.placeOrder(payload);
         // Fetch the real order from history instead of inserting an optimistic dummy row.
-        await fetchHistoryData();
+        await fetchHistoryData({ silent: true });
 
         setOrderResult({
           variant: 'success',
@@ -486,29 +488,31 @@ export default function TradeScreen() {
         }}
       />
 
-      {orderResult ? (
-        <OrderResultModal
-          styles={styles}
-          theme={theme}
-          visible
-          variant={orderResult.variant}
-          title={orderResult.title}
-          message={orderResult.message}
-          onClose={() => setOrderResult(null)}
-        />
-      ) : null}
+      {(() => {
+        // Only one result modal is ever shown. Priority: create/update result,
+        // then delete result, then fetch failure — so parallel requests can never
+        // stack overlapping popups.
+        const active = orderResult || deleteResult || fetchResult;
+        if (!active) return null;
 
-      {deleteResult ? (
-        <OrderResultModal
-          styles={styles}
-          theme={theme}
-          visible
-          variant={deleteResult.variant}
-          title={deleteResult.title}
-          message={deleteResult.message}
-          onClose={() => setDeleteResult(null)}
-        />
-      ) : null}
+        const onClose = orderResult
+          ? () => setOrderResult(null)
+          : deleteResult
+            ? () => setDeleteResult(null)
+            : () => setFetchResult(null);
+
+        return (
+          <OrderResultModal
+            styles={styles}
+            theme={theme}
+            visible
+            variant={active.variant}
+            title={active.title}
+            message={active.message}
+            onClose={onClose}
+          />
+        );
+      })()}
     </>
   );
 }

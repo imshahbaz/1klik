@@ -3,8 +3,8 @@ import { CustomAlert } from '../context/AlertContext';
 import type { User } from '../services/api';
 import { strategyOrderAPI, orderAPI } from '../services/api';
 import { formatMtfOrders, formatStrategyOrders, type FormattedMtfOrder, type FormattedStrategyOrder } from '../utils/tradeFormatters';
-import { getDeleteOrderResult } from '../utils/orderError';
-import { getDeleteStrategyOrderResult } from '../utils/strategyOrderError';
+import { getDeleteOrderResult, getOrdersResult } from '../utils/orderError';
+import { getDeleteStrategyOrderResult, getStrategyOrdersResult } from '../utils/strategyOrderError';
 
 /**
  * Owns the Trade screen's order-history data layer: the MTF and Strategy order
@@ -27,8 +27,11 @@ export function useOrderHistory(user: User | null) {
   const [loadingHistory, setLoadingHistory] = useState(false);
   // Modal shown after a delete request resolves — mirrors the create/update flow.
   const [deleteResult, setDeleteResult] = useState<DeleteResult | null>(null);
+  // Single modal state for the history fetch — both GETs run in parallel, so their
+  // failures are aggregated here to guarantee only one popup ever appears.
+  const [fetchResult, setFetchResult] = useState<DeleteResult | null>(null);
 
-  const fetchHistoryData = useCallback(async () => {
+  const fetchHistoryData = useCallback(async (options?: { silent?: boolean }) => {
     const userId = user?.id || user?.userId;
     if (!userId) return;
 
@@ -51,8 +54,46 @@ export function useOrderHistory(user: User | null) {
       } else {
         setStrategyOrders([]);
       }
+
+      // Aggregate both fetch outcomes into a single modal. Success on both clears
+      // the error; otherwise one friendly popup for the failures.
+      if (options?.silent) {
+        setFetchResult(null);
+        return;
+      }
+
+      if (stratRes.status === 'rejected' || mtfRes.status === 'rejected') {
+        let result: DeleteResult;
+        if (stratRes.status === 'rejected' && mtfRes.status === 'rejected') {
+          result = {
+            variant: 'error',
+            title: 'Could Not Load Orders',
+            message: 'We could not load your order history. Please check your connection and try again.',
+          };
+        } else if (stratRes.status === 'rejected') {
+          result = { variant: 'error', ...getStrategyOrdersResult(stratRes.reason) };
+        } else if (mtfRes.status === 'rejected') {
+          result = { variant: 'error', ...getOrdersResult(mtfRes.reason) };
+        } else {
+          result = {
+            variant: 'error',
+            title: 'Could Not Load Orders',
+            message: 'We could not load your order history. Please check your connection and try again.',
+          };
+        }
+        setFetchResult(result);
+      } else {
+        setFetchResult(null);
+      }
     } catch (err) {
       console.error('Error fetching history logs:', err);
+      if (!options?.silent) {
+        setFetchResult({
+          variant: 'error',
+          title: 'Could Not Load Orders',
+          message: 'We could not load your order history. Please try again.',
+        });
+      }
     } finally {
       setLoadingHistory(false);
     }
@@ -137,5 +178,7 @@ export function useOrderHistory(user: User | null) {
     handleDeleteStrategyOrder,
     deleteResult,
     setDeleteResult,
+    fetchResult,
+    setFetchResult,
   };
 }
