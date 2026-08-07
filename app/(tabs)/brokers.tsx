@@ -65,6 +65,8 @@ export default function BrokersConfigScreen() {
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Guards against setState-after-unmount and unbounded background polling.
   const isMountedRef = useRef(true);
+  const isAuthenticatingZerodhaRef = useRef(false);
+  const isAuthenticatingRupeezyRef = useRef(false);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -186,11 +188,13 @@ export default function BrokersConfigScreen() {
   };
 
   const checkZerodhaAuthUrl = async (url: string) => {
+    if (isAuthenticatingZerodhaRef.current) return;
     // Only trust a request_token that arrives over https (the Kite redirect is
     // always https); ignore tokens on any non-secure/arbitrary navigation.
     if (url?.startsWith('https://') && url.includes('request_token=')) {
       const tokenMatch = /[?&]request_token=([^&]+)/.exec(url);
       if (tokenMatch?.[1]) {
+        isAuthenticatingZerodhaRef.current = true;
         const requestToken = tokenMatch[1];
         setShowWebView(false);
 
@@ -212,6 +216,7 @@ export default function BrokersConfigScreen() {
           setIsTokenExpired(true);
         } finally {
           setZerodhaLoading(false);
+          isAuthenticatingZerodhaRef.current = false;
         }
       }
     }
@@ -295,10 +300,12 @@ export default function BrokersConfigScreen() {
   };
 
   const checkRupeezyAuthUrl = async (url: string) => {
+    if (isAuthenticatingRupeezyRef.current) return;
     // Only trust an auth token that arrives over https.
     if (url?.startsWith('https://') && url.includes('auth=')) {
       const tokenMatch = /[?&]auth=([^&]+)/.exec(url);
       if (tokenMatch?.[1]) {
+        isAuthenticatingRupeezyRef.current = true;
         const auth = tokenMatch[1];
         setShowRupeezyWebView(false);
 
@@ -320,6 +327,7 @@ export default function BrokersConfigScreen() {
           setIsRupeezyTokenExpired(true);
         } finally {
           setRupeezyLoading(false);
+          isAuthenticatingRupeezyRef.current = false;
         }
       }
     }
