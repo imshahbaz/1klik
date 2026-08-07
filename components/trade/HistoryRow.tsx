@@ -26,6 +26,23 @@ interface HistoryRowProps {
   readonly onDelete: () => void;
 }
 
+function resolveStatusColors(
+  status: string | undefined,
+  statusColor: string | undefined
+): { bg: string; fg: string } {
+  if (statusColor) {
+    return { bg: `${statusColor}1F`, fg: statusColor };
+  }
+  const upper = status?.toUpperCase();
+  if (upper === 'PENDING') {
+    return { bg: '#FEF3C7', fg: '#D97706' };
+  }
+  if (upper === 'EXECUTED' || upper === 'COMPLETED') {
+    return { bg: '#D1FAE5', fg: '#059669' };
+  }
+  return { bg: '#F3F4F6', fg: '#6B7280' };
+}
+
 /**
  * One order-history row, styled after the Zerodha Kite orders list: a coloured
  * side tag + bold symbol, broker badge, order status pill, target/strategy metadata,
@@ -50,22 +67,24 @@ export default function HistoryRow({
   onEdit,
   onDelete,
 }: HistoryRowProps) {
-  // Determine status color & text
   const displayStatus = statusLabel || orderStatus;
-  const statusBg = statusColor
-    ? `${statusColor}1F`
-    : displayStatus?.toUpperCase() === 'PENDING'
-    ? '#FEF3C7'
-    : displayStatus?.toUpperCase() === 'EXECUTED' || displayStatus?.toUpperCase() === 'COMPLETED'
-    ? '#D1FAE5'
-    : '#F3F4F6';
-  const statusFg = statusColor
-    ? statusColor
-    : displayStatus?.toUpperCase() === 'PENDING'
-    ? '#D97706'
-    : displayStatus?.toUpperCase() === 'EXECUTED' || displayStatus?.toUpperCase() === 'COMPLETED'
-    ? '#059669'
-    : '#6B7280';
+  const { bg: statusBg, fg: statusFg } = resolveStatusColors(displayStatus, statusColor);
+  const hasStrategy = Boolean(strategyName || targetPercentage);
+
+  let subRowContent: React.ReactNode = null;
+  if (hasStrategy) {
+    subRowContent = (
+      <Text style={styles.ohMeta} numberOfLines={1}>
+        {strategyName}
+        {strategyName && targetPercentage ? ' • ' : ''}
+        {targetPercentage ? `Target: +${targetPercentage}%` : ''}
+      </Text>
+    );
+  } else if (footerText) {
+    subRowContent = (
+      <Text style={styles.ohMeta} numberOfLines={1}>{footerText}</Text>
+    );
+  }
 
   return (
     <View style={styles.ohRow}>
@@ -88,15 +107,7 @@ export default function HistoryRow({
       {/* Sub Row: Details / Strategy (Left) | Status Pill (Right) */}
       <View style={styles.ohSubRow}>
         <View style={{ flex: 1, marginRight: 6 }}>
-          {strategyName || targetPercentage ? (
-            <Text style={styles.ohMeta} numberOfLines={1}>
-              {strategyName ? strategyName : ''}
-              {strategyName && targetPercentage ? ' • ' : ''}
-              {targetPercentage ? `Target: +${targetPercentage}%` : ''}
-            </Text>
-          ) : footerText ? (
-            <Text style={styles.ohMeta} numberOfLines={1}>{footerText}</Text>
-          ) : null}
+          {subRowContent}
         </View>
 
         {displayStatus ? (
@@ -109,7 +120,7 @@ export default function HistoryRow({
       </View>
 
       {/* Date Row (shown if strategy info was in sub row) */}
-      {(strategyName || targetPercentage) && footerText ? (
+      {hasStrategy && footerText ? (
         <Text style={styles.ohDateText} numberOfLines={1}>{footerText}</Text>
       ) : null}
 

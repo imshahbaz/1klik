@@ -353,12 +353,17 @@ function HoldingCardBase({
   const isProfit = pnl >= 0;
   const warningColor = theme.warning || '#F59E0B';
 
+  let borderColor = theme.borderLight;
+  if (isExpanded) {
+    borderColor = isProfit ? theme.success : theme.danger;
+  }
+
   return (
     <View
       style={[
         styles.card,
         {
-          borderColor: isExpanded ? (isProfit ? theme.success : theme.danger) : theme.borderLight,
+          borderColor,
           borderLeftColor: isProfit ? theme.success : theme.danger,
         },
       ]}

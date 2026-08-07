@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import { buildCalendarDays } from '../../utils/calendar';
 
 interface DatePickerModalProps {
   readonly styles: any;
@@ -43,16 +44,7 @@ export default function DatePickerModal({
   onSelectDate,
   isDateDisabled,
 }: DatePickerModalProps) {
-  const daysInMonth = new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 0).getDate();
-  const firstDayIndex = new Date(pickerDate.getFullYear(), pickerDate.getMonth(), 1).getDay();
-
-  const calendarDays: (Date | null)[] = [];
-  for (let i = 0; i < firstDayIndex; i++) {
-    calendarDays.push(null);
-  }
-  for (let i = 1; i <= daysInMonth; i++) {
-    calendarDays.push(new Date(pickerDate.getFullYear(), pickerDate.getMonth(), i));
-  }
+  const calendarDays = buildCalendarDays(pickerDate);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -86,9 +78,10 @@ export default function DatePickerModal({
                 <Text style={styles.calendarHeaderDayText as any}>{label}</Text>
               </View>
             ))}
-            {calendarDays.map((dayDate, idx) => {
+            {calendarDays.map((cell) => {
+              const dayDate = cell.date;
               if (!dayDate) {
-                return <View key={`empty-${idx}`} style={styles.calendarDayCell as any} />;
+                return <View key={cell.key} style={styles.calendarDayCell as any} />;
               }
 
               const isSelected = selectedDate.getDate() === dayDate.getDate() &&
@@ -102,7 +95,7 @@ export default function DatePickerModal({
 
               return (
                 <TouchableOpacity
-                  key={`day-${idx}`}
+                  key={cell.key}
                   style={[
                     styles.calendarDayCell,
                     isSelected && styles.selectedDayCell,

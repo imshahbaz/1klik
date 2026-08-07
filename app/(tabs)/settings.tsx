@@ -87,11 +87,11 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleNotificationToggle = async (value: boolean) => {
-    if (value) {
-      await enableNotifications();
-    } else {
+  const handleNotificationToggle = async () => {
+    if (notificationsEnabled) {
       disableNotifications();
+    } else {
+      await enableNotifications();
     }
   };
 

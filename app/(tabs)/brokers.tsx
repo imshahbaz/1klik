@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
-import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
+import { ScreenScaffold } from '../../components/ScreenScaffold';
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -120,18 +120,23 @@ export default function BrokersConfigScreen() {
     }
   };
 
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearTimeout(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
+
   const pollGetMe = async () => {
     if (!isMountedRef.current) return;
     try {
       const res = await zerodhaAPI.getMe();
       if (!isMountedRef.current) return;
+      stopPolling();
+      setAutoConnectLoading(false);
       if (res.data?.success === true) {
-        if (pollingRef.current) clearTimeout(pollingRef.current);
-        setAutoConnectLoading(false);
         fetchZerodhaProfile();
       } else {
-        if (pollingRef.current) clearTimeout(pollingRef.current);
-        setAutoConnectLoading(false);
         setShowWebView(true);
       }
     } catch (err: any) {
@@ -140,14 +145,14 @@ export default function BrokersConfigScreen() {
       const detail = err.response?.data?.detail || err.response?.data?.message || '';
       if (status === 409 && typeof detail === 'string' && detail.includes('E002')) {
         pollingRef.current = setTimeout(pollGetMe, 30000);
-      } else {
-        if (pollingRef.current) clearTimeout(pollingRef.current);
-        setAutoConnectLoading(false);
-        if (status === 409) {
-          CustomAlert.alert("Auto-Login Failed", getFriendlyErrorMessage(err, "Auto-login couldn’t be completed. Please try connecting again."));
-        }
-        setShowWebView(true);
+        return;
       }
+      stopPolling();
+      setAutoConnectLoading(false);
+      if (status === 409) {
+        CustomAlert.alert("Auto-Login Failed", getFriendlyErrorMessage(err, "Auto-login couldn’t be completed. Please try connecting again."));
+      }
+      setShowWebView(true);
     }
   };
 
@@ -468,23 +473,7 @@ export default function BrokersConfigScreen() {
   } = getBrokerStatusDisplay(rupeezyLoading, rupeezyError, rupeezyUser, theme, styles);
 
   return (
-    <View style={[styles.safeArea, layout.screenPadding]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        enabled={Platform.OS === 'ios'}
-        style={styles.keyboardFrame}
-        keyboardVerticalOffset={insets.top + 60}
-      >
-        <KeyboardAwareScrollView
-          style={styles.container}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.scrollContentContainer,
-            layout.centeredContent,
-            { paddingHorizontal: layout.horizontalPadding, paddingBottom: layout.tabBarHeight + 24 },
-          ]}
-          keyboardShouldPersistTaps="handled"
-        >
+    <ScreenScaffold styles={styles} layout={layout} insets={insets}>
           {/* Top Switcher */}
           <View style={[styles.tabContainer, { marginBottom: 24 }] as any}>
             <TouchableOpacity
@@ -557,8 +546,6 @@ export default function BrokersConfigScreen() {
             />
           )}
 
-        </KeyboardAwareScrollView>
-      </KeyboardAvoidingView>
-    </View>
+        </ScreenScaffold>
   );
 }

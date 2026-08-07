@@ -6,7 +6,6 @@ import { WebView } from 'react-native-webview';
 interface ChartProps {
   readonly rawData: any[];
   readonly theme: any;
-  readonly isDarkMode: boolean;
   readonly height?: number;
 }
 
@@ -186,9 +185,10 @@ export default function FinancialChart({ rawData, theme, height = 400 }: ChartPr
     );
   }
 
-  const selectedColor = selectedEntry
-    ? (selectedEntry.close >= selectedEntry.open ? TV_COLORS.up : TV_COLORS.down)
-    : theme.textPrimary;
+  let selectedColor = theme.textPrimary;
+  if (selectedEntry) {
+    selectedColor = selectedEntry.close >= selectedEntry.open ? TV_COLORS.up : TV_COLORS.down;
+  }
 
   return (
     <View style={{ height, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card }}>

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as LocalAuthentication from 'expo-local-authentication';
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from './AuthContext';
 import { useTheme } from './ThemeContext';
@@ -26,7 +26,7 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { user, appLoading } = useAuth();
   const { theme } = useTheme();
 
-  const unlockApp = async () => {
+  const unlockApp = useCallback(async () => {
     if (unlockingRef.current) return;
     unlockingRef.current = true;
     try {
@@ -53,7 +53,7 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } finally {
       unlockingRef.current = false;
     }
-  };
+  }, []);
 
   // Handle initial lock and logout lock state
   useEffect(() => {
@@ -96,8 +96,13 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [user]);
 
+  const securityValue = useMemo(
+    () => ({ isAppLocked, unlockApp }),
+    [isAppLocked, unlockApp]
+  );
+
   return (
-    <SecurityContext.Provider value={{ isAppLocked, unlockApp }}>
+    <SecurityContext.Provider value={securityValue}>
       {children}
       {isAppLocked && user && (
         <Modal transparent={false} animationType="fade" visible={isAppLocked}>
