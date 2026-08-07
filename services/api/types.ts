@@ -185,6 +185,22 @@ export interface CreateOrderResponse {
   error: null;
 }
 
+/** Payload for `POST /api/strategy-order` (create) and `PUT /api/strategy-order/:id` (update). */
+export interface CreateStrategyOrderPayload {
+  strategyName: string;
+  date: string; // ISO YYYY-MM-DD
+  amount: number; // must be >= 1
+  broker: OrderBroker;
+}
+
+/** Success envelope returned by `POST /api/strategy-order` (201 Created). */
+export interface CreateStrategyOrderResponse {
+  success: boolean;
+  message: string;
+  data: StrategyOrder;
+  error: null;
+}
+
 /** RFC 7807 `application/problem+json` body returned for error responses. */
 export interface ProblemDetail {
   type?: string;

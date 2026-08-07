@@ -11,7 +11,12 @@ import { useOrderHistory } from '../../hooks/useOrderHistory';
 import { useMargins } from '../../context/MarginContext';
 import { useStrategies } from '../../context/StrategyContext';
 import { useTheme } from '../../context/ThemeContext';
-import { strategyOrderAPI, orderAPI, type CreateOrderPayload } from '../../services/api';
+import {
+  strategyOrderAPI,
+  orderAPI,
+  type CreateOrderPayload,
+  type CreateStrategyOrderPayload,
+} from '../../services/api';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 import ExecuteTab, { ExecuteStrategy } from '../../components/trade/ExecuteTab';
@@ -19,8 +24,8 @@ import StrategyTab from '../../components/trade/StrategyTab';
 import HistoryTab from '../../components/trade/HistoryTab';
 import OrderResultModal from '../../components/trade/OrderResultModal';
 import DatePickerModal from '../../components/common/DatePickerModal';
-import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import { getOrderResult } from '../../utils/orderError';
+import { getStrategyOrderResult } from '../../utils/strategyOrderError';
 import {
   formatDateString,
   formatIsoDate,
@@ -354,7 +359,7 @@ export default function TradeScreen() {
 
     try {
       setSubmittingStrategy(true);
-      const payload = {
+      const payload: CreateStrategyOrderPayload = {
         strategyName: strategyFormData.strategyName,
         amount: amountVal,
         date: strategyFormData.date,
@@ -366,20 +371,22 @@ export default function TradeScreen() {
         // Refresh from the server instead of patching the row locally.
         await fetchHistoryData();
 
-        CustomAlert.alert(
-          'Order Updated Successfully',
-          `Successfully updated strategy order for ${payload.strategyName} with amount ₹${payload.amount}.`
-        );
+        setOrderResult({
+          variant: 'success',
+          title: 'Strategy Order Updated',
+          message: `Successfully updated the strategy order for ${payload.strategyName} with amount ₹${payload.amount}.`,
+        });
         setEditingStrategyOrderId(null);
       } else {
         await strategyOrderAPI.placeOrder(payload);
         // Fetch the real order from history instead of inserting an optimistic dummy row.
         await fetchHistoryData();
 
-        CustomAlert.alert(
-          'Order Placed Successfully',
-          `Successfully registered strategy order for ${payload.strategyName} of amount ₹${payload.amount}.`
-        );
+        setOrderResult({
+          variant: 'success',
+          title: 'Strategy Order Placed',
+          message: `Successfully registered the strategy order for ${payload.strategyName} of amount ₹${payload.amount}.`,
+        });
       }
 
       setStrategyFormData({
@@ -390,7 +397,11 @@ export default function TradeScreen() {
       });
     } catch (err: any) {
       console.error('Failed to save strategy order:', err);
-      CustomAlert.alert('Order Failed', getFriendlyErrorMessage(err, 'Could not save the strategy order. Please try again.'));
+      const { title, message } = getStrategyOrderResult(
+        err,
+        'Could not save the strategy order. Please try again.'
+      );
+      setOrderResult({ variant: 'error', title, message });
     } finally {
       setSubmittingStrategy(false);
     }

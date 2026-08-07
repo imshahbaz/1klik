@@ -6,6 +6,8 @@ import {
   BrokerType,
   CreateOrderPayload,
   CreateOrderResponse,
+  CreateStrategyOrderPayload,
+  CreateStrategyOrderResponse,
   Holding,
   Id,
   MarketQuote,
@@ -85,10 +87,11 @@ export const zerodhaAPI = {
 };
 
 export const strategyOrderAPI = {
-  placeOrder: (orderData: unknown) => api.post('/api/strategy-order', orderData),
+  placeOrder: (orderData: CreateStrategyOrderPayload) =>
+    api.post<CreateStrategyOrderResponse>('/api/strategy-order', orderData),
   getMyOrders: () => api.get<ApiResponse<StrategyOrder[]>>('/api/strategy-order/my'),
-  updateOrder: (id: Id, orderData: unknown) =>
-    api.put(`/api/strategy-order/${id}`, orderData),
+  updateOrder: (id: Id, orderData: CreateStrategyOrderPayload) =>
+    api.put<CreateStrategyOrderResponse>(`/api/strategy-order/${id}`, orderData),
   deleteOrder: (id: Id) => api.delete<ApiResponse<string>>(`/api/strategy-order/${id}`),
 };
 
