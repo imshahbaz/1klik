@@ -13,7 +13,7 @@ import NewsSection from '../components/chart/NewsSection';
 export default function ChartScreen() {
   const { symbol } = useLocalSearchParams<{ symbol: string }>();
   const insets = useSafeAreaInsets();
-  const { isDarkMode, theme } = useTheme();
+  const { theme } = useTheme();
 
   const [chartData, setChartData] = useState<any[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
@@ -118,7 +118,7 @@ export default function ChartScreen() {
                   <ActivityIndicator size="large" color={theme.primary} />
                 </View>
               ) : (
-                <FinancialChart rawData={chartData} theme={theme} isDarkMode={isDarkMode} height={400} />
+                <FinancialChart rawData={chartData} theme={theme} height={400} />
               )}
             </View>
           )}

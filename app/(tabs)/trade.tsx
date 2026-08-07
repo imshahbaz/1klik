@@ -139,6 +139,26 @@ export default function TradeScreen() {
     }, [activeTab, fetchHistoryData])
   );
 
+  const buildRejectedOrder = (isConflict: boolean, errMsg: string) => {
+    const status = isConflict ? 'CONFLICT' : 'REJECTED';
+    return {
+      id: `m-${Date.now()}`,
+      symbol: tradeSymbol.toUpperCase().trim(),
+      qty: Number.parseInt(tradeQty),
+      price: 0,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status,
+      orderStatus: status,
+      statusLabel: isConflict ? 'Conflict' : 'Rejected',
+      statusColor: '#EF4444',
+      reason: isConflict ? 'Already scheduled for this date.' : errMsg,
+      targetDate: formatDateString(targetDate),
+      strategyName: tradeStrategyName,
+      targetPercentage: tradeTargetPercentage,
+      broker: tradeBroker,
+    };
+  };
+
   const handleExecuteOrder = async () => {
     if (!tradeSymbol.trim()) {
       CustomAlert.alert('Execution Alert', 'Please enter or select a stock symbol.');
@@ -207,53 +227,23 @@ export default function TradeScreen() {
       const isConflict = err?.response?.status === 409;
       const errMsg = getFriendlyErrorMessage(err, 'Please try again.');
 
-      if (editingMtfOrderId) {
-        setMtfOrders(prev => prev.map(o => o.id === editingMtfOrderId ? {
-          ...o,
-          status: isConflict ? 'CONFLICT' : 'REJECTED',
-          reason: isConflict ? 'Already scheduled for this date.' : errMsg,
-        } : o));
+      if (!editingMtfOrderId) {
+        return;
+      }
 
-        if (isConflict) {
-          CustomAlert.alert(
-            'Scheduling Conflict',
-            'An MTF order is already scheduled for this symbol on the selected date.'
-          );
-        } else {
-          CustomAlert.alert(
-            'Update Failed',
-            `Could not update the MTF order. ${errMsg}`
-          );
-        }
-        const rejectedOrder = {
-          id: `m-${Date.now()}`,
-          symbol: tradeSymbol.toUpperCase().trim(),
-          qty: Number.parseInt(tradeQty),
-          price: 0,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          status: isConflict ? 'CONFLICT' : 'REJECTED',
-          orderStatus: isConflict ? 'CONFLICT' : 'REJECTED',
-          statusLabel: isConflict ? 'Conflict' : 'Rejected',
-          statusColor: '#EF4444',
-          reason: isConflict ? 'Already scheduled for this date.' : errMsg,
-          targetDate: formatDateString(targetDate),
-          strategyName: tradeStrategyName,
-          targetPercentage: tradeTargetPercentage,
-          broker: tradeBroker,
-        };
-        setMtfOrders([rejectedOrder, ...mtfOrders]);
+      const rejectedOrder = buildRejectedOrder(isConflict, errMsg);
+      setMtfOrders([rejectedOrder, ...mtfOrders]);
 
-        if (isConflict) {
-          CustomAlert.alert(
-            'Scheduling Conflict',
-            'An MTF order is already scheduled for this symbol on the selected date.'
-          );
-        } else {
-          CustomAlert.alert(
-            'Order Failed',
-            `Could not place the MTF order. ${errMsg}`
-          );
-        }
+      if (isConflict) {
+        CustomAlert.alert(
+          'Scheduling Conflict',
+          'An MTF order is already scheduled for this symbol on the selected date.'
+        );
+      } else {
+        CustomAlert.alert(
+          'Order Failed',
+          `Could not place the MTF order. ${errMsg}`
+        );
       }
     } finally {
       setExecutingTrade(false);
@@ -421,6 +411,13 @@ export default function TradeScreen() {
     return <View style={{ flex: 1, backgroundColor: theme.background }} />;
   }
 
+  let pickerSelectedDate = new Date();
+  if (datePickerTarget === 'execute') {
+    pickerSelectedDate = targetDate;
+  } else if (strategyFormData.date) {
+    pickerSelectedDate = new Date(strategyFormData.date);
+  }
+
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>
 
@@ -479,11 +476,7 @@ export default function TradeScreen() {
         theme={theme}
         visible={showDatePicker}
         pickerDate={pickerDate}
-        selectedDate={
-          datePickerTarget === 'execute'
-            ? targetDate
-            : (strategyFormData.date ? new Date(strategyFormData.date) : new Date())
-        }
+        selectedDate={pickerSelectedDate}
         onPrevMonth={handlePrevMonth}
         onNextMonth={handleNextMonth}
         onClose={() => setShowDatePicker(false)}

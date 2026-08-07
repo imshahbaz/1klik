@@ -72,10 +72,10 @@ const SymbolSearch = ({
           <ScrollView style={{ maxHeight: 200 }} keyboardShouldPersistTaps="handled">
             {filteredMargins.slice(0, 10).map((marginItem: any, idx: number) => {
               const rawMargin = marginItem.requiredMargin ?? '';
-              const parsedMargin = parseFloat(rawMargin.toString().trim());
+              const parsedMargin = Number.parseFloat(rawMargin.toString().trim());
               let uiMarginStr = '1x';
 
-              if (!isNaN(parsedMargin) && parsedMargin > 0) {
+              if (!Number.isNaN(parsedMargin) && parsedMargin > 0) {
                 uiMarginStr = `${parsedMargin.toFixed(2)}x`;
               }
 
@@ -116,8 +116,8 @@ const SymbolSearch = ({
           Leverage for <Text style={{ fontWeight: '700' }}>{selectedSymbol}</Text> is{' '}
           <Text style={{ fontWeight: '700', color: theme.success }}>
             {(() => {
-              const parsedMargin = parseFloat(selectedLeverage?.toString().trim());
-              return !isNaN(parsedMargin) && parsedMargin > 0 ? `${parsedMargin.toFixed(2)}x` : '1x';
+              const parsedMargin = Number.parseFloat(selectedLeverage?.toString().trim());
+              return !Number.isNaN(parsedMargin) && parsedMargin > 0 ? `${parsedMargin.toFixed(2)}x` : '1x';
             })()}
           </Text>
         </Text>

@@ -28,7 +28,8 @@ export function rankMarginSymbols(
     ? margins.filter((m) => m?.symbol?.toLowerCase().includes(q))
     : [...margins];
 
-  const ranked = filtered.sort((a, b) => {
+  const ranked = [...filtered];
+  ranked.sort((a, b) => {
     const sA = a.symbol.toLowerCase();
     const sB = b.symbol.toLowerCase();
     if (sA === q) return -1;

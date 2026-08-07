@@ -120,18 +120,23 @@ export default function BrokersConfigScreen() {
     }
   };
 
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearTimeout(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
+
   const pollGetMe = async () => {
     if (!isMountedRef.current) return;
     try {
       const res = await zerodhaAPI.getMe();
       if (!isMountedRef.current) return;
+      stopPolling();
+      setAutoConnectLoading(false);
       if (res.data?.success === true) {
-        if (pollingRef.current) clearTimeout(pollingRef.current);
-        setAutoConnectLoading(false);
         fetchZerodhaProfile();
       } else {
-        if (pollingRef.current) clearTimeout(pollingRef.current);
-        setAutoConnectLoading(false);
         setShowWebView(true);
       }
     } catch (err: any) {
@@ -140,14 +145,14 @@ export default function BrokersConfigScreen() {
       const detail = err.response?.data?.detail || err.response?.data?.message || '';
       if (status === 409 && typeof detail === 'string' && detail.includes('E002')) {
         pollingRef.current = setTimeout(pollGetMe, 30000);
-      } else {
-        if (pollingRef.current) clearTimeout(pollingRef.current);
-        setAutoConnectLoading(false);
-        if (status === 409) {
-          CustomAlert.alert("Auto-Login Failed", getFriendlyErrorMessage(err, "Auto-login couldn’t be completed. Please try connecting again."));
-        }
-        setShowWebView(true);
+        return;
       }
+      stopPolling();
+      setAutoConnectLoading(false);
+      if (status === 409) {
+        CustomAlert.alert("Auto-Login Failed", getFriendlyErrorMessage(err, "Auto-login couldn’t be completed. Please try connecting again."));
+      }
+      setShowWebView(true);
     }
   };
 

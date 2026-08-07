@@ -100,28 +100,31 @@ export default function CalculatorScreen() {
   // Filter and sort stocks list
   const filteredMargins = rankMarginSymbols(margins, searchQuery);
 
-  const validateStep = (stepNum: 1 | 2) => {
+  const validateStepOne = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (stepNum === 1) {
-      if (!selectedSymbol) {
-        newErrors.stock = 'Stock selection is required';
-      }
-      if (!buyPrice || Number.isNaN(Number.parseFloat(buyPrice)) || Number.parseFloat(buyPrice) <= 0) {
-        newErrors.buyPrice = 'Enter a valid buy price';
-      }
-      if (!sellPrice || Number.isNaN(Number.parseFloat(sellPrice)) || Number.parseFloat(sellPrice) <= 0) {
-        newErrors.sellPrice = sellType === 'exact' ? 'Enter a valid target price' : 'Enter a valid percentage';
-      }
+    if (!selectedSymbol) {
+      newErrors.stock = 'Stock selection is required';
+    }
+    if (!buyPrice || Number.isNaN(Number.parseFloat(buyPrice)) || Number.parseFloat(buyPrice) <= 0) {
+      newErrors.buyPrice = 'Enter a valid buy price';
+    }
+    if (!sellPrice || Number.isNaN(Number.parseFloat(sellPrice)) || Number.parseFloat(sellPrice) <= 0) {
+      newErrors.sellPrice = sellType === 'exact' ? 'Enter a valid target price' : 'Enter a valid percentage';
     }
 
-    if (stepNum === 2) {
-      if (daysHeld < 0 || Number.isNaN(daysHeld)) {
-        newErrors.daysHeld = 'Enter valid holding days';
-      }
-      if (!quantity || Number.isNaN(Number.parseFloat(quantity)) || Number.parseFloat(quantity) <= 0) {
-        newErrors.quantity = quantityType === 'quantity' ? 'Enter quantity' : 'Enter capital amount';
-      }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStepTwo = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (daysHeld < 0 || Number.isNaN(daysHeld)) {
+      newErrors.daysHeld = 'Enter valid holding days';
+    }
+    if (!quantity || Number.isNaN(Number.parseFloat(quantity)) || Number.parseFloat(quantity) <= 0) {
+      newErrors.quantity = quantityType === 'quantity' ? 'Enter quantity' : 'Enter capital amount';
     }
 
     setErrors(newErrors);
@@ -129,7 +132,7 @@ export default function CalculatorScreen() {
   };
 
   const handleNext = () => {
-    if (validateStep(1)) {
+    if (validateStepOne()) {
       setActiveStep(2);
     }
   };
@@ -151,7 +154,7 @@ export default function CalculatorScreen() {
   };
 
   const calculateReturns = () => {
-    if (!validateStep(2)) return;
+    if (!validateStepTwo()) return;
 
     const leverage = Number.parseFloat(selectedLeverage) || 1;
     const bp = Number.parseFloat(buyPrice);
@@ -354,13 +357,16 @@ export default function CalculatorScreen() {
               {(() => {
                 const daysInMonth = new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 0).getDate();
                 const firstDayIndex = new Date(pickerDate.getFullYear(), pickerDate.getMonth(), 1).getDay();
-                const calendarDays = [];
+                const calendarDays: { key: string; date: Date | null }[] = [];
 
                 for (let i = 0; i < firstDayIndex; i++) {
-                  calendarDays.push(null);
+                  calendarDays.push({ key: `empty-${i}`, date: null });
                 }
                 for (let i = 1; i <= daysInMonth; i++) {
-                  calendarDays.push(new Date(pickerDate.getFullYear(), pickerDate.getMonth(), i));
+                  calendarDays.push({
+                    key: `day-${pickerDate.getFullYear()}-${pickerDate.getMonth()}-${i}`,
+                    date: new Date(pickerDate.getFullYear(), pickerDate.getMonth(), i),
+                  });
                 }
 
                 let currentSelectionDate = null;
@@ -378,9 +384,10 @@ export default function CalculatorScreen() {
                   minAllowedDate.setHours(0, 0, 0, 0);
                 }
 
-                return calendarDays.map((dayDate, idx) => {
+                return calendarDays.map((cell) => {
+                  const dayDate = cell.date;
                   if (!dayDate) {
-                    return <View key={`empty-${idx}`} style={styles.calendarDayCell} />;
+                    return <View key={cell.key} style={styles.calendarDayCell} />;
                   }
                   const isSelected = currentSelectionDate?.getDate() === dayDate.getDate() &&
                     currentSelectionDate?.getMonth() === dayDate.getMonth() &&
@@ -391,7 +398,7 @@ export default function CalculatorScreen() {
 
                   return (
                     <TouchableOpacity
-                      key={`day-${idx}`}
+                      key={cell.key}
                       style={[
                         styles.calendarDayCell,
                         isSelected && styles.selectedDayCell,

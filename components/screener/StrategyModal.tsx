@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 function formatSuccessRate(rate: unknown): string | null {
-  const num = typeof rate === 'string' ? parseFloat(rate) : rate;
-  if (typeof num !== 'number' || !isFinite(num)) return null;
+  const num = typeof rate === 'string' ? Number.parseFloat(rate) : rate;
+  if (typeof num !== 'number' || !Number.isFinite(num)) return null;
   if (num <= 0) return null;
   const rounded = Math.round(num * 100) / 100;
   const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);

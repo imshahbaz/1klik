@@ -102,11 +102,11 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
     try {
       if (!newSymbol.trim()) return CustomAlert.alert('Validation Error', 'Symbol cannot be blank.');
 
-      const qty = parseInt(newQuantity);
-      if (isNaN(qty) || qty < 1) return CustomAlert.alert('Validation Error', 'Quantity must be at least 1.');
+      const qty = Number.parseInt(newQuantity);
+      if (Number.isNaN(qty) || qty < 1) return CustomAlert.alert('Validation Error', 'Quantity must be at least 1.');
 
-      const prc = parseFloat(newPrice);
-      if (isNaN(prc) || prc < 1) return CustomAlert.alert('Validation Error', 'Price must be 1 or greater.');
+      const prc = Number.parseFloat(newPrice);
+      if (Number.isNaN(prc) || prc < 1) return CustomAlert.alert('Validation Error', 'Price must be 1 or greater.');
 
       setAdding(true);
 

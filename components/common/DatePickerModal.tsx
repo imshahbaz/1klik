@@ -46,12 +46,15 @@ export default function DatePickerModal({
   const daysInMonth = new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 0).getDate();
   const firstDayIndex = new Date(pickerDate.getFullYear(), pickerDate.getMonth(), 1).getDay();
 
-  const calendarDays: (Date | null)[] = [];
+  const calendarDays: { key: string; date: Date | null }[] = [];
   for (let i = 0; i < firstDayIndex; i++) {
-    calendarDays.push(null);
+    calendarDays.push({ key: `empty-${i}`, date: null });
   }
   for (let i = 1; i <= daysInMonth; i++) {
-    calendarDays.push(new Date(pickerDate.getFullYear(), pickerDate.getMonth(), i));
+    calendarDays.push({
+      key: `day-${pickerDate.getFullYear()}-${pickerDate.getMonth()}-${i}`,
+      date: new Date(pickerDate.getFullYear(), pickerDate.getMonth(), i),
+    });
   }
 
   const today = new Date();
@@ -86,9 +89,10 @@ export default function DatePickerModal({
                 <Text style={styles.calendarHeaderDayText as any}>{label}</Text>
               </View>
             ))}
-            {calendarDays.map((dayDate, idx) => {
+            {calendarDays.map((cell) => {
+              const dayDate = cell.date;
               if (!dayDate) {
-                return <View key={`empty-${idx}`} style={styles.calendarDayCell as any} />;
+                return <View key={cell.key} style={styles.calendarDayCell as any} />;
               }
 
               const isSelected = selectedDate.getDate() === dayDate.getDate() &&
@@ -102,7 +106,7 @@ export default function DatePickerModal({
 
               return (
                 <TouchableOpacity
-                  key={`day-${idx}`}
+                  key={cell.key}
                   style={[
                     styles.calendarDayCell,
                     isSelected && styles.selectedDayCell,

@@ -154,11 +154,11 @@ export default function ExecuteTab({
                 const rawMargin = marginItem.requiredMargin || marginItem.leverage || '';
                 let marginStr = rawMargin.toString().trim();
 
-                const parsedMargin = parseFloat(marginStr);
-                if (isNaN(parsedMargin) || parsedMargin <= 0) {
+                const parsedMargin = Number.parseFloat(marginStr);
+                if (Number.isNaN(parsedMargin) || parsedMargin <= 0) {
                   marginStr = '1x';
                 } else {
-                  const suffix = marginStr.toLowerCase().endsWith('x') ? 'x' : marginStr.endsWith('%') ? '%' : 'x';
+                  const suffix = marginStr.endsWith('%') ? '%' : 'x';
                   marginStr = `${parsedMargin.toFixed(2)}${suffix}`;
                 }
 

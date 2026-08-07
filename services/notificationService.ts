@@ -19,17 +19,15 @@ let channelPromise: Promise<string> | null = null;
 
 export async function ensureDefaultChannel(): Promise<string> {
   if (Platform.OS !== 'android') return DEFAULT_CHANNEL_ID;
-  if (!channelPromise) {
-    channelPromise = notifee.createChannel({
-      id: DEFAULT_CHANNEL_ID,
-      name: 'General Notifications',
-      importance: AndroidImportance.HIGH,
-      visibility: AndroidVisibility.PUBLIC,
-      sound: 'default',
-      vibration: true,
-      vibrationPattern: [300, 500],
-    });
-  }
+  channelPromise ??= notifee.createChannel({
+    id: DEFAULT_CHANNEL_ID,
+    name: 'General Notifications',
+    importance: AndroidImportance.HIGH,
+    visibility: AndroidVisibility.PUBLIC,
+    sound: 'default',
+    vibration: true,
+    vibrationPattern: [300, 500],
+  });
   return channelPromise;
 }
 
