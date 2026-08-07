@@ -3,6 +3,8 @@ import { CustomAlert } from '../context/AlertContext';
 import type { User } from '../services/api';
 import { strategyOrderAPI, orderAPI } from '../services/api';
 import { formatMtfOrders, formatStrategyOrders, type FormattedMtfOrder, type FormattedStrategyOrder } from '../utils/tradeFormatters';
+import { getDeleteOrderResult } from '../utils/orderError';
+import { getDeleteStrategyOrderResult } from '../utils/strategyOrderError';
 
 /**
  * Owns the Trade screen's order-history data layer: the MTF and Strategy order
@@ -69,7 +71,8 @@ export function useOrderHistory(user: User | null) {
             } catch (err: any) {
               console.error('Failed to delete MTF order:', err);
               // Keep the row — the order still exists server-side.
-              CustomAlert.alert('Cancellation Failed', 'Could not cancel the MTF order. Please try again.');
+              const result = getDeleteOrderResult(err);
+              CustomAlert.alert(result.title, result.message);
             }
           }
         }
@@ -98,7 +101,8 @@ export function useOrderHistory(user: User | null) {
             } catch (err: any) {
               console.error('Failed to delete Strategy order:', err);
               // Keep the row — the log still exists server-side.
-              CustomAlert.alert('Deletion Failed', 'Could not delete the Strategy order log. Please try again.');
+              const result = getDeleteStrategyOrderResult(err);
+              CustomAlert.alert(result.title, result.message);
             }
           }
         }

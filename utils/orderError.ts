@@ -1,7 +1,7 @@
 /**
- * Maps the MTF order API (`POST /api/order`, `PUT /api/order/:id`) response into
- * a user-facing modal result. Every backend scenario documented for the order
- * endpoints is translated here into a clean `{ title, message }` pair — the raw
+ * Maps the MTF order API (`POST /api/order`, `PUT /api/order/:id`, `DELETE /api/order/:id`)
+ * response into a user-facing modal/alert result. Every backend scenario documented for
+ * the order endpoints is translated here into a clean `{ title, message }` pair — the raw
  * HTTP status and ProblemDetail fields are never surfaced to the user.
  */
 import type { ProblemDetail } from '../services/api';
@@ -138,6 +138,75 @@ export function getOrderResult(
       return {
         title: 'Something Went Wrong',
         message: 'Our servers hit a problem placing your order. Please try again in a few minutes.',
+      };
+  }
+}
+
+/**
+ * Maps the MTF order DELETE (`DELETE /api/order/:id`) response into a user-facing
+ * alert result.
+ */
+export function getDeleteOrderResult(
+  error: any,
+  fallbackMessage = 'Something went wrong. Please try again.'
+): OrderResult {
+  // No HTTP response → network / timeout / client-side failure.
+  if (!error?.response) {
+    const code = error?.code;
+    const msg = String(error?.message || '').toLowerCase();
+    if (code === 'ECONNABORTED' || msg.includes('timeout')) {
+      return {
+        title: 'Request Timed Out',
+        message: 'The request took too long. Please check your connection and try again.',
+      };
+    }
+    if (msg.includes('network')) {
+      return {
+        title: 'Connection Problem',
+        message: 'No internet connection. Please check your network and try again.',
+      };
+    }
+    return { title: 'Order Not Deleted', message: fallbackMessage };
+  }
+
+  const status: number = error.response.status;
+  const problem = readProblem(error);
+
+  switch (status) {
+    case 401:
+      return {
+        title: 'Session Expired',
+        message: 'Your session has expired. Please sign in again and try again.',
+      };
+
+    case 404:
+      return {
+        title: 'Order Not Found',
+        message: 'This order no longer exists. It may have already been cancelled.',
+      };
+
+    case 400:
+      // Trading-hours deletion restriction.
+      if (hasDetail(problem, 'cannot be deleted')) {
+        return {
+          title: 'Cannot Delete During Market Hours',
+          message: 'Orders cannot be deleted while the market is open (9:00 AM – 3:30 PM IST). Please try again after market hours.',
+        };
+      }
+      // Blank/invalid path variable or any other validation failure.
+      if (problem?.detail) {
+        return {
+          title: 'Check Your Order',
+          message: 'We could not process this deletion. Please try again.',
+        };
+      }
+      return { title: 'Order Not Deleted', message: fallbackMessage };
+
+    default:
+      // 5xx and anything else — unhandled server exception.
+      return {
+        title: 'Something Went Wrong',
+        message: 'Our servers hit a problem cancelling your order. Please try again in a few minutes.',
       };
   }
 }
