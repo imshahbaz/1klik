@@ -82,6 +82,8 @@ export default function TradeScreen() {
     fetchHistoryData,
     handleDeleteMtfOrder,
     handleDeleteStrategyOrder,
+    deleteResult,
+    setDeleteResult,
   } = useOrderHistory(user);
 
   // Edit Order State
@@ -493,6 +495,18 @@ export default function TradeScreen() {
           title={orderResult.title}
           message={orderResult.message}
           onClose={() => setOrderResult(null)}
+        />
+      ) : null}
+
+      {deleteResult ? (
+        <OrderResultModal
+          styles={styles}
+          theme={theme}
+          visible
+          variant={deleteResult.variant}
+          title={deleteResult.title}
+          message={deleteResult.message}
+          onClose={() => setDeleteResult(null)}
         />
       ) : null}
     </>
