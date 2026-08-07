@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import SwipeButton from '../common/SwipeButton';
+import StrategyDropdownModal from './StrategyDropdownModal';
 
 interface StrategyTabProps {
   readonly styles: any;
@@ -155,61 +156,15 @@ export default function StrategyTab({
       </View>
 
       {/* Strategy dropdown picker */}
-      <Modal
+      <StrategyDropdownModal
+        styles={styles}
+        theme={theme}
         visible={showStrategyDropdown}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowStrategyDropdown(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowStrategyDropdown(false)}
-        >
-          <View
-            style={[styles.editModalContainer, { maxHeight: 420 }]}
-            onStartShouldSetResponder={() => true}
-          >
-            <View style={styles.editModalHeader}>
-              <Text style={styles.editModalTitle}>Select Strategy</Text>
-              <TouchableOpacity
-                style={styles.editModalCloseBtn}
-                onPress={() => setShowStrategyDropdown(false)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="close" size={18} color={theme.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {strategyOptions.length > 0 ? (
-                strategyOptions.map((name: string) => {
-                  const isSelected = strategyFormData.strategyName === name;
-                  return (
-                    <TouchableOpacity
-                      key={name}
-                      style={[styles.suggestionRow, isSelected && { backgroundColor: theme.primaryBackground }]}
-                      onPress={() => {
-                        setStrategyFormData({ ...strategyFormData, strategyName: name });
-                        setShowStrategyDropdown(false);
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.suggestionRowSymbol, isSelected && { color: theme.primary }]}>
-                        {name}
-                      </Text>
-                      {isSelected ? <Ionicons name="checkmark" size={16} color={theme.primary} /> : null}
-                    </TouchableOpacity>
-                  );
-                })
-              ) : (
-                <Text style={[styles.orderFieldLabel, { color: theme.placeholder, marginBottom: 0 }]}>
-                  No strategies available
-                </Text>
-              )}
-            </ScrollView>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+        options={strategyOptions}
+        selected={strategyFormData.strategyName}
+        onSelect={(name) => setStrategyFormData({ ...strategyFormData, strategyName: name })}
+        onClose={() => setShowStrategyDropdown(false)}
+      />
     </View>
   );
 }

@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
+import { ScreenScaffold } from '../../components/ScreenScaffold';
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
@@ -419,28 +419,15 @@ export default function TradeScreen() {
   }
 
   return (
-    <View style={[styles.safeArea, layout.screenPadding]}>
-
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        enabled={Platform.OS === 'ios'}
-        style={styles.keyboardFrame}
-        keyboardVerticalOffset={insets.top + 60}
+    <>
+      <ScreenScaffold
+        styles={styles}
+        layout={layout}
+        insets={insets}
+        contentInsetAdjustmentBehavior="automatic"
+        extraKeyboardSpace={72}
       >
-        <KeyboardAwareScrollView
-          style={styles.container}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.scrollContentContainer,
-            layout.centeredContent,
-            { paddingHorizontal: layout.horizontalPadding, paddingBottom: layout.tabBarHeight + 24 },
-          ]}
-          contentInsetAdjustmentBehavior="automatic"
-          keyboardShouldPersistTaps="handled"
-          extraKeyboardSpace={72}
-        >
-          {/* Custom Premium Segmented Tab Bar */}
+        {/* Custom Premium Segmented Tab Bar */}
           <View style={styles.tabContainer as any}>
             {[
               { id: 'execute', label: 'EXECUTE', icon: 'flash' },
@@ -468,8 +455,7 @@ export default function TradeScreen() {
           {/* Tab Views Render */}
           {renderTabContent()}
 
-        </KeyboardAwareScrollView>
-      </KeyboardAvoidingView>
+      </ScreenScaffold>
 
       <DatePickerModal
         styles={styles}
@@ -488,7 +474,6 @@ export default function TradeScreen() {
           }
         }}
       />
-
-    </View>
+    </>
   );
 }
