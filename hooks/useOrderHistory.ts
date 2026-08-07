@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { CustomAlert } from '../context/AlertContext';
 import type { User } from '../services/api';
-import { strategyOrderAPI, zerodhaAPI } from '../services/api';
+import { strategyOrderAPI, orderAPI } from '../services/api';
 import { formatMtfOrders, formatStrategyOrders, type FormattedMtfOrder, type FormattedStrategyOrder } from '../utils/tradeFormatters';
 
 /**
@@ -26,7 +26,7 @@ export function useOrderHistory(user: User | null) {
       setLoadingHistory(true);
 
       const [mtfRes, stratRes] = await Promise.allSettled([
-        zerodhaAPI.getUserOrders(userId),
+        orderAPI.getUserOrders(userId),
         strategyOrderAPI.getMyOrders(),
       ]);
 
@@ -59,7 +59,7 @@ export function useOrderHistory(user: User | null) {
           style: 'destructive',
           onPress: async () => {
             try {
-              const res = await zerodhaAPI.deleteOrder(orderId);
+              const res = await orderAPI.deleteOrder(orderId);
               if (res.data?.success === false) {
                 throw new Error(res.data?.message || 'Backend reported failure.');
               }

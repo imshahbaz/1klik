@@ -11,14 +11,16 @@ import { useOrderHistory } from '../../hooks/useOrderHistory';
 import { useMargins } from '../../context/MarginContext';
 import { useStrategies } from '../../context/StrategyContext';
 import { useTheme } from '../../context/ThemeContext';
-import { strategyOrderAPI, zerodhaAPI } from '../../services/api';
+import { strategyOrderAPI, orderAPI, type CreateOrderPayload } from '../../services/api';
 import { useAdaptiveLayout } from '../../theme/layout';
 import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 import ExecuteTab, { ExecuteStrategy } from '../../components/trade/ExecuteTab';
 import StrategyTab from '../../components/trade/StrategyTab';
 import HistoryTab from '../../components/trade/HistoryTab';
+import OrderResultModal from '../../components/trade/OrderResultModal';
 import DatePickerModal from '../../components/common/DatePickerModal';
 import { getFriendlyErrorMessage } from '../../utils/errorMessage';
+import { getOrderResult } from '../../utils/orderError';
 import {
   formatDateString,
   formatIsoDate,
@@ -79,6 +81,13 @@ export default function TradeScreen() {
 
   // Edit Order State
   const [editingMtfOrderId, setEditingMtfOrderId] = useState<string | null>(null);
+
+  // Modal shown after the MTF order create/update request resolves.
+  const [orderResult, setOrderResult] = useState<{
+    variant: 'success' | 'error';
+    title: string;
+    message: string;
+  } | null>(null);
 
   // Strategy Order Form State
   const [strategyFormData, setStrategyFormData] = useState({
@@ -179,7 +188,7 @@ export default function TradeScreen() {
     const parsedUserId = Number(user?.id || user?.userId || 1);
     const isoDateString = formatIsoDate(targetDate);
 
-    const payload = {
+    const payload: CreateOrderPayload = {
       userId: parsedUserId,
       symbol: tradeSymbol.toUpperCase().trim(),
       quantity: Number.parseInt(tradeQty),
@@ -193,26 +202,28 @@ export default function TradeScreen() {
       setExecutingTrade(true);
 
       if (editingMtfOrderId) {
-        await zerodhaAPI.updateOrder(editingMtfOrderId, payload);
+        await orderAPI.updateOrder(editingMtfOrderId, payload);
         // Pull the authoritative list from the server rather than patching the
         // row locally — avoids showing a stale/duplicate row before the refresh.
         await fetchHistoryData();
 
-        CustomAlert.alert(
-          'Order Updated Successfully',
-          `Successfully updated scheduled MTF order for ${tradeSymbol.toUpperCase()} to ${tradeQty} shares, target date: ${formatDateString(targetDate)}.`
-        );
+        setOrderResult({
+          variant: 'success',
+          title: 'Order Updated',
+          message: `Successfully updated the scheduled MTF order for ${tradeSymbol.toUpperCase()} to ${tradeQty} shares, target date: ${formatDateString(targetDate)}.`,
+        });
         setEditingMtfOrderId(null);
       } else {
-        await zerodhaAPI.placeMTFOrder(payload);
+        await orderAPI.createOrder(payload);
         // Fetch the real order from history instead of inserting an optimistic
         // dummy row — the dummy + the fetched real order briefly showed as two rows.
         await fetchHistoryData();
 
-        CustomAlert.alert(
-          'Order Placed Successfully',
-          `Successfully registered MTF order for ${tradeQty} shares of ${tradeSymbol.toUpperCase()} target date: ${formatDateString(targetDate)}.`
-        );
+        setOrderResult({
+          variant: 'success',
+          title: 'Order Placed',
+          message: `Successfully registered MTF order for ${tradeQty} shares of ${tradeSymbol.toUpperCase()} target date: ${formatDateString(targetDate)}.`,
+        });
       }
 
       setTradeSymbol('');
@@ -224,27 +235,14 @@ export default function TradeScreen() {
     } catch (err: any) {
       console.error('Failed to process MTF order:', err);
 
-      const isConflict = err?.response?.status === 409;
-      const errMsg = getFriendlyErrorMessage(err, 'Please try again.');
+      const { title, message } = getOrderResult(err, 'Could not place the MTF order. Please try again.');
 
       if (!editingMtfOrderId) {
-        return;
+        const rejectedOrder = buildRejectedOrder(title === 'Duplicate Order', message);
+        setMtfOrders([rejectedOrder, ...mtfOrders]);
       }
 
-      const rejectedOrder = buildRejectedOrder(isConflict, errMsg);
-      setMtfOrders([rejectedOrder, ...mtfOrders]);
-
-      if (isConflict) {
-        CustomAlert.alert(
-          'Scheduling Conflict',
-          'An MTF order is already scheduled for this symbol on the selected date.'
-        );
-      } else {
-        CustomAlert.alert(
-          'Order Failed',
-          `Could not place the MTF order. ${errMsg}`
-        );
-      }
+      setOrderResult({ variant: 'error', title, message });
     } finally {
       setExecutingTrade(false);
     }
@@ -474,6 +472,18 @@ export default function TradeScreen() {
           }
         }}
       />
+
+      {orderResult ? (
+        <OrderResultModal
+          styles={styles}
+          theme={theme}
+          visible
+          variant={orderResult.variant}
+          title={orderResult.title}
+          message={orderResult.message}
+          onClose={() => setOrderResult(null)}
+        />
+      ) : null}
     </>
   );
 }

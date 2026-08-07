@@ -163,6 +163,37 @@ export interface Holding {
 /** Broker identifiers used across order/holdings endpoints. */
 export type BrokerType = 'ZERODHA' | 'RUPEEZY' | 'MSTOCK';
 
+/** Broker values accepted by the MTF order endpoints. */
+export type OrderBroker = 'ZERODHA' | 'RUPEEZY';
+
+/** Payload for `POST /api/order` (create) and `PUT /api/order/:id` (update). */
+export interface CreateOrderPayload {
+  userId: number;
+  symbol: string;
+  quantity: number;
+  date: string; // ISO YYYY-MM-DD
+  broker: OrderBroker;
+  strategyName: string;
+  targetPercentage?: number;
+}
+
+/** Success envelope returned by `POST /api/order` (201 Created). */
+export interface CreateOrderResponse {
+  success: boolean;
+  message: string;
+  data: null;
+  error: null;
+}
+
+/** RFC 7807 `application/problem+json` body returned for error responses. */
+export interface ProblemDetail {
+  type?: string;
+  title?: string;
+  status?: number;
+  detail?: string;
+  instance?: string;
+}
+
 /** Resource identifier. Backend IDs are numeric but are often held as strings. */
 export type Id = string | number;
 
