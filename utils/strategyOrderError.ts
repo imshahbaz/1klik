@@ -1,9 +1,9 @@
 /**
  * Maps the strategy order API (`POST /api/strategy-order`, `PUT /api/strategy-order/:id`,
- * `DELETE /api/strategy-order/:id`) response into a user-facing modal/alert result. Every
- * backend scenario documented for the strategy order endpoints is translated here into a
- * clean `{ title, message }` pair — the raw HTTP status and ProblemDetail fields are never
- * surfaced to the user.
+ * `DELETE /api/strategy-order/:id`, `GET /api/strategy-order/my`) response into a
+ * user-facing modal/alert result. Every backend scenario documented for the strategy
+ * order endpoints is translated here into a clean `{ title, message }` pair — the raw
+ * HTTP status and ProblemDetail fields are never surfaced to the user.
  */
 import type { ProblemDetail } from '../services/api';
 
@@ -116,6 +116,49 @@ export function getStrategyOrderResult(
  * Maps the strategy order DELETE (`DELETE /api/strategy-order/:id`) response into a
  * user-facing alert result.
  */
+/**
+ * Maps the strategy order list fetch (`GET /api/strategy-order/my`) response into a
+ * user-facing alert result. The backend only documents 200/401/500 for this endpoint.
+ */
+export function getStrategyOrdersResult(
+  error: any,
+  fallbackMessage = 'Could not load your strategy orders. Please try again.'
+): StrategyOrderResult {
+  // No HTTP response → network / timeout / client-side failure.
+  if (!error?.response) {
+    const code = error?.code;
+    const msg = String(error?.message || '').toLowerCase();
+    if (code === 'ECONNABORTED' || msg.includes('timeout')) {
+      return {
+        title: 'Request Timed Out',
+        message: 'The request took too long. Please check your connection and try again.',
+      };
+    }
+    if (msg.includes('network')) {
+      return {
+        title: 'Connection Problem',
+        message: 'No internet connection. Please check your network and try again.',
+      };
+    }
+    return { title: 'Could Not Load Strategy Orders', message: fallbackMessage };
+  }
+
+  switch (error.response.status) {
+    case 401:
+      return {
+        title: 'Session Expired',
+        message: 'Your session has expired. Please sign in again to view your strategy orders.',
+      };
+
+    default:
+      // 500 and anything else — unhandled server exception.
+      return {
+        title: 'Something Went Wrong',
+        message: 'Our servers hit a problem loading your strategy orders. Please try again in a few minutes.',
+      };
+  }
+}
+
 export function getDeleteStrategyOrderResult(
   error: any,
   fallbackMessage = 'Something went wrong. Please try again.'

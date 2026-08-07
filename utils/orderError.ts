@@ -143,6 +143,49 @@ export function getOrderResult(
 }
 
 /**
+ * Maps the MTF order list fetch (`GET /api/order/user/:userId`) response into a
+ * user-facing alert result. The backend documents 200/400/401/500 for this endpoint.
+ */
+export function getOrdersResult(
+  error: any,
+  fallbackMessage = 'Could not load your MTF orders. Please try again.'
+): OrderResult {
+  // No HTTP response → network / timeout / client-side failure.
+  if (!error?.response) {
+    const code = error?.code;
+    const msg = String(error?.message || '').toLowerCase();
+    if (code === 'ECONNABORTED' || msg.includes('timeout')) {
+      return {
+        title: 'Request Timed Out',
+        message: 'The request took too long. Please check your connection and try again.',
+      };
+    }
+    if (msg.includes('network')) {
+      return {
+        title: 'Connection Problem',
+        message: 'No internet connection. Please check your network and try again.',
+      };
+    }
+    return { title: 'Could Not Load MTF Orders', message: fallbackMessage };
+  }
+
+  switch (error.response.status) {
+    case 401:
+      return {
+        title: 'Session Expired',
+        message: 'Your session has expired. Please sign in again to view your MTF orders.',
+      };
+
+    default:
+      // 400 (validation / type mismatch), 500, and anything else — unhandled.
+      return {
+        title: 'Something Went Wrong',
+        message: 'Our servers hit a problem loading your MTF orders. Please try again in a few minutes.',
+      };
+  }
+}
+
+/**
  * Maps the MTF order DELETE (`DELETE /api/order/:id`) response into a user-facing
  * alert result.
  */
