@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import { buildCalendarDays } from '../../utils/calendar';
 
 interface DatePickerModalProps {
   readonly styles: any;
@@ -43,19 +44,7 @@ export default function DatePickerModal({
   onSelectDate,
   isDateDisabled,
 }: DatePickerModalProps) {
-  const daysInMonth = new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 0).getDate();
-  const firstDayIndex = new Date(pickerDate.getFullYear(), pickerDate.getMonth(), 1).getDay();
-
-  const calendarDays: { key: string; date: Date | null }[] = [];
-  for (let i = 0; i < firstDayIndex; i++) {
-    calendarDays.push({ key: `empty-${i}`, date: null });
-  }
-  for (let i = 1; i <= daysInMonth; i++) {
-    calendarDays.push({
-      key: `day-${pickerDate.getFullYear()}-${pickerDate.getMonth()}-${i}`,
-      date: new Date(pickerDate.getFullYear(), pickerDate.getMonth(), i),
-    });
-  }
+  const calendarDays = buildCalendarDays(pickerDate);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);

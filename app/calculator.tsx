@@ -22,6 +22,7 @@ import {
   mtfInterest,
 } from '../utils/charges';
 import { rankMarginSymbols } from '../utils/margins';
+import { buildCalendarDays } from '../utils/calendar';
 
 export default function CalculatorScreen() {
   const insets = useSafeAreaInsets();
@@ -355,19 +356,7 @@ export default function CalculatorScreen() {
                 </View>
               ))}
               {(() => {
-                const daysInMonth = new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 0).getDate();
-                const firstDayIndex = new Date(pickerDate.getFullYear(), pickerDate.getMonth(), 1).getDay();
-                const calendarDays: { key: string; date: Date | null }[] = [];
-
-                for (let i = 0; i < firstDayIndex; i++) {
-                  calendarDays.push({ key: `empty-${i}`, date: null });
-                }
-                for (let i = 1; i <= daysInMonth; i++) {
-                  calendarDays.push({
-                    key: `day-${pickerDate.getFullYear()}-${pickerDate.getMonth()}-${i}`,
-                    date: new Date(pickerDate.getFullYear(), pickerDate.getMonth(), i),
-                  });
-                }
+                const calendarDays = buildCalendarDays(pickerDate);
 
                 let currentSelectionDate = null;
                 if (datePickerTarget === 'entry') {
