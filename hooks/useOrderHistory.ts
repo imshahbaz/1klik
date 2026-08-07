@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { CustomAlert } from '../context/AlertContext';
 import type { User } from '../services/api';
 import { strategyOrderAPI, zerodhaAPI } from '../services/api';
-import { formatMtfOrders, formatStrategyOrders } from '../utils/tradeFormatters';
+import { formatMtfOrders, formatStrategyOrders, type FormattedMtfOrder, type FormattedStrategyOrder } from '../utils/tradeFormatters';
 
 /**
  * Owns the Trade screen's order-history data layer: the MTF and Strategy order
@@ -14,8 +14,8 @@ import { formatMtfOrders, formatStrategyOrders } from '../utils/tradeFormatters'
  * update the lists, preserving the screen's existing behavior.
  */
 export function useOrderHistory(user: User | null) {
-  const [mtfOrders, setMtfOrders] = useState<any[]>([]);
-  const [strategyOrders, setStrategyOrders] = useState<any[]>([]);
+  const [mtfOrders, setMtfOrders] = useState<FormattedMtfOrder[]>([]);
+  const [strategyOrders, setStrategyOrders] = useState<FormattedStrategyOrder[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   const fetchHistoryData = useCallback(async () => {

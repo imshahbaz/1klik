@@ -225,17 +225,21 @@ export default function TradeScreen() {
             `Could not update the MTF order. ${errMsg}`
           );
         }
-      } else {
         const rejectedOrder = {
           id: `m-${Date.now()}`,
           symbol: tradeSymbol.toUpperCase().trim(),
-          type: 'BUY',
           qty: Number.parseInt(tradeQty),
           price: 0,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: isConflict ? 'CONFLICT' : 'REJECTED',
+          orderStatus: isConflict ? 'CONFLICT' : 'REJECTED',
+          statusLabel: isConflict ? 'Conflict' : 'Rejected',
+          statusColor: '#EF4444',
           reason: isConflict ? 'Already scheduled for this date.' : errMsg,
           targetDate: formatDateString(targetDate),
+          strategyName: tradeStrategyName,
+          targetPercentage: tradeTargetPercentage,
+          broker: tradeBroker,
         };
         setMtfOrders([rejectedOrder, ...mtfOrders]);
 

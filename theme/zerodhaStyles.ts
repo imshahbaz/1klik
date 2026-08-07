@@ -1328,12 +1328,16 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     letterSpacing: 0.3,
   },
 
-  // ── Order History row (Zerodha Kite style) ─────────────────────
+  // ── Order History row (Clean Zerodha Kite style) ───────────────
   ohRow: {
-    paddingVertical: '12@vs',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.borderLight,
-    gap: '7@vs',
+    paddingVertical: '10@vs',
+    paddingHorizontal: '12@ms',
+    borderRadius: 8,
+    backgroundColor: theme.card,
+    borderWidth: 1,
+    borderColor: theme.borderLight,
+    marginBottom: '8@vs',
+    gap: '4@vs',
   },
   ohTopRow: {
     flexDirection: 'row',
@@ -1344,14 +1348,14 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
   ohLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: '8@ms',
+    gap: '6@ms',
     flex: 1,
     minWidth: 0,
   },
   ohSideTag: {
-    paddingHorizontal: '7@ms',
-    paddingVertical: '3@ms',
-    borderRadius: 5,
+    paddingHorizontal: '6@ms',
+    paddingVertical: '2@ms',
+    borderRadius: 3,
   },
   ohSideTagText: {
     fontSize: '9@ms',
@@ -1364,11 +1368,33 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     color: theme.textPrimary,
     flexShrink: 1,
   },
+  ohBrokerTag: {
+    paddingHorizontal: '5@ms',
+    paddingVertical: '2@ms',
+    borderRadius: 3,
+    backgroundColor: theme.borderLight,
+    flexShrink: 0,
+  },
+  ohBrokerTagText: {
+    fontSize: '9@ms',
+    fontWeight: '700',
+    color: theme.textSecondary,
+  },
+  ohStatusTag: {
+    paddingHorizontal: '7@ms',
+    paddingVertical: '2@ms',
+    borderRadius: 10,
+    flexShrink: 0,
+  },
+  ohStatusTagText: {
+    fontSize: '9@ms',
+    fontWeight: '800',
+  },
   ohSubRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: '10@ms',
+    gap: '8@ms',
   },
   ohMeta: {
     fontSize: '11@ms',
@@ -1376,8 +1402,14 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     color: theme.textSecondary,
     flexShrink: 1,
   },
+  ohDateText: {
+    fontSize: '10@ms',
+    fontWeight: '500',
+    color: theme.textSecondary,
+    flexShrink: 1,
+  },
   ohQty: {
-    fontSize: '12@ms',
+    fontSize: '13@ms',
     fontWeight: '700',
     color: theme.textPrimary,
     flexShrink: 0,
@@ -1386,23 +1418,26 @@ const createStyles = (theme: Colors) => ScaledSheet.create({
     fontSize: '10@ms',
     fontWeight: '600',
     color: theme.danger,
+    marginTop: '2@vs',
   },
   ohActions: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: '18@ms',
-    marginTop: '1@vs',
+    gap: '16@ms',
+    paddingTop: '4@vs',
+    borderTopWidth: 1,
+    borderTopColor: theme.borderLight,
+    marginTop: '2@vs',
   },
   ohActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: '5@ms',
+    gap: '4@ms',
   },
   ohActionText: {
     fontSize: '11@ms',
     fontWeight: '700',
-    letterSpacing: 0.2,
   },
 });
 

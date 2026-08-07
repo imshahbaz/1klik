@@ -39,16 +39,53 @@ export const parseTargetDate = (dateStr: string): Date => {
   }
 };
 
+export interface FormattedMtfOrder {
+  id: string;
+  userId?: number;
+  symbol: string;
+  qty: number;
+  price: number;
+  time: string;
+  status: string;
+  orderStatus: string;
+  statusLabel?: string;
+  statusColor?: string;
+  reason?: string;
+  targetDate: string;
+  strategyName: string;
+  targetPercentage: string;
+  broker: string;
+}
+
+export interface FormattedStrategyOrder {
+  id: string;
+  userId?: number;
+  symbol: string;
+  qty: number;
+  price: number;
+  time: string;
+  status: string;
+  reason?: string;
+  strategyName: string;
+  amount: number;
+  date: string;
+  broker: string;
+}
+
 /** Normalizes the MTF orders API payload into the shape the UI renders. */
-export const formatMtfOrders = (rawData: any) => {
+export const formatMtfOrders = (rawData: any): FormattedMtfOrder[] => {
   const ordersArray = Array.isArray(rawData) ? rawData : [];
   return ordersArray.map((order: any, idx: number) => ({
     id: order.id || `m-api-${idx}`,
+    userId: order.userId,
     symbol: order.symbol,
     qty: order.quantity ?? order.qty ?? 0,
     price: order.price ?? 0,
     time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    status: order.status || order.orderStatus || 'COMPLETED',
+    status: order.status || order.orderStatus || 'PENDING',
+    orderStatus: order.orderStatus || order.status || 'PENDING',
+    statusLabel: order.statusLabel || undefined,
+    statusColor: order.statusColor || undefined,
     reason: order.reason || undefined,
     targetDate: order.date ? formatDateString(new Date(order.date)) : 'Today',
     strategyName: order.strategyName || 'TRAILING PROFIT',
@@ -56,14 +93,16 @@ export const formatMtfOrders = (rawData: any) => {
       order.targetPercentage !== undefined && order.targetPercentage !== null
         ? order.targetPercentage.toString()
         : '',
+    broker: order.broker || 'ZERODHA',
   }));
 };
 
 /** Normalizes the strategy orders API payload into the shape the UI renders. */
-export const formatStrategyOrders = (rawData: any) => {
+export const formatStrategyOrders = (rawData: any): FormattedStrategyOrder[] => {
   const stratArray = Array.isArray(rawData) ? rawData : [];
   return stratArray.map((order: any, idx: number) => ({
     id: order.id || order._id || `s-api-${idx}`,
+    userId: order.userId,
     symbol: order.symbol || 'AUTO',
     qty: order.quantity ?? order.qty ?? 0,
     price: order.price ?? 0,
@@ -76,5 +115,6 @@ export const formatStrategyOrders = (rawData: any) => {
     // edit flow converts it back to ISO via parseTargetDate before it re-enters
     // the form, mirroring how MTF handles its date.
     date: order.date ? formatDateString(new Date(order.date)) : '',
+    broker: order.broker || 'ZERODHA',
   }));
 };
