@@ -31,7 +31,7 @@ export default function SwipeButton({
   color,
   icon = 'flash',
 }: SwipeButtonProps) {
-  const fill = color || theme.success;
+  const fill = color || theme.buttonPrimary || theme.primary;
 
   const [trackW, setTrackW] = useState(0);
   const maxX = Math.max(0, trackW - THUMB - PAD * 2);

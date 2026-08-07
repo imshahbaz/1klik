@@ -140,7 +140,7 @@ export default function ProfileMenu({
                   }}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="log-in-outline" size={18} color={theme.darkCardText} />
+                  <Ionicons name="log-in-outline" size={18} color={theme.buttonPrimaryText} />
                   <Text style={styles.loginButtonText}>Login</Text>
                 </TouchableOpacity>
               </View>

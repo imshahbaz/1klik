@@ -293,10 +293,10 @@ export default function SettingsScreen() {
                 activeOpacity={0.85}
               >
                 {loading ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
+                  <ActivityIndicator size="small" color={theme.buttonPrimaryText} />
                 ) : (
                   <>
-                    <Ionicons name="save-outline" size={18} color={theme.darkCardText} />
+                    <Ionicons name="save-outline" size={18} color={theme.buttonPrimaryText} />
                     <Text style={styles.saveButtonText}>Update Username</Text>
                   </>
                 )}

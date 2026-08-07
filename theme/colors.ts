@@ -23,7 +23,17 @@ export const lightColors = {
   warningText: '#d97706',
   warningBackground: 'rgba(245, 158, 11, 0.08)',
   primaryBackground: 'rgba(240, 90, 40, 0.08)',
-  placeholder: '#94a3b8'
+  placeholder: '#94a3b8',
+  buttonPrimary: '#f05a28',
+  buttonPrimaryPressed: '#c74a1f',
+  buttonPrimaryText: '#ffffff',
+  buttonSecondary: '#ffffff',
+  buttonSecondaryPressed: '#f1f5f9',
+  buttonSecondaryText: '#0f172a',
+  buttonSecondaryBorder: '#e2e8f0',
+  buttonDanger: '#f43f5e',
+  buttonDangerPressed: '#be123c',
+  buttonDangerText: '#ffffff',
 };
 
 export const darkColors = {
@@ -51,7 +61,17 @@ export const darkColors = {
   warningText: '#fbbf24',
   warningBackground: 'rgba(245, 158, 11, 0.2)',
   primaryBackground: 'rgba(240, 90, 40, 0.15)',
-  placeholder: '#94a3b8'
+  placeholder: '#94a3b8',
+  buttonPrimary: '#f05a28',
+  buttonPrimaryPressed: '#d14e22',
+  buttonPrimaryText: '#ffffff',
+  buttonSecondary: '#1c1c1e',
+  buttonSecondaryPressed: '#2c2c2e',
+  buttonSecondaryText: '#f8fafc',
+  buttonSecondaryBorder: '#2c2c2e',
+  buttonDanger: '#f43f5e',
+  buttonDangerPressed: '#e11d48',
+  buttonDangerText: '#ffffff',
 };
 
 export type Colors = typeof lightColors;
