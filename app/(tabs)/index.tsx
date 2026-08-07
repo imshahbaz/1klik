@@ -173,8 +173,8 @@ export default function HomeScreen() {
           {/* Quick Actions Grid */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/screener')} activeOpacity={0.7}>
-              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: 'rgba(59, 130, 246, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="filter" size={moderateScale(30)} color={theme.primary || '#3b82f6'} />
+              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: theme.primaryBackground, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                <Ionicons name="filter" size={moderateScale(30)} color={theme.primary} />
               </View>
               <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Screener</Text>
             </TouchableOpacity>
@@ -186,15 +186,15 @@ export default function HomeScreen() {
                 router.push('/trade');
               }
             }} activeOpacity={0.7}>
-              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: 'rgba(16, 185, 129, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="pulse" size={moderateScale(30)} color={theme.success || '#10b981'} />
+              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: theme.successBackground, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                <Ionicons name="pulse" size={moderateScale(30)} color={theme.success} />
               </View>
               <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Trade</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/calculator')} activeOpacity={0.7}>
-              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: 'rgba(245, 158, 11, 0.12)', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="calculator" size={moderateScale(30)} color="#f59e0b" />
+              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: theme.warningBackground, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                <Ionicons name="calculator" size={moderateScale(30)} color={theme.warningText} />
               </View>
               <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Calculator</Text>
             </TouchableOpacity>

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale } from 'react-native-size-matters';
+import { lightColors } from '../theme/colors';
 
 interface ErrorBoundaryProps {
   readonly children: React.ReactNode;
@@ -40,7 +41,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
     return (
       <View style={styles.container}>
         <View style={styles.iconCircle}>
-          <Ionicons name="alert-circle-outline" size={40} color="#3b82f6" />
+          <Ionicons name="alert-circle-outline" size={40} color={lightColors.buttonPrimary} />
         </View>
         <Text style={styles.title}>Something went wrong</Text>
         <Text style={styles.subtitle}>
@@ -67,7 +68,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(59, 130, 246, 0.12)',
+    backgroundColor: 'rgba(240, 90, 40, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#3b82f6',
+    backgroundColor: lightColors.buttonPrimary,
     paddingHorizontal: 24,
     height: 50,
     borderRadius: 14,
