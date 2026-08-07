@@ -15,10 +15,18 @@ import { getDeleteStrategyOrderResult } from '../utils/strategyOrderError';
  * The list setters are exposed so the placement handlers can optimistically
  * update the lists, preserving the screen's existing behavior.
  */
+export interface DeleteResult {
+  variant: 'success' | 'error';
+  title: string;
+  message: string;
+}
+
 export function useOrderHistory(user: User | null) {
   const [mtfOrders, setMtfOrders] = useState<FormattedMtfOrder[]>([]);
   const [strategyOrders, setStrategyOrders] = useState<FormattedStrategyOrder[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  // Modal shown after a delete request resolves — mirrors the create/update flow.
+  const [deleteResult, setDeleteResult] = useState<DeleteResult | null>(null);
 
   const fetchHistoryData = useCallback(async () => {
     const userId = user?.id || user?.userId;
@@ -67,12 +75,16 @@ export function useOrderHistory(user: User | null) {
               }
               // Only drop the row once the server confirms the cancellation.
               setMtfOrders(prev => prev.filter(o => o.id !== orderId));
-              CustomAlert.alert('Order Cancelled', 'Scheduled MTF order has been successfully cancelled.');
+              setDeleteResult({
+                variant: 'success',
+                title: 'Order Cancelled',
+                message: 'Scheduled MTF order has been successfully cancelled.',
+              });
             } catch (err: any) {
               console.error('Failed to delete MTF order:', err);
               // Keep the row — the order still exists server-side.
               const result = getDeleteOrderResult(err);
-              CustomAlert.alert(result.title, result.message);
+              setDeleteResult({ variant: 'error', ...result });
             }
           }
         }
@@ -97,12 +109,16 @@ export function useOrderHistory(user: User | null) {
               }
               // Only drop the row once the server confirms the deletion.
               setStrategyOrders(prev => prev.filter(o => o.id !== orderId));
-              CustomAlert.alert('Order Deleted', 'Strategy order log has been successfully deleted.');
+              setDeleteResult({
+                variant: 'success',
+                title: 'Order Deleted',
+                message: 'Strategy order log has been successfully deleted.',
+              });
             } catch (err: any) {
               console.error('Failed to delete Strategy order:', err);
               // Keep the row — the log still exists server-side.
               const result = getDeleteStrategyOrderResult(err);
-              CustomAlert.alert(result.title, result.message);
+              setDeleteResult({ variant: 'error', ...result });
             }
           }
         }
@@ -119,5 +135,7 @@ export function useOrderHistory(user: User | null) {
     fetchHistoryData,
     handleDeleteMtfOrder,
     handleDeleteStrategyOrder,
+    deleteResult,
+    setDeleteResult,
   };
 }
