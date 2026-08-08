@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Text, TouchableRipple } from 'react-native-paper';
 import { buyCharges, sellCharges, mtfInterest, breakEvenSellAmount } from '../../utils/charges';
 import type { Holding } from '../../services/api/types';
@@ -119,27 +119,46 @@ function HoldingCardBase({
   const isProfit = pnl >= 0;
   const tint = isProfit ? theme.up : theme.down;
 
+  // The collapsed row is two side-by-side two-line stacks. If either secondary
+  // line wrapped, that stack would grow taller than its neighbour and the two
+  // would stop lining up — so both are pinned to one line and the type steps
+  // down when the row gets tight. Divided by font scale as well as width,
+  // since large system text starves the row the same way a small screen does.
+  const { width, fontScale } = useWindowDimensions();
+  const effectiveWidth = width / Math.max(fontScale, 1);
+  const titleSize = effectiveWidth < 380 ? 14 : 15;
+  const subSize = effectiveWidth < 380 ? 11 : 12;
+
   return (
     <View style={[styles.wrap, { borderBottomColor: theme.divider }]}>
       <TouchableRipple onPress={() => onToggle(holding.symbol)} rippleColor={theme.ripple}>
         <View style={styles.summary}>
           <View style={styles.summaryLeft}>
             <View style={styles.symbolRow}>
-              <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '700', color: theme.textPrimary }}>
+              <Text numberOfLines={1} style={{ fontSize: titleSize, fontWeight: '700', color: theme.textPrimary }}>
                 {holding.symbol}
               </Text>
               {leverage > 1 ? <Tag label={`${leverage}× MTF`} tone="accent" /> : null}
             </View>
-            <Text style={[numeric, { fontSize: 12, color: theme.textSecondary, marginTop: 3 }]}>
+            <Text
+              numberOfLines={1}
+              style={[numeric, { fontSize: subSize, color: theme.textSecondary, marginTop: 3 }]}
+            >
               {totalQty} qty · avg ₹{formatINR(avgPrice)}
             </Text>
           </View>
 
           <View style={styles.summaryRight}>
-            <Text style={[numeric, { fontSize: 15, fontWeight: '700', color: theme.textPrimary }]}>
+            <Text
+              numberOfLines={1}
+              style={[numeric, { fontSize: titleSize, fontWeight: '700', color: theme.textPrimary }]}
+            >
               ₹{formatINR(ltp)}
             </Text>
-            <Text style={[numeric, { fontSize: 12, fontWeight: '700', color: tint, marginTop: 3 }]}>
+            <Text
+              numberOfLines={1}
+              style={[numeric, { fontSize: subSize, fontWeight: '700', color: tint, marginTop: 3 }]}
+            >
               {isProfit ? '+' : '−'}₹{formatINR(Math.abs(pnl))} ({pnlPercent.toFixed(2)}%)
             </Text>
           </View>
@@ -273,6 +292,9 @@ const styles = StyleSheet.create({
   },
   summaryRight: {
     alignItems: 'flex-end',
+    // Lets the P&L column give ground instead of squeezing the symbol/quantity
+    // column until it truncates.
+    flexShrink: 1,
   },
   symbolRow: {
     flexDirection: 'row',
