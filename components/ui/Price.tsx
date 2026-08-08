@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleProp, TextStyle, View } from 'react-native';
+import { StyleProp, TextStyle, useWindowDimensions, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useTheme } from '../../context/ThemeContext';
 import { numeric, radius, space } from '../../theme/tokens';
@@ -84,22 +84,57 @@ interface StatProps {
   readonly value: string;
   readonly align?: 'flex-start' | 'center' | 'flex-end';
   readonly tint?: string;
+  /** Override the caption size — see `useStatScale` for narrow layouts. */
+  readonly labelSize?: number;
+  readonly valueSize?: number;
 }
 
-/** Caption-over-value cell used in OHLC strips and summary rows. */
-export function Stat({ label, value, align = 'flex-start', tint }: StatProps) {
+/**
+ * Caption-over-value cell used in OHLC strips and summary rows.
+ *
+ * The caption is pinned to a single line: if one cell's label wrapped while its
+ * neighbours' didn't, that cell's value would sit a line lower and break the
+ * row's baseline. Narrow layouts should shrink the type via `useStatScale`
+ * rather than let it wrap.
+ */
+export function Stat({ label, value, align = 'flex-start', tint, labelSize = 10, valueSize = 13.5 }: StatProps) {
   const { theme } = useTheme();
   return (
     <View style={{ flex: 1, alignItems: align, minWidth: 0 }}>
-      <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 0.7, color: theme.textTertiary }}>
+      <Text
+        numberOfLines={1}
+        style={{
+          fontSize: labelSize,
+          fontWeight: '700',
+          letterSpacing: labelSize >= 10 ? 0.7 : 0.3,
+          color: theme.textTertiary,
+        }}
+      >
         {label}
       </Text>
       <Text
         numberOfLines={1}
-        style={[numeric, { fontSize: 13.5, fontWeight: '600', color: tint || theme.textPrimary, marginTop: 3 }]}
+        style={[numeric, { fontSize: valueSize, fontWeight: '600', color: tint || theme.textPrimary, marginTop: 3 }]}
       >
         {value}
       </Text>
     </View>
   );
+}
+
+/**
+ * Type scale for a row of `columns` Stat cells spanning the viewport.
+ *
+ * Steps the caption and value down as each column's share of the width
+ * shrinks. Divides by the system font scale too, so a user running large text
+ * gets the same protection a small screen does — that combination is what
+ * pushes a long caption like "PREV CLOSE" onto a second line.
+ */
+export function useStatScale(columns: number, horizontalPadding = 32) {
+  const { width, fontScale } = useWindowDimensions();
+  const column = (width - horizontalPadding) / columns / Math.max(fontScale, 1);
+
+  if (column < 62) return { labelSize: 8, valueSize: 11.5 };
+  if (column < 74) return { labelSize: 9, valueSize: 12.5 };
+  return { labelSize: 10, valueSize: 13.5 };
 }

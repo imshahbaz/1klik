@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text, TouchableRipple } from 'react-native-paper';
-import { Delta, Money, Stat, formatAmount } from '../ui/Price';
+import { Delta, Money, Stat, formatAmount, useStatScale } from '../ui/Price';
 import { EmptyState, Tag } from '../ui/Feedback';
 import { Panel } from '../ui/Panel';
 import { numeric, radius, space } from '../../theme/tokens';
@@ -43,6 +43,10 @@ export default function MarketStatusCard({
   high,
   low,
 }: MarketStatusCardProps) {
+  // Four columns inside the screen gutter (16 × 2) and the strip's own inset
+  // (16 × 2). Called before the early returns so the hook order stays stable.
+  const statScale = useStatScale(4, 64);
+
   if (cardLoading && !marketData) {
     return (
       <Panel style={{ minHeight: 168, alignItems: 'center', justifyContent: 'center' }}>
@@ -86,12 +90,6 @@ export default function MarketStatusCard({
               </Text>
               <Tag label="NSE" />
             </View>
-            <View style={styles.live}>
-              <View style={[styles.dot, { backgroundColor: tint }]} />
-              <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 0.7, color: theme.textTertiary }}>
-                LIVE
-              </Text>
-            </View>
           </View>
 
           <View style={styles.quote}>
@@ -116,10 +114,10 @@ export default function MarketStatusCard({
           </View>
 
           <View style={[styles.strip, { borderTopColor: theme.divider }]}>
-            <Stat label="OPEN" value={formatAmount(open)} />
-            <Stat label="HIGH" value={formatAmount(high)} align="center" tint={theme.up} />
-            <Stat label="LOW" value={formatAmount(low)} align="center" tint={theme.down} />
-            <Stat label="PREV CLOSE" value={formatAmount(prevClose)} align="flex-end" />
+            <Stat label="OPEN" value={formatAmount(open)} {...statScale} />
+            <Stat label="HIGH" value={formatAmount(high)} align="center" tint={theme.up} {...statScale} />
+            <Stat label="LOW" value={formatAmount(low)} align="center" tint={theme.down} {...statScale} />
+            <Stat label="PREV CLOSE" value={formatAmount(prevClose)} align="flex-end" {...statScale} />
           </View>
         </View>
       </TouchableRipple>
@@ -131,7 +129,6 @@ const styles = StyleSheet.create({
   head: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: space.lg,
     paddingTop: space.lg,
   },
@@ -141,16 +138,6 @@ const styles = StyleSheet.create({
     gap: space.sm,
     flex: 1,
     minWidth: 0,
-  },
-  live: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: radius.pill,
   },
   quote: {
     paddingHorizontal: space.lg,
