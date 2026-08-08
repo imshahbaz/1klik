@@ -1,9 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ScreenScaffold } from '../../components/ScreenScaffold';
+import { View } from 'react-native';
+import { ActivityIndicator } from 'react-native-paper';
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
@@ -17,10 +15,11 @@ import {
   type CreateOrderPayload,
   type CreateStrategyOrderPayload,
 } from '../../services/api';
-import { useAdaptiveLayout } from '../../theme/layout';
-import { useZerodhaStyles } from '../../theme/zerodhaStyles';
-import ExecuteTab, { ExecuteStrategy } from '../../components/trade/ExecuteTab';
-import StrategyTab from '../../components/trade/StrategyTab';
+import Screen from '../../components/ui/Screen';
+import TopBar from '../../components/ui/TopBar';
+import Tabs from '../../components/ui/Tabs';
+import ExecuteTab, { ExecuteAction, ExecuteStrategy } from '../../components/trade/ExecuteTab';
+import StrategyTab, { StrategyAction } from '../../components/trade/StrategyTab';
 import HistoryTab from '../../components/trade/HistoryTab';
 import OrderResultModal from '../../components/trade/OrderResultModal';
 import DatePickerModal from '../../components/common/DatePickerModal';
@@ -34,11 +33,8 @@ import {
 import { rankMarginSymbols } from '../../utils/margins';
 
 export default function TradeScreen() {
-  const insets = useSafeAreaInsets();
-  const layout = useAdaptiveLayout(insets);
   const { user, appLoading } = useAuth();
-  const { isDarkMode, theme } = useTheme();
-  const styles = useZerodhaStyles(isDarkMode);
+  const { theme } = useTheme();
 
   useRequireAuth();
 
@@ -262,7 +258,6 @@ export default function TradeScreen() {
       case 'execute':
         return (
           <ExecuteTab
-            styles={styles}
             theme={theme}
             tradeBroker={tradeBroker}
             setTradeBroker={setTradeBroker}
@@ -293,7 +288,6 @@ export default function TradeScreen() {
       case 'strategy':
         return (
           <StrategyTab
-            styles={styles}
             theme={theme}
             strategyOptions={strategyOptions}
             strategyFormData={strategyFormData}
@@ -312,7 +306,6 @@ export default function TradeScreen() {
       case 'history':
         return (
           <HistoryTab
-            styles={styles}
             theme={theme}
             loadingHistory={loadingHistory}
             mtfOrders={mtfOrders}
@@ -413,9 +406,8 @@ export default function TradeScreen() {
 
   if (appLoading) {
     return (
-      <View style={[styles.safeArea, layout.screenPadding, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={{ flex: 1, backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -431,47 +423,53 @@ export default function TradeScreen() {
     pickerSelectedDate = new Date(strategyFormData.date);
   }
 
+  // Execute and Strategy commit through a pinned action bar; History has none.
+  let footer: React.ReactNode = null;
+  if (activeTab === 'execute') {
+    footer = (
+      <ExecuteAction
+        theme={theme}
+        editingMtfOrderId={editingMtfOrderId}
+        executingTrade={executingTrade}
+        handleExecuteOrder={handleExecuteOrder}
+      />
+    );
+  } else if (activeTab === 'strategy') {
+    footer = (
+      <StrategyAction
+        theme={theme}
+        editingStrategyOrderId={editingStrategyOrderId}
+        submittingStrategy={submittingStrategy}
+        handleSaveStrategyOrder={handleSaveStrategyOrder}
+      />
+    );
+  }
+
   return (
     <>
-      <ScreenScaffold
-        styles={styles}
-        layout={layout}
-        insets={insets}
-        contentInsetAdjustmentBehavior="automatic"
-        extraKeyboardSpace={72}
+      <Screen
+        footer={footer}
+        header={
+          <TopBar
+            title="Orders"
+            bottom={
+              <Tabs
+                value={activeTab}
+                onChange={(val) => handleTabChange(val as 'execute' | 'strategy' | 'history')}
+                items={[
+                  { value: 'execute', label: 'Execute' },
+                  { value: 'strategy', label: 'Strategy' },
+                  { value: 'history', label: 'History' },
+                ]}
+              />
+            }
+          />
+        }
       >
-        {/* Custom Premium Segmented Tab Bar */}
-          <View style={styles.tabContainer as any}>
-            {[
-              { id: 'execute', label: 'EXECUTE', icon: 'flash' },
-              { id: 'strategy', label: 'STRATEGY', icon: 'analytics' },
-              { id: 'history', label: 'HISTORY', icon: 'receipt' },
-            ].map((tab) => (
-              <TouchableOpacity
-                key={tab.id}
-                style={[styles.tabButton, activeTab === tab.id && styles.activeTabButton] as any}
-                onPress={() => handleTabChange(tab.id as any)}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name={activeTab === tab.id ? (tab.icon as any) : (`${tab.icon}-outline` as any)}
-                  size={16}
-                  color={activeTab === tab.id ? theme.primary : theme.textSecondary}
-                />
-                <Text style={[styles.tabButtonLabel, activeTab === tab.id && styles.activeTabButtonLabel] as any}>
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Tab Views Render */}
-          {renderTabContent()}
-
-      </ScreenScaffold>
+        {renderTabContent()}
+      </Screen>
 
       <DatePickerModal
-        styles={styles}
         theme={theme}
         visible={showDatePicker}
         pickerDate={pickerDate}
@@ -503,7 +501,6 @@ export default function TradeScreen() {
 
         return (
           <OrderResultModal
-            styles={styles}
             theme={theme}
             visible
             variant={active.variant}

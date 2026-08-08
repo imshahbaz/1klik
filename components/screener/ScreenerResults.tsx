@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, FlatList } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+import { EmptyState } from '../ui/Feedback';
+import { overline, space } from '../../theme/tokens';
 
 interface ScreenerResultsProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly layout: any;
   readonly selectedStrategy: string | null;
@@ -13,88 +15,92 @@ interface ScreenerResultsProps {
   readonly renderStockSkeletons: () => any;
   readonly handleStrategyPress: (name: string) => void;
   readonly renderStockResultItem: ({ item }: { item: any }) => any;
+  /** Bottom padding so the last row clears the navigation bar. */
+  readonly bottomInset: number;
 }
 
+/**
+ * Scan output as a continuous, hairline-separated table with a sticky column
+ * header — the layout a broker uses for a watchlist, which fits roughly twice
+ * as many instruments on screen as the previous stack of rounded cards.
+ */
 export default function ScreenerResults({
-  styles,
   theme,
-  layout,
   selectedStrategy,
   scanLoading,
   scanError,
   scanResults,
   renderStockSkeletons,
   handleStrategyPress,
-  renderStockResultItem
+  renderStockResultItem,
+  bottomInset,
 }: ScreenerResultsProps) {
+  if (scanLoading) {
+    return <View style={{ flex: 1 }}>{renderStockSkeletons()}</View>;
+  }
+
+  if (scanError) {
+    return (
+      <EmptyState
+        icon="alert-circle-outline"
+        title="Scan failed"
+        message={scanError}
+        actionLabel="Retry scan"
+        onAction={() => handleStrategyPress(selectedStrategy || '')}
+        tone="error"
+      />
+    );
+  }
+
+  if (!selectedStrategy) {
+    return (
+      <EmptyState
+        icon="scan-outline"
+        title="Pick a strategy"
+        message="Choose a scan above to query the market for matching setups."
+      />
+    );
+  }
+
+  if (scanResults.length === 0) {
+    return (
+      <EmptyState
+        icon="funnel-outline"
+        title="No matches"
+        message={`Nothing currently satisfies the ${selectedStrategy} criteria.`}
+      />
+    );
+  }
+
   return (
-    <View style={styles.resultsSection}>
-      <View style={styles.resultsHeaderRow}>
-        <Text style={styles.resultsTitle}>
-          {selectedStrategy ? `Scan results: ${selectedStrategy}` : 'Scan Results'}
-        </Text>
+    <View style={{ flex: 1 }}>
+      <View style={[styles.columns, { borderBottomColor: theme.divider, backgroundColor: theme.background }]}>
+        <Text style={[overline, { color: theme.textTertiary }]}>Symbol</Text>
+        <Text style={[overline, { color: theme.textTertiary }]}>LTP</Text>
       </View>
 
-      {(() => {
-        if (scanLoading) {
-          return renderStockSkeletons();
-        }
-        if (scanError) {
-          return (
-            <View style={styles.emptyStateContainer}>
-              <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.danger + '15' }]}>
-                <Ionicons name="alert-circle-outline" size={32} color={theme.danger} />
-              </View>
-              <Text style={styles.emptyStateTitle}>Scan Failed</Text>
-              <Text style={[styles.emptyStateSubtext, { color: theme.danger }]}>{scanError}</Text>
-              <TouchableOpacity style={[styles.retryButton, { marginTop: 8 }]} onPress={() => handleStrategyPress(selectedStrategy || '')} activeOpacity={0.8}>
-                <Text style={styles.retryText}>Retry Scan</Text>
-              </TouchableOpacity>
-            </View>
-          );
-        }
-        if (!selectedStrategy) {
-          return (
-            <View style={styles.emptyStateContainer}>
-              <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.primary + '15' }]}>
-                <Ionicons name="search-outline" size={32} color={theme.primary} />
-              </View>
-              <Text style={styles.emptyStateTitle}>Ready to Scan</Text>
-              <Text style={styles.emptyStateSubtext}>
-                Select a strategy above to query the market and find your next setup.
-              </Text>
-            </View>
-          );
-        }
-        if (scanResults.length === 0) {
-          return (
-            <View style={styles.emptyStateContainer}>
-              <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.borderLight }]}>
-                <Ionicons name="filter-outline" size={32} color={theme.iconMuted} />
-              </View>
-              <Text style={styles.emptyStateTitle}>No Matches Found</Text>
-              <Text style={styles.emptyStateSubtext}>
-                No stocks currently match the {selectedStrategy} criteria.
-              </Text>
-            </View>
-          );
-        }
-        return (
-          <FlatList
-            data={scanResults}
-            keyExtractor={(item, index) => String(item.symbol || item.nsecode || item.name || index)}
-            renderItem={renderStockResultItem}
-            contentContainerStyle={[styles.resultsList, { paddingBottom: layout.tabBarHeight + 24 }]}
-            contentInsetAdjustmentBehavior="automatic"
-            initialNumToRender={12}
-            maxToRenderPerBatch={12}
-            windowSize={7}
-            removeClippedSubviews
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          />
-        );
-      })()}
+      <FlatList
+        data={scanResults}
+        keyExtractor={(item, index) => String(item.symbol || item.nsecode || item.name || index)}
+        renderItem={renderStockResultItem}
+        contentContainerStyle={{ paddingBottom: bottomInset }}
+        initialNumToRender={14}
+        maxToRenderPerBatch={14}
+        windowSize={7}
+        removeClippedSubviews
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  columns: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: space.lg,
+    paddingVertical: space.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+});

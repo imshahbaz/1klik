@@ -1,12 +1,16 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View } from 'react-native';
+import { Text } from 'react-native-paper';
 import { CustomAlert } from '../../context/AlertContext';
-import FormInput from '../common/FormInput';
 import BrokerConnectionStatus from './BrokerConnectionStatus';
+import Button from '../ui/Button';
+import { Field } from '../ui/Field';
+import { Notice } from '../ui/Feedback';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { space } from '../../theme/tokens';
 
 interface RupeezyCardProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly rupeezyStatusColor: string;
   readonly rupeezyStatusContent: React.ReactNode;
@@ -26,7 +30,6 @@ interface RupeezyCardProps {
 }
 
 export default function RupeezyCard({
-  styles,
   theme,
   rupeezyStatusColor,
   rupeezyStatusContent,
@@ -42,93 +45,86 @@ export default function RupeezyCard({
   rupeezySaving,
   handleSaveRupeezyConfig,
   setRupeezyError,
-  setShowRupeezyWebView
+  setShowRupeezyWebView,
 }: RupeezyCardProps) {
   return (
     <View>
+      <SectionHeader title="Session" />
       <BrokerConnectionStatus
-        styles={styles}
         theme={theme}
         statusColor={rupeezyStatusColor}
         statusContent={rupeezyStatusContent}
         connectionText={rupeezyConnectionText}
         error={rupeezyError}
-        idleSubtitle="Secured Rupeezy Connection"
+        idleSubtitle="Rupeezy Flow · orders route through this session"
         onToggleConfig={() => setIsRupeezy404Error(!isRupeezy404Error)}
       />
 
-      {/* Login Action Card if disconnected but config exists */}
       {!isRupeezy404Error && isRupeezyTokenExpired && (
-        <View style={[styles.formCard, { marginTop: 16 }]}>
-          <Text style={styles.formTitle}>Reconnect Required</Text>
-          <Text style={styles.formSubtitle}>Your Rupeezy session has expired. Click below to re-authenticate.</Text>
-          
-          <TouchableOpacity
-            style={[styles.submitButton, { marginTop: 16 }]}
-            onPress={() => {
-              if (!rupeezyAppId) {
-                CustomAlert.alert("Missing App ID", "No saved App ID found. Please save your API config first.");
-                return;
-              }
-              setShowRupeezyWebView(true);
-            }}
-          >
-            <Ionicons name="flash-outline" size={20} color="#ffffff" />
-            <Text style={styles.submitButtonText}>Connect to Rupeezy</Text>
-          </TouchableOpacity>
+        <View style={{ marginTop: space.md }}>
+          <Panel style={{ gap: space.md }}>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: theme.textPrimary }}>
+              Reconnect required
+            </Text>
+            <Text style={{ fontSize: 13, color: theme.textSecondary, lineHeight: 19 }}>
+              Your Rupeezy session has expired. Re-authenticate to resume placing orders.
+            </Text>
+            <Button
+              label="Connect to Rupeezy"
+              icon="flash-outline"
+              onPress={() => {
+                if (!rupeezyAppId) {
+                  CustomAlert.alert(
+                    'Missing App ID',
+                    'No saved App ID found. Please save your API config first.'
+                  );
+                  return;
+                }
+                setShowRupeezyWebView(true);
+              }}
+            />
+          </Panel>
         </View>
       )}
 
-      {/* Config Form */}
       {isRupeezy404Error && (
-        <View style={[styles.formCard, { marginTop: 16 }]}>
-          <View style={styles.formHeaderContainer}>
-            <View style={styles.actionIconCircle}>
-              <Ionicons name="business-outline" size={22} color={theme.primary} />
-            </View>
-            <View style={styles.actionTextContainer}>
-              <Text style={styles.formTitle}>Rupeezy Configuration</Text>
-              <Text style={styles.formSubtitle}>Enter your App ID and API Secret below.</Text>
-            </View>
-          </View>
+        <>
+          <SectionHeader title="Rupeezy API credentials" />
+          <Panel style={{ gap: space.lg }}>
+            <Field
+              label="App ID"
+              icon="apps-outline"
+              placeholder="Rupeezy application ID"
+              value={rupeezyAppId}
+              onChangeText={(text) => {
+                setRupeezyAppId(text);
+                setRupeezyError(null);
+              }}
+            />
 
-          <FormInput
-            styles={styles}
-            theme={theme}
-            label="APP ID *"
-            icon="apps-outline"
-            placeholder="Enter App ID"
-            value={rupeezyAppId}
-            onChangeText={(text) => { setRupeezyAppId(text); setRupeezyError(null); }}
-          />
+            <Field
+              label="API secret"
+              icon="lock-closed-outline"
+              placeholder="Rupeezy API secret"
+              value={rupeezyApiSecret}
+              onChangeText={(text) => {
+                setRupeezyApiSecret(text);
+                setRupeezyError(null);
+              }}
+              secureTextEntry
+            />
 
-          <FormInput
-            styles={styles}
-            theme={theme}
-            label="API SECRET *"
-            icon="lock-closed-outline"
-            placeholder="Enter API Secret"
-            value={rupeezyApiSecret}
-            onChangeText={(text) => { setRupeezyApiSecret(text); setRupeezyError(null); }}
-            secureTextEntry
-          />
+            {rupeezyError ? <Notice tone="down" message={rupeezyError} /> : null}
 
-          {rupeezyError && (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle-outline" size={16} color={theme.danger} />
-              <Text style={styles.errorText}>{rupeezyError}</Text>
-            </View>
-          )}
-
-          <TouchableOpacity style={[styles.submitButton, rupeezySaving && styles.disabledButton]} onPress={handleSaveRupeezyConfig} disabled={rupeezySaving}>
-            {rupeezySaving ? <ActivityIndicator size="small" color="#ffffff" /> : (
-              <>
-                <Ionicons name="checkmark-circle-outline" size={20} color="#ffffff" />
-                <Text style={styles.submitButtonText}>Save Rupeezy Config</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+            <Button
+              label="Save credentials"
+              icon="checkmark-circle-outline"
+              onPress={handleSaveRupeezyConfig}
+              loading={rupeezySaving}
+              disabled={rupeezySaving}
+            />
+          </Panel>
+        </>
       )}
     </View>
   );

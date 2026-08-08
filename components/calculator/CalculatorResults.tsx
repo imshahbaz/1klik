@@ -1,9 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+import Button from '../ui/Button';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { numeric, radius, space } from '../../theme/tokens';
 
 interface CalculatorResultsProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly results: any;
   readonly setView: (val: 'form' | 'results') => void;
@@ -11,115 +14,121 @@ interface CalculatorResultsProps {
   readonly formatCurrency: (val: string) => string;
 }
 
+/**
+ * Outcome screen. The net P&L is the single dominant number, tinted by
+ * direction, with everything that produced it laid out as a plain ledger below.
+ */
 export default function CalculatorResults({
-  styles,
   theme,
   results,
   setView,
   resetForm,
-  formatCurrency
+  formatCurrency,
 }: CalculatorResultsProps) {
+  const tint = results.isProfit ? theme.up : theme.down;
+
   return (
-    <View style={styles.resultsContainer}>
-      {/* Headline ROI card */}
-      <View style={[styles.headlineCard, results.isProfit ? styles.headlineCardProfit : styles.headlineCardLoss]}>
-        <View style={[styles.iconCircle, results.isProfit ? styles.iconCircleProfit : styles.iconCircleLoss]}>
-          <Ionicons name={results.isProfit ? "trending-up" : "trending-down"} size={32} color="#ffffff" />
-        </View>
-
-        <Text style={styles.headlineLabel}>Net P&L Result</Text>
-        <Text style={[styles.headlinePnLValue, results.isProfit ? styles.textProfit : styles.textLoss]}>
-          ₹{results.net}
-        </Text>
-
-        <View style={[styles.roiBadge, results.isProfit ? styles.roiBadgeProfit : styles.roiBadgeLoss]}>
-          <Text style={[styles.roiBadgeText, results.isProfit ? styles.roiBadgeTextProfit : styles.roiBadgeTextLoss]}>
-            {results.roi}% ROI
+    <View>
+      <SectionHeader title="Net result" />
+      <Panel padded={false}>
+        <View style={[styles.headline, { borderBottomColor: theme.divider }]}>
+          <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 0.8, color: theme.textTertiary }}>
+            {results.isProfit ? 'NET PROFIT' : 'NET LOSS'}
           </Text>
-        </View>
-
-        {/* Reset options */}
-        <View style={styles.resultActionsRow}>
-          <TouchableOpacity
-            style={styles.resultAdjustBtn}
-            onPress={() => setView('form')}
-          >
-            <Ionicons name="create-outline" size={16} color={theme.textPrimary} />
-            <Text style={styles.resultAdjustBtnText}>Adjust</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.resultResetBtn}
-            onPress={resetForm}
-          >
-            <Ionicons name="refresh-outline" size={16} color="#ffffff" />
-            <Text style={styles.resultResetBtnText}>Reset</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Section 1: Position Summary */}
-      <View style={styles.resultsDetailCard}>
-        <View style={styles.resultsHeaderRow}>
-          <Ionicons name="wallet-outline" size={18} color={theme.secondary} />
-          <Text style={styles.resultsDetailCardTitle}>Position Summary</Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Stock Symbol</Text>
-          <Text style={styles.detailValueBold} numberOfLines={1} adjustsFontSizeToFit>{results.symbol}</Text>
-        </View>
-        <View style={styles.rowDivider} />
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Shares Quantity</Text>
-          <Text style={styles.detailValue} numberOfLines={1} adjustsFontSizeToFit>{results.shares} shares</Text>
-        </View>
-        <View style={styles.rowDivider} />
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Total Position Value</Text>
-          <Text style={styles.detailValue} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(results.totalValue)}</Text>
-        </View>
-        <View style={styles.rowDivider} />
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Your Required Capital</Text>
-          <Text style={styles.detailValueBold} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(results.margin)}</Text>
-        </View>
-        <View style={styles.rowDivider} />
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Exit Target Price</Text>
-          <Text style={styles.detailValue} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(results.sellPrice)}</Text>
-        </View>
-      </View>
-
-      {/* Section 2: Cost Breakdown */}
-      <View style={styles.resultsDetailCard}>
-        <View style={styles.resultsHeaderRow}>
-          <Ionicons name="receipt-outline" size={18} color={theme.danger} />
-          <Text style={styles.resultsDetailCardTitle}>Cost Breakdown</Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Gross Profit / Loss</Text>
-          <Text style={[styles.detailValue, results.isProfit ? styles.textProfit : styles.textLoss]} numberOfLines={1} adjustsFontSizeToFit>
-            {formatCurrency(results.gross)}
+          <Text style={[numeric, { fontSize: 38, fontWeight: '700', color: tint, marginTop: space.sm }]}>
+            {results.isProfit ? '+' : '−'}₹{String(results.net).replace('-', '')}
           </Text>
+          <View style={[styles.roi, { backgroundColor: results.isProfit ? theme.upBackground : theme.downBackground }]}>
+            <Text style={[numeric, { fontSize: 13, fontWeight: '700', color: tint }]}>
+              {results.roi}% return on capital
+            </Text>
+          </View>
         </View>
-        <View style={styles.rowDivider} />
 
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>MTF Interest (15% p.a.)</Text>
-          <Text style={styles.detailValue} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(results.interest)}</Text>
+        <View style={styles.actions}>
+          <Button label="Adjust" variant="outlined" compact onPress={() => setView('form')} style={{ flex: 1 }} />
+          <Button label="New calculation" compact onPress={resetForm} style={{ flex: 1.4 }} />
         </View>
-        <View style={styles.rowDivider} />
+      </Panel>
 
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel} numberOfLines={1} adjustsFontSizeToFit>Total Charges & Taxes</Text>
-          <Text style={styles.detailValueBold} numberOfLines={1} adjustsFontSizeToFit>{formatCurrency(results.charges)}</Text>
-        </View>
-      </View>
+      <SectionHeader title="Position" />
+      <Panel padded={false}>
+        <Line theme={theme} label="Symbol" value={results.symbol} />
+        <Line theme={theme} label="Shares" value={`${results.shares}`} mono />
+        <Line theme={theme} label="Position value" value={formatCurrency(results.totalValue)} mono />
+        <Line theme={theme} label="Capital required" value={formatCurrency(results.margin)} mono />
+        <Line theme={theme} label="Funded by broker" value={formatCurrency(results.funding)} mono />
+        <Line theme={theme} label="Exit price" value={formatCurrency(results.sellPrice)} mono last />
+      </Panel>
+
+      <SectionHeader title="Cost breakdown" />
+      <Panel padded={false}>
+        <Line theme={theme} label="Gross P&L" value={formatCurrency(results.gross)} mono tint={tint} />
+        <Line theme={theme} label="MTF interest (15% p.a.)" value={`−${formatCurrency(results.interest)}`} mono tint={theme.down} />
+        <Line theme={theme} label="Charges & taxes" value={`−${formatCurrency(results.charges)}`} mono tint={theme.down} last />
+      </Panel>
     </View>
   );
 }
+
+function Line({
+  theme,
+  label,
+  value,
+  mono = false,
+  tint,
+  last = false,
+}: {
+  readonly theme: any;
+  readonly label: string;
+  readonly value: string;
+  readonly mono?: boolean;
+  readonly tint?: string;
+  readonly last?: boolean;
+}) {
+  return (
+    <View
+      style={[
+        styles.line,
+        { borderBottomColor: theme.divider, borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth },
+      ]}
+    >
+      <Text style={{ fontSize: 13, color: theme.textSecondary }}>{label}</Text>
+      <Text
+        style={[
+          mono && numeric,
+          { fontSize: 13.5, fontWeight: '700', color: tint || theme.textPrimary, marginLeft: space.md },
+        ]}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  headline: {
+    alignItems: 'center',
+    paddingVertical: space.xxl,
+    paddingHorizontal: space.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  roi: {
+    marginTop: space.md,
+    paddingHorizontal: space.md,
+    paddingVertical: 5,
+    borderRadius: radius.xs,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: space.md,
+    padding: space.md,
+  },
+  line: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+  },
+});

@@ -2,27 +2,33 @@ import { Ionicons } from '@expo/vector-icons';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { moderateScale } from 'react-native-size-matters';
-import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { CustomAlert } from '../context/AlertContext';
 import { useAuth } from '../context/AuthContext';
 import { authAPI, googleAPI } from '../services/api';
 import { getFriendlyErrorMessage } from '../utils/errorMessage';
-import { useAdaptiveLayout } from '../theme/layout';
-import { useLoginStyles } from '../theme/loginStyles';
 import { darkColors } from '../theme/colors';
+import { radius, space } from '../theme/tokens';
+import Button from '../components/ui/Button';
+import { Notice } from '../components/ui/Feedback';
+
+/** Sold on capability, not on chrome — three lines, no marketing card. */
+const FEATURES = [
+  { icon: 'scan-outline' as const, text: 'Quantitative screeners across the NSE universe' },
+  { icon: 'flash-outline' as const, text: 'Scheduled MTF and automated strategy orders' },
+  { icon: 'git-network-outline' as const, text: 'Zerodha Kite and Rupeezy in one place' },
+];
 
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const layout = useAdaptiveLayout(insets);
   const { refreshUserData, user } = useAuth();
 
-  // Force dark mode colors to match the pitch black splash screen background
+  // Sign-in is always presented dark: it is the app's brand moment, and the
+  // user's stored theme isn't known until after authentication.
   const theme = darkColors;
-  const styles = useLoginStyles(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,9 +39,7 @@ export default function LoginScreen() {
   }, [user, router]);
 
   useEffect(() => {
-    // Retrieve the Google Client ID configured in your .env file
     const clientID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
-
     GoogleSignin.configure({
       webClientId: clientID,
       offlineAccess: false,
@@ -48,7 +52,6 @@ export default function LoginScreen() {
       setError(null);
 
       await GoogleSignin.hasPlayServices();
-
       const signInResponse = await GoogleSignin.signIn();
       const idToken = signInResponse.data?.idToken || (signInResponse as any).idToken;
 
@@ -56,21 +59,14 @@ export default function LoginScreen() {
         throw new Error('Failed to retrieve ID Token from Google SDK.');
       }
 
-      // 2. Validate the native token with your Spring Boot backend validation endpoint
       await googleAPI.googleTokenValidation(idToken);
-
-      // 3. Fetch the full user details using the secure session cookie (this handles cookie sync lag)
       await getMeWithRetry(2, 100);
-
-      // 5. Update global AuthContext state & wait for useEffect to redirect
       await refreshUserData();
-
     } catch (err: any) {
       console.error('Native Google Sign-In Error Details:', err);
 
-      // Handle user cancellation (12501) gracefully
       if (err.code === '12501' || err.message?.includes('Sign_in_cancel')) {
-        setError("Sign-in canceled.");
+        setError('Sign-in canceled.');
       } else {
         const errMsg = getFriendlyErrorMessage(err, 'Google sign-in failed. Please try again.');
         setError(errMsg);
@@ -81,7 +77,7 @@ export default function LoginScreen() {
     }
   };
 
-  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const getMeWithRetry = async (retries = 2, delayMs = 100) => {
     let finalErr = null;
@@ -105,62 +101,102 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[styles.safeArea, layout.screenPadding, { backgroundColor: '#000000' }]}>
+    <View
+      style={[
+        styles.root,
+        { backgroundColor: theme.background, paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, space.lg) },
+      ]}
+    >
+      <View style={styles.hero}>
+        <Image source={require('../assets/images/icon.png')} style={styles.mark} resizeMode="contain" />
+        <Text style={[styles.wordmark, { color: theme.textPrimary }]}>1Klik</Text>
+        <Text style={[styles.tagline, { color: theme.textSecondary }]}>
+          Screen, schedule and execute — from one terminal.
+        </Text>
+      </View>
 
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        enabled={Platform.OS === 'ios'}
-        style={styles.keyboardFrame}
-        keyboardVerticalOffset={insets.top + 60}
-      >
-        <KeyboardAwareScrollView
-          contentContainerStyle={[
-            styles.scrollContainer,
-            { paddingHorizontal: layout.horizontalPadding },
-          ]}
-          contentInsetAdjustmentBehavior="automatic"
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={[styles.container, layout.centeredContent]}>
-            {/* Title Brand Section */}
-            <View style={{ alignItems: 'center', marginBottom: 40 }}>
-              <Text style={[styles.brandName, { color: '#ffffff', fontSize: moderateScale(26) }]}>Welcome to 1Klik</Text>
-              <Text style={[styles.brandTagline, { color: '#94a3b8', fontSize: moderateScale(15) }]}>
-                Sign in to access your trading dashboard
-              </Text>
+      <View style={styles.features}>
+        {FEATURES.map((feature) => (
+          <View key={feature.text} style={styles.feature}>
+            <View style={[styles.featureIcon, { backgroundColor: theme.primaryBackground }]}>
+              <Ionicons name={feature.icon} size={16} color={theme.primary} />
             </View>
-            {/* Login Options Card */}
-            <View style={[styles.formCard, { backgroundColor: '#111827', borderColor: '#374151' }]}>
-              {error ? (
-                <View style={styles.errorAlert}>
-                  <Ionicons name="alert-circle-outline" size={20} color={theme.danger} />
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
-              ) : null}
-
-              {/* Google Sign In Button (Strictly Native Google Sign-In!) */}
-              <TouchableOpacity
-                style={styles.googleButton}
-                activeOpacity={0.85}
-                onPress={handleGoogleLogin}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color={theme.textPrimary} />
-                ) : (
-                  <View style={styles.googleButtonContent}>
-                    <View style={styles.googleIconCircle}>
-                      <Ionicons name="logo-google" size={18} color="#e04f3f" />
-                    </View>
-                    <Text style={styles.googleButtonText}>Continue with Google</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
+            <Text style={{ flex: 1, fontSize: 13.5, color: theme.textSecondary, lineHeight: 19 }}>
+              {feature.text}
+            </Text>
           </View>
-        </KeyboardAwareScrollView>
-      </KeyboardAvoidingView>
+        ))}
+      </View>
+
+      <View style={styles.actions}>
+        {error ? <Notice tone="down" message={error} /> : null}
+
+        <Button
+          label="Continue with Google"
+          icon="logo-google"
+          onPress={handleGoogleLogin}
+          loading={loading}
+          disabled={loading}
+        />
+
+        <Text style={[styles.legal, { color: theme.textTertiary }]}>
+          By continuing you agree to 1Klik&apos;s terms of use. Trading involves risk of capital loss.
+        </Text>
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    paddingHorizontal: space.xxl,
+  },
+  hero: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingBottom: space.xxl,
+  },
+  mark: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.md,
+    marginBottom: space.xl,
+  },
+  wordmark: {
+    fontSize: 34,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
+  tagline: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: space.sm,
+    maxWidth: 300,
+  },
+  features: {
+    gap: space.lg,
+    paddingVertical: space.xl,
+  },
+  feature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+  },
+  featureIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actions: {
+    paddingTop: space.xxl,
+    gap: space.lg,
+  },
+  legal: {
+    fontSize: 11.5,
+    lineHeight: 17,
+    textAlign: 'center',
+  },
+});

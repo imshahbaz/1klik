@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { moderateScale } from 'react-native-size-matters';
 import { WebView } from 'react-native-webview';
+import { numeric } from '../theme/tokens';
 
 interface ChartProps {
   readonly rawData: any[];
@@ -24,7 +25,8 @@ const MONTH_TO_NUM: Record<string, string> = {
   Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12',
 };
 
-const TV_COLORS = { up: '#26a69a', down: '#ef5350' };
+/** Candle colours come from the app palette so the chart matches P&L elsewhere. */
+const candleColors = (theme: any) => ({ up: theme.up || '#0ECB81', down: theme.down || '#F6465D' });
 
 /** Pinned to v4 for the stable `addCandlestickSeries` API. */
 const LWC_CDN = 'https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js';
@@ -49,7 +51,7 @@ const buildHtml = (theme: any): string => `<!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<style>html,body,#chart{margin:0;padding:0;height:100%;width:100%;background:${theme.card};overflow:hidden;}</style>
+<style>html,body,#chart{margin:0;padding:0;height:100%;width:100%;background:${theme.surface};overflow:hidden;}</style>
 <script src="${LWC_CDN}"></script>
 </head>
 <body>
@@ -65,18 +67,18 @@ const buildHtml = (theme: any): string => `<!DOCTYPE html>
 
     var chart = LightweightCharts.createChart(document.getElementById('chart'), {
       autoSize: true,
-      layout: { background: { type: 'solid', color: '${theme.card}' }, textColor: '${theme.textSecondary}' },
-      grid: { vertLines: { visible: false }, horzLines: { color: '${theme.border}' } },
-      rightPriceScale: { borderColor: '${theme.border}' },
-      timeScale: { borderColor: '${theme.border}', fixLeftEdge: true, fixRightEdge: true },
+      layout: { background: { type: 'solid', color: '${theme.surface}' }, textColor: '${theme.textTertiary}' },
+      grid: { vertLines: { visible: false }, horzLines: { color: '${theme.divider}' } },
+      rightPriceScale: { borderColor: '${theme.divider}' },
+      timeScale: { borderColor: '${theme.divider}', fixLeftEdge: true, fixRightEdge: true },
       crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
       handleScale: { axisPressedMouseMove: true },
     });
 
     var series = chart.addCandlestickSeries({
-      upColor: '${TV_COLORS.up}', downColor: '${TV_COLORS.down}',
-      borderUpColor: '${TV_COLORS.up}', borderDownColor: '${TV_COLORS.down}',
-      wickUpColor: '${TV_COLORS.up}', wickDownColor: '${TV_COLORS.down}',
+      upColor: '${candleColors(theme).up}', downColor: '${candleColors(theme).down}',
+      borderUpColor: '${candleColors(theme).up}', borderDownColor: '${candleColors(theme).down}',
+      wickUpColor: '${candleColors(theme).up}', wickDownColor: '${candleColors(theme).down}',
     });
 
     window.__setData = function (data) {
@@ -187,13 +189,14 @@ export default function FinancialChart({ rawData, theme, height = 400 }: ChartPr
 
   let selectedColor = theme.textPrimary;
   if (selectedEntry) {
-    selectedColor = selectedEntry.close >= selectedEntry.open ? TV_COLORS.up : TV_COLORS.down;
+    const colors = candleColors(theme);
+    selectedColor = selectedEntry.close >= selectedEntry.open ? colors.up : colors.down;
   }
 
   return (
-    <View style={{ height, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card }}>
-      {/* Top Info Bar */}
-      <View style={[styles.infoBar, { borderBottomColor: theme.border, backgroundColor: theme.card }]}>
+    <View style={{ height, overflow: 'hidden', backgroundColor: theme.surface }}>
+      {/* Crosshair OHLC readout, as on a desktop terminal */}
+      <View style={[styles.infoBar, { borderBottomColor: theme.divider, backgroundColor: theme.surface }]}>
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: theme.textSecondary }]}>O</Text>
           <Text style={[styles.value, { color: selectedColor }]}>{selectedEntry?.open.toFixed(2) ?? '--'}</Text>
@@ -222,7 +225,7 @@ export default function FinancialChart({ rawData, theme, height = 400 }: ChartPr
         scrollEnabled={false}
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
-        style={{ flex: 1, backgroundColor: theme.card }}
+        style={{ flex: 1, backgroundColor: theme.surface }}
       />
     </View>
   );
@@ -238,8 +241,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     zIndex: 10,
   },
   infoRow: {
@@ -249,9 +252,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: moderateScale(10),
-    fontWeight: '900',
+    fontWeight: '700',
   },
   value: {
+    ...numeric,
     fontSize: moderateScale(12),
     fontWeight: '700',
   },

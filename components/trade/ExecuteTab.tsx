@@ -1,15 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Text, TouchableRipple } from 'react-native-paper';
 import SwipeButton from '../common/SwipeButton';
 import StrategyDropdownModal from './StrategyDropdownModal';
+import { Field, SelectField, ToggleGroup } from '../ui/Field';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { Tag } from '../ui/Feedback';
+import { numeric, radius, space } from '../../theme/tokens';
 
-// Fixed strategy choices for the Execute order pad. Sent to the backend as `strategyName`.
 export const EXECUTE_STRATEGIES = ['TARGET PROFIT', 'TRAILING PROFIT'] as const;
 export type ExecuteStrategy = (typeof EXECUTE_STRATEGIES)[number];
 
 interface ExecuteTabProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly tradeBroker: 'ZERODHA' | 'RUPEEZY';
   readonly setTradeBroker: (broker: 'ZERODHA' | 'RUPEEZY') => void;
@@ -29,17 +33,19 @@ interface ExecuteTabProps {
   readonly setPickerDate: (date: Date) => void;
   readonly setShowDatePicker: (show: boolean) => void;
   readonly editingMtfOrderId: string | null;
-  readonly setEditingMtfOrderId: (id: string | null) => void;
-  readonly setTargetDate: (date: Date) => void;
+  readonly setEditingMtfOrderId?: (id: string | null) => void;
+  readonly setTargetDate?: (date: Date) => void;
   readonly executingTrade: boolean;
   readonly handleExecuteOrder: () => void;
   readonly formatDateString: (date: Date) => string;
 }
 
-const BROKERS: ('ZERODHA' | 'RUPEEZY')[] = ['ZERODHA', 'RUPEEZY'];
-
+/**
+ * MTF order ticket. Fields run top to bottom in the order a trader fills them —
+ * where, what, how much, when — with the commit control pinned by the parent so
+ * it stays reachable while the keyboard is up.
+ */
 export default function ExecuteTab({
-  styles,
   theme,
   tradeBroker,
   setTradeBroker,
@@ -59,197 +65,152 @@ export default function ExecuteTab({
   setPickerDate,
   setShowDatePicker,
   editingMtfOrderId,
-  setEditingMtfOrderId,
-  setTargetDate,
-  executingTrade,
-  handleExecuteOrder,
   formatDateString,
 }: ExecuteTabProps) {
   const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
 
-  const resetForm = () => {
-    setEditingMtfOrderId(null);
-    setTradeSymbol('');
-    setSearchQuery('');
-    setTradeQty('10');
-    setTargetDate(new Date());
-    setTradeBroker('ZERODHA');
-    setTradeStrategyName('TRAILING PROFIT');
-    setTradeTargetPercentage('');
-  };
-
   return (
-    <View style={styles.orderPadCard}>
-      {/* Order pad body */}
-      <View style={styles.orderPadBody}>
-        {/* Broker — segmented toggle */}
-        <Text style={styles.orderFieldLabel}>BROKER</Text>
-        <View style={styles.segmentGroup}>
-          {BROKERS.map((brokerOption) => {
-            const active = tradeBroker === brokerOption;
-            return (
-              <TouchableOpacity
-                key={brokerOption}
-                style={[styles.segmentBtn, active && styles.segmentBtnActive]}
-                onPress={() => setTradeBroker(brokerOption)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.segmentBtnText, active && styles.segmentBtnTextActive]}>
-                  {brokerOption}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Strategy */}
-        <View style={styles.orderFieldGroup}>
-          <Text style={styles.orderFieldLabel}>STRATEGY</Text>
-          <TouchableOpacity
-            style={[styles.orderInput, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
-            onPress={() => setShowStrategyDropdown(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.orderInputText} numberOfLines={1} adjustsFontSizeToFit>
-              {tradeStrategyName}
+    <View>
+      {editingMtfOrderId ? (
+        <View style={{ paddingTop: space.lg }}>
+          <Panel raised style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+            <Ionicons name="create-outline" size={16} color={theme.warningText} />
+            <Text style={{ flex: 1, fontSize: 13, fontWeight: '600', color: theme.warningText }}>
+              Editing an existing order
             </Text>
-            <Ionicons name="chevron-down" size={16} color={theme.iconMuted} />
-          </TouchableOpacity>
+          </Panel>
         </View>
+      ) : null}
 
-        {/* Target percentage — required only for TARGET PROFIT */}
+      <SectionHeader title="Order ticket" />
+      <Panel style={{ gap: space.lg }}>
+        <ToggleGroup
+          label="Broker"
+          value={tradeBroker}
+          options={[
+            { value: 'ZERODHA', label: 'ZERODHA' },
+            { value: 'RUPEEZY', label: 'RUPEEZY' },
+          ]}
+          onChange={(val) => setTradeBroker(val as 'ZERODHA' | 'RUPEEZY')}
+        />
+
+        <SelectField
+          label="Exit strategy"
+          value={tradeStrategyName}
+          onPress={() => setShowStrategyDropdown(true)}
+          icon="trending-up-outline"
+        />
+
         {tradeStrategyName === 'TARGET PROFIT' ? (
-          <View style={styles.orderFieldGroup}>
-            <Text style={styles.orderFieldLabel}>TARGET %</Text>
-            <TextInput
-              style={styles.orderInput}
-              value={tradeTargetPercentage}
-              onChangeText={setTradeTargetPercentage}
-              keyboardType="numeric"
-              placeholder="0.4 – 20"
-              placeholderTextColor={theme.placeholder}
-            />
-          </View>
+          <Field
+            label="Target"
+            hint="0.4 – 20"
+            value={tradeTargetPercentage}
+            onChangeText={setTradeTargetPercentage}
+            keyboardType="numeric"
+            placeholder="0.00"
+            suffix="%"
+            numericFace
+          />
         ) : null}
 
-        {/* Symbol */}
-        <View style={styles.orderFieldGroup}>
-          <Text style={styles.orderFieldLabel}>SYMBOL</Text>
-          <TextInput
-            style={styles.orderInput}
+        {/* Symbol lookup: results drop directly under the field, as an Android
+            autocomplete does, rather than inside a separate overlay. */}
+        <View style={{ zIndex: 10 }}>
+          <Field
+            label="Symbol"
             value={tradeSymbol}
             onChangeText={(val) => {
               setTradeSymbol(val);
               setSearchQuery(val);
             }}
             autoCapitalize="characters"
-            autoCorrect={false}
-            placeholder="Search e.g. RELIANCE"
-            placeholderTextColor={theme.placeholder}
+            placeholder="e.g. RELIANCE"
+            icon="search-outline"
+            onClear={() => {
+              setTradeSymbol('');
+              setSearchQuery('');
+            }}
           />
 
-          {/* Autocomplete suggestions from margins */}
           {searchQuery && filteredMargins.length > 0 ? (
-            <View style={styles.verticalDropdownContainer}>
-              {filteredMargins.map((marginItem: any, idx: number) => {
-                const rawMargin = marginItem.requiredMargin || marginItem.leverage || '';
-                let marginStr = rawMargin.toString().trim();
+            <Panel padded={false} style={[styles.suggestions, { backgroundColor: theme.surfaceAlt }]}>
+              <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+                {filteredMargins.map((marginItem: any, idx: number) => {
+                  const rawMargin = marginItem.requiredMargin || marginItem.leverage || '';
+                  let marginStr = rawMargin.toString().trim();
+                  const parsedMargin = Number.parseFloat(marginStr);
+                  if (Number.isNaN(parsedMargin) || parsedMargin <= 0) {
+                    marginStr = '1x';
+                  } else {
+                    const suffix = marginStr.endsWith('%') ? '%' : 'x';
+                    marginStr = `${parsedMargin.toFixed(2)}${suffix}`;
+                  }
 
-                const parsedMargin = Number.parseFloat(marginStr);
-                if (Number.isNaN(parsedMargin) || parsedMargin <= 0) {
-                  marginStr = '1x';
-                } else {
-                  const suffix = marginStr.endsWith('%') ? '%' : 'x';
-                  marginStr = `${parsedMargin.toFixed(2)}${suffix}`;
-                }
-
-                return (
-                  <TouchableOpacity
-                    key={marginItem.symbol || idx}
-                    style={styles.suggestionRow}
-                    onPress={() => {
-                      setTradeSymbol(marginItem.symbol);
-                      setSearchQuery('');
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="trending-up" size={14} color={theme.primary} />
-                      <Text style={styles.suggestionRowSymbol}>{marginItem.symbol}</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={styles.suggestionRowBadge}>
-                        {marginStr}
-                      </Text>
-                      {marginItem.price || marginItem.ltp ? (
-                        <Text style={styles.suggestionRowPrice}>
-                          ₹{marginItem.price || marginItem.ltp}
+                  return (
+                    <TouchableRipple
+                      key={marginItem.symbol || idx}
+                      rippleColor={theme.ripple}
+                      onPress={() => {
+                        setTradeSymbol(marginItem.symbol);
+                        setSearchQuery('');
+                      }}
+                    >
+                      <View style={[styles.suggestion, { borderBottomColor: theme.divider }]}>
+                        <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: theme.textPrimary }}>
+                          {marginItem.symbol}
                         </Text>
-                      ) : null}
-                      <Ionicons name="chevron-forward" size={14} color={theme.iconMuted} />
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+                        <Tag label={marginStr} tone="accent" />
+                      </View>
+                    </TouchableRipple>
+                  );
+                })}
+              </ScrollView>
+            </Panel>
           ) : null}
         </View>
 
-        {/* Quantity + Target date, side by side */}
-        <View style={styles.orderRow}>
-          <View style={styles.orderCol}>
-            <Text style={styles.orderFieldLabel}>QUANTITY</Text>
-            <TextInput
-              style={styles.orderInput}
-              value={tradeQty}
-              onChangeText={setTradeQty}
-              keyboardType="number-pad"
-              placeholder="0"
-              placeholderTextColor={theme.placeholder}
-            />
-          </View>
-
-          <View style={styles.orderCol}>
-            <Text style={styles.orderFieldLabel}>TARGET DATE</Text>
-            <TouchableOpacity
-              style={styles.orderInput}
-              onPress={() => {
-                setDatePickerTarget('execute');
-                setPickerDate(new Date(targetDate));
-                setShowDatePicker(true);
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.orderInputText} numberOfLines={1} adjustsFontSizeToFit>
-                {formatDateString(targetDate)}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Swipe-to-confirm action bar */}
-      <View style={styles.orderPadActionBar}>
-        <SwipeButton
-          styles={styles}
-          theme={theme}
-          label={editingMtfOrderId ? 'Swipe to update order' : 'Swipe to place order'}
-          loadingLabel={editingMtfOrderId ? 'Updating order…' : 'Placing order…'}
-          icon={editingMtfOrderId ? 'checkmark-done' : 'flash'}
-          loading={executingTrade}
-          onSwipeSuccess={handleExecuteOrder}
+        <Field
+          label="Quantity"
+          value={tradeQty}
+          onChangeText={setTradeQty}
+          keyboardType="number-pad"
+          placeholder="0"
+          suffix="qty"
+          numericFace
         />
 
-        {editingMtfOrderId ? (
-          <TouchableOpacity style={styles.orderCancelLink} onPress={resetForm} disabled={executingTrade} activeOpacity={0.7}>
-            <Text style={styles.orderCancelLinkText}>Cancel edit</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
+        <SelectField
+          label="Target date"
+          value={formatDateString(targetDate)}
+          icon="calendar-outline"
+          onPress={() => {
+            setDatePickerTarget('execute');
+            setPickerDate(new Date(targetDate));
+            setShowDatePicker(true);
+          }}
+        />
+      </Panel>
 
-      {/* Strategy dropdown picker */}
+      {/* Ticket summary — the numbers worth re-reading before committing. */}
+      <SectionHeader title="Summary" />
+      <Panel padded={false}>
+        <SummaryLine theme={theme} label="Broker" value={tradeBroker} />
+        <SummaryLine theme={theme} label="Symbol" value={tradeSymbol.toUpperCase() || '—'} />
+        <SummaryLine theme={theme} label="Quantity" value={tradeQty || '0'} mono />
+        <SummaryLine
+          theme={theme}
+          label="Strategy"
+          value={
+            tradeStrategyName === 'TARGET PROFIT' && tradeTargetPercentage
+              ? `TARGET +${tradeTargetPercentage}%`
+              : tradeStrategyName
+          }
+        />
+        <SummaryLine theme={theme} label="Executes on" value={formatDateString(targetDate)} last />
+      </Panel>
+
       <StrategyDropdownModal
-        styles={styles}
         theme={theme}
         visible={showStrategyDropdown}
         options={EXECUTE_STRATEGIES}
@@ -260,3 +221,87 @@ export default function ExecuteTab({
     </View>
   );
 }
+
+/** Pinned commit control, rendered by the parent into the screen's action bar. */
+export function ExecuteAction({
+  theme,
+  editingMtfOrderId,
+  executingTrade,
+  handleExecuteOrder,
+}: {
+  readonly theme: any;
+  readonly editingMtfOrderId: string | null;
+  readonly executingTrade: boolean;
+  readonly handleExecuteOrder: () => void;
+}) {
+  return (
+    <SwipeButton
+      theme={theme}
+      label={editingMtfOrderId ? 'Swipe to update order' : 'Swipe to place order'}
+      loadingLabel={editingMtfOrderId ? 'Updating order…' : 'Placing order…'}
+      icon={editingMtfOrderId ? 'checkmark-done' : 'flash'}
+      loading={executingTrade}
+      onSwipeSuccess={handleExecuteOrder}
+    />
+  );
+}
+
+function SummaryLine({
+  theme,
+  label,
+  value,
+  mono = false,
+  last = false,
+}: {
+  readonly theme: any;
+  readonly label: string;
+  readonly value: string;
+  readonly mono?: boolean;
+  readonly last?: boolean;
+}) {
+  return (
+    <View
+      style={[
+        styles.summaryLine,
+        { borderBottomColor: theme.divider, borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth },
+      ]}
+    >
+      <Text style={{ fontSize: 13, color: theme.textSecondary }}>{label}</Text>
+      <Text
+        numberOfLines={1}
+        style={[mono && numeric, { fontSize: 13.5, fontWeight: '700', color: theme.textPrimary, marginLeft: space.md }]}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  suggestions: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    marginTop: space.xs,
+    maxHeight: 220,
+    borderRadius: radius.sm,
+    // Suggestions genuinely float above the form, so this is one of the few
+    // places elevation is warranted.
+    elevation: 6,
+  },
+  suggestion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: space.md,
+    paddingVertical: space.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  summaryLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+  },
+});

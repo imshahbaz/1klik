@@ -1,12 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ActivityIndicator, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { View } from 'react-native';
+import { Switch, Text } from 'react-native-paper';
 import ZerodhaHoldings from './ZerodhaHoldings';
-import FormInput from '../common/FormInput';
 import BrokerConnectionStatus from './BrokerConnectionStatus';
+import Button from '../ui/Button';
+import { Field } from '../ui/Field';
+import { Notice } from '../ui/Feedback';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { space } from '../../theme/tokens';
 
 interface ZerodhaCardProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly zerodhaStatusColor: string;
   readonly zerodhaStatusContent: React.ReactNode;
@@ -62,132 +67,132 @@ export default function ZerodhaCard({
   formError,
   setFormError,
   savingConfig,
-  handleSaveZerodhaConfig
+  handleSaveZerodhaConfig,
 }: ZerodhaCardProps) {
   return (
     <View>
+      <SectionHeader title="Session" />
       <BrokerConnectionStatus
-        styles={styles}
         theme={theme}
         statusColor={zerodhaStatusColor}
         statusContent={zerodhaStatusContent}
         connectionText={zerodhaConnectionText}
         error={zerodhaError}
-        idleSubtitle="Secured Zerodha Connection"
+        idleSubtitle="Kite Connect · orders route through this session"
         onToggleConfig={() => setIs404Error(!is404Error)}
       />
 
-      {/* Login Action Card if disconnected but config exists */}
       {!is404Error && isTokenExpired && (
-        <View style={[styles.formCard, { marginTop: 16 }]}>
-          <Text style={styles.formTitle}>Reconnect Required</Text>
-          <Text style={styles.formSubtitle}>Your Kite Connect session has expired. Click below to re-authenticate.</Text>
-
-          <TouchableOpacity
-            style={[styles.submitButton, { marginTop: 16 }]}
-            onPress={handleConnectKite}
-            disabled={autoConnectLoading}
-          >
-            {autoConnectLoading ? (
-              <ActivityIndicator size="small" color="#ffffff" />
-            ) : (
-              <>
-                <Ionicons name="flash-outline" size={20} color="#ffffff" />
-                <Text style={styles.submitButtonText}>Connect to Kite</Text>
-              </>
-            )}
-          </TouchableOpacity>
+        <View style={{ marginTop: space.md }}>
+          <Panel style={{ gap: space.md }}>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: theme.textPrimary }}>
+              Reconnect required
+            </Text>
+            <Text style={{ fontSize: 13, color: theme.textSecondary, lineHeight: 19 }}>
+              Your Kite Connect session has expired. Re-authenticate to resume placing orders.
+            </Text>
+            <Button
+              label="Connect to Kite"
+              icon="flash-outline"
+              onPress={handleConnectKite}
+              loading={autoConnectLoading}
+              disabled={autoConnectLoading}
+            />
+          </Panel>
         </View>
       )}
 
-      {/* Holdings Section - always show */}
       <ZerodhaHoldings styles={styles} theme={theme} />
 
-      {/* Config Form */}
       {is404Error && (
-        <View style={[styles.formCard, { marginTop: 16 }]}>
-          <Text style={styles.formTitle}>Zerodha Configuration</Text>
-          <Text style={styles.formSubtitle}>Enter your Kite Connect API credentials below.</Text>
+        <>
+          <SectionHeader title="Kite API credentials" />
+          <Panel style={{ gap: space.lg }}>
+            <Field
+              label="API key"
+              icon="key-outline"
+              placeholder="Kite Connect API key"
+              value={apiKey}
+              onChangeText={(text) => {
+                setApiKey(text);
+                setFormError(null);
+              }}
+            />
 
-          <FormInput
-            styles={styles}
-            theme={theme}
-            label="KITE API KEY *"
-            icon="key-outline"
-            placeholder="Enter your Kite API Key"
-            value={apiKey}
-            onChangeText={(text) => { setApiKey(text); setFormError(null); }}
-          />
+            <Field
+              label="API secret"
+              icon="lock-closed-outline"
+              placeholder="Kite Connect API secret"
+              value={apiSecret}
+              onChangeText={(text) => {
+                setApiSecret(text);
+                setFormError(null);
+              }}
+              secureTextEntry
+            />
 
-          <FormInput
-            styles={styles}
-            theme={theme}
-            label="KITE API SECRET *"
-            icon="lock-closed-outline"
-            placeholder="Enter your Kite API Secret"
-            value={apiSecret}
-            onChangeText={(text) => { setApiSecret(text); setFormError(null); }}
-            secureTextEntry
-          />
-
-          <View style={[styles.inputGroup, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
               <Ionicons name="power-outline" size={18} color={theme.textSecondary} />
-              <Text style={[styles.inputLabel, { marginBottom: 0 }]}>ENABLE AUTOLOGIN</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: theme.textPrimary }}>
+                  Auto-login
+                </Text>
+                <Text style={{ fontSize: 12, color: theme.textSecondary, marginTop: 1 }}>
+                  Renew the session without the Kite web flow
+                </Text>
+              </View>
+              <Switch value={enableAutoLogin} onValueChange={setEnableAutoLogin} color={theme.primary} />
             </View>
-            <Switch value={enableAutoLogin} onValueChange={setEnableAutoLogin} trackColor={{ false: theme.borderLight, true: theme.primary }} thumbColor="#ffffff" />
-          </View>
 
-          {enableAutoLogin && (
-            <>
-              <FormInput
-                styles={styles}
-                theme={theme}
-                label="USER NAME *"
-                icon="person-outline"
-                placeholder="Enter your Zerodha User Name"
-                value={userName}
-                onChangeText={(text) => { setUserName(text); setFormError(null); }}
-              />
-              <FormInput
-                styles={styles}
-                theme={theme}
-                label="PASSWORD *"
-                icon="lock-closed-outline"
-                placeholder="Enter your Password"
-                value={password}
-                onChangeText={(text) => { setPassword(text); setFormError(null); }}
-                secureTextEntry
-              />
-              <FormInput
-                styles={styles}
-                theme={theme}
-                label="TOTP SECRET *"
-                icon="keypad-outline"
-                placeholder="Enter your TOTP Secret"
-                value={totpSecret}
-                onChangeText={(text) => { setTotpSecret(text); setFormError(null); }}
-                secureTextEntry
-              />
-            </>
-          )}
-
-          {formError && (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle-outline" size={16} color={theme.danger} />
-              <Text style={styles.errorText}>{formError}</Text>
-            </View>
-          )}
-
-          <TouchableOpacity style={[styles.submitButton, savingConfig && styles.disabledButton]} onPress={handleSaveZerodhaConfig} disabled={savingConfig}>
-            {savingConfig ? <ActivityIndicator size="small" color="#ffffff" /> : (
+            {enableAutoLogin && (
               <>
-                <Ionicons name="checkmark-circle-outline" size={20} color="#ffffff" />
-                <Text style={styles.submitButtonText}>Save API Config</Text>
+                <Field
+                  label="Zerodha user ID"
+                  icon="person-outline"
+                  placeholder="e.g. AB1234"
+                  value={userName}
+                  onChangeText={(text) => {
+                    setUserName(text);
+                    setFormError(null);
+                  }}
+                  autoCapitalize="characters"
+                />
+                <Field
+                  label="Password"
+                  icon="lock-closed-outline"
+                  placeholder="Kite password"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    setFormError(null);
+                  }}
+                  secureTextEntry
+                />
+                <Field
+                  label="TOTP secret"
+                  icon="keypad-outline"
+                  placeholder="Authenticator seed"
+                  value={totpSecret}
+                  onChangeText={(text) => {
+                    setTotpSecret(text);
+                    setFormError(null);
+                  }}
+                  secureTextEntry
+                />
               </>
             )}
-          </TouchableOpacity>
-        </View>
+
+            {formError ? <Notice tone="down" message={formError} /> : null}
+
+            <Button
+              label="Save credentials"
+              icon="checkmark-circle-outline"
+              onPress={handleSaveZerodhaConfig}
+              loading={savingConfig}
+              disabled={savingConfig}
+            />
+          </Panel>
+        </>
       )}
     </View>
   );

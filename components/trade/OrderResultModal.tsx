@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Dialog, Portal, Text, TouchableRipple } from 'react-native-paper';
+import { useTheme } from '../../context/ThemeContext';
+import { radius, space } from '../../theme/tokens';
 
 interface OrderResultModalProps {
-  readonly styles: any;
-  readonly theme: any;
+  readonly styles?: any;
+  readonly theme?: any;
   readonly visible: boolean;
   readonly variant: 'success' | 'error';
   readonly title: string;
@@ -13,98 +16,104 @@ interface OrderResultModalProps {
 }
 
 /**
- * Full-screen feedback modal shown after the MTF order create/update request
- * resolves. `success` renders a green confirmation, `error` a red failure —
- * either way only friendly text is shown, never backend status codes.
+ * Material 3 alert dialog: hero icon and headline centred, body text
+ * left-aligned, and a single text action in the bottom-right corner — where
+ * Android puts confirmations, rather than a full-width web-style button.
  */
 export default function OrderResultModal({
-  styles,
-  theme,
+  theme: themeProp,
   visible,
   variant,
   title,
   message,
   onClose,
 }: OrderResultModalProps) {
+  const { theme: contextTheme } = useTheme();
+  const theme = themeProp || contextTheme;
+
   const isSuccess = variant === 'success';
-  const accent = isSuccess ? theme.success : theme.danger;
-  const accentBackground = isSuccess ? theme.successBackground : theme.dangerBackground;
-  const icon = isSuccess ? 'checkmark-circle' : 'close-circle';
+  const accent = isSuccess ? theme.up : theme.down;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={onClose}
+    <Portal>
+      <Dialog
+        visible={visible}
+        onDismiss={onClose}
+        style={[styles.dialog, { backgroundColor: theme.surface }]}
       >
-        <View
-          style={[styles.editModalContainer, { alignItems: 'center', paddingVertical: 28 }]}
-          onStartShouldSetResponder={() => true}
-        >
-          <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            <View
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 36,
-                backgroundColor: accentBackground,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name={icon} size={44} color={accent} />
-            </View>
+        <View style={styles.hero}>
+          <View
+            style={[
+              styles.heroIcon,
+              { backgroundColor: isSuccess ? theme.upBackground : theme.downBackground },
+            ]}
+          >
+            <Ionicons name={isSuccess ? 'checkmark-circle' : 'alert-circle'} size={28} color={accent} />
           </View>
-
-          <Text
-            style={{
-              fontSize: 17,
-              fontWeight: '800',
-              color: theme.textPrimary,
-              textAlign: 'center',
-              marginBottom: 8,
-            }}
-          >
-            {title}
-          </Text>
-
-          <Text
-            style={{
-              fontSize: 13,
-              lineHeight: 19,
-              fontWeight: '500',
-              color: theme.textSecondary,
-              textAlign: 'center',
-              marginBottom: 20,
-            }}
-          >
-            {message}
-          </Text>
-
-          <TouchableOpacity
-            style={{
-              alignSelf: 'stretch',
-              height: 48,
-              borderRadius: 12,
-              backgroundColor: isSuccess ? theme.success : theme.primary,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            onPress={onClose}
-            activeOpacity={0.8}
-          >
-            <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '800', letterSpacing: 0.2 }}>
-              {isSuccess ? 'Done' : 'Got it'}
-            </Text>
-          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
-    </Modal>
+
+        <Text style={[styles.title, { color: theme.textPrimary }]}>{title}</Text>
+
+        <Text style={[styles.body, { color: theme.textSecondary }]}>{message}</Text>
+
+        <View style={styles.actions}>
+          <TouchableRipple
+            onPress={onClose}
+            rippleColor={theme.ripple}
+            style={styles.action}
+            accessibilityRole="button"
+          >
+            <Text style={{ fontSize: 14, fontWeight: '700', letterSpacing: 0.5, color: theme.primary }}>
+              {isSuccess ? 'DONE' : 'GOT IT'}
+            </Text>
+          </TouchableRipple>
+        </View>
+      </Dialog>
+    </Portal>
   );
 }
+
+const styles = StyleSheet.create({
+  dialog: {
+    borderRadius: 28,
+    marginHorizontal: space.xxl,
+  },
+  hero: {
+    alignItems: 'center',
+    paddingTop: space.xxl,
+  },
+  heroIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingHorizontal: space.xxl,
+    paddingTop: space.lg,
+  },
+  body: {
+    fontSize: 14,
+    lineHeight: 20,
+    paddingHorizontal: space.xxl,
+    paddingTop: space.md,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: space.md,
+    paddingTop: space.xl,
+  },
+  action: {
+    minWidth: 72,
+    height: 40,
+    paddingHorizontal: space.md,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

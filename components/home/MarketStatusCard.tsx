@@ -1,9 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Text, TouchableRipple } from 'react-native-paper';
+import { Delta, Money, Stat, formatAmount, useStatScale } from '../ui/Price';
+import { EmptyState, Tag } from '../ui/Feedback';
+import { Panel } from '../ui/Panel';
+import { numeric, radius, space } from '../../theme/tokens';
 
 interface MarketStatusCardProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly cardLoading: boolean;
   readonly marketData: any;
@@ -19,8 +23,12 @@ interface MarketStatusCardProps {
   readonly low: number;
 }
 
+/**
+ * Primary index quote. Laid out like a broker's instrument header: exchange
+ * keyline, oversized last-traded price in tabular figures, signed change, then
+ * a hairline-separated OHLC strip.
+ */
 export default function MarketStatusCard({
-  styles,
   theme,
   cardLoading,
   marketData,
@@ -33,88 +41,134 @@ export default function MarketStatusCard({
   changePercent,
   open,
   high,
-  low
+  low,
 }: MarketStatusCardProps) {
+  // Four columns inside the screen gutter (16 × 2) and the strip's own inset
+  // (16 × 2). Called before the early returns so the hook order stays stable.
+  const statScale = useStatScale(4, 64);
+
   if (cardLoading && !marketData) {
     return (
-      <View style={[styles.card, styles.centeredCard]}>
-        <ActivityIndicator size="small" color={theme.iconMuted} />
-        <Text style={styles.loadingText}>Fetching Live Market Status...</Text>
-      </View>
+      <Panel style={{ minHeight: 168, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="small" color={theme.primary} />
+        <Text style={{ color: theme.textSecondary, fontSize: 13, marginTop: space.md }}>
+          Fetching live quote…
+        </Text>
+      </Panel>
     );
   }
+
   if (error && !marketData) {
     return (
-      <View style={[styles.card, styles.centeredCard]}>
-        <Ionicons name="alert-circle-outline" size={24} color={theme.danger} />
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => fetchMarketStatus(true)}>
-          <Text style={styles.retryText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+      <Panel padded={false}>
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="Quote unavailable"
+          message={error}
+          actionLabel="Retry"
+          onAction={() => fetchMarketStatus(true)}
+          tone="error"
+        />
+      </Panel>
     );
   }
-  return (
-    <TouchableOpacity
-      style={styles.card}
-      activeOpacity={0.9}
-      onPress={() => fetchMarketStatus(true)} // Tap card to manually refresh
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.cardTitleContainer}>
-          <Ionicons name="analytics-outline" size={18} color={theme.iconMuted} />
-          <Text style={styles.cardTitle}>Market Status</Text>
-        </View>
-        <View style={[styles.badge, isBullish ? styles.bullishBadge : styles.bearishBadge]}>
-          <View style={[styles.dot, isBullish ? styles.bullishDot : styles.bearishDot]} />
-          <Text style={[styles.badgeText, isBullish ? styles.bullishBadgeText : styles.bearishBadgeText]}>
-            {isBullish ? 'BULLISH' : 'BEARISH'}
-          </Text>
-        </View>
-      </View>
 
-      <View style={styles.cardBody}>
-        <Text style={styles.indexName}>{symbol}</Text>
-        <View style={styles.priceContainer}>
-          <Text style={styles.indexPrice} numberOfLines={1} adjustsFontSizeToFit>
-            {ltp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Text>
-          <View style={styles.changeContainer}>
-            <Ionicons
-              name={isBullish ? "caret-up" : "caret-down"}
-              size={16}
-              color={isBullish ? theme.success : theme.danger}
-            />
-            <Text style={[styles.indexChange, { color: isBullish ? theme.success : theme.danger }]}>
-              {isBullish ? '+' : ''}
-              {change.toFixed(2)} ({changePercent.toFixed(2)}%)
-            </Text>
+  const prevClose = ltp - change;
+  const tint = isBullish ? theme.up : theme.down;
+  // Where the last price sits within the day's range, for the range bar.
+  const span = Math.max(high - low, 0.0001);
+  const position = Math.min(Math.max((ltp - low) / span, 0), 1);
+
+  return (
+    <Panel padded={false}>
+      <TouchableRipple onPress={() => fetchMarketStatus(true)} rippleColor={theme.ripple}>
+        <View>
+          <View style={styles.head}>
+            <View style={styles.headLeft}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: theme.textPrimary }} numberOfLines={1}>
+                {symbol}
+              </Text>
+              <Tag label="NSE" />
+            </View>
+          </View>
+
+          <View style={styles.quote}>
+            <Money value={ltp} size={34} weight="700" color={theme.textPrimary} />
+            <View style={{ marginTop: space.xs }}>
+              <Delta change={change} percent={changePercent} size={14} pill />
+            </View>
+          </View>
+
+          {/* Day range: low ── marker ── high */}
+          <View style={styles.range}>
+            <Text style={[numeric, { fontSize: 11, color: theme.textTertiary }]}>{formatAmount(low)}</Text>
+            <View style={[styles.rangeTrack, { backgroundColor: theme.surfaceSunken }]}>
+              <View
+                style={[
+                  styles.rangeMarker,
+                  { left: `${position * 100}%`, backgroundColor: tint, borderColor: theme.surface },
+                ]}
+              />
+            </View>
+            <Text style={[numeric, { fontSize: 11, color: theme.textTertiary }]}>{formatAmount(high)}</Text>
+          </View>
+
+          <View style={[styles.strip, { borderTopColor: theme.divider }]}>
+            <Stat label="OPEN" value={formatAmount(open)} {...statScale} />
+            <Stat label="HIGH" value={formatAmount(high)} align="center" tint={theme.up} {...statScale} />
+            <Stat label="LOW" value={formatAmount(low)} align="center" tint={theme.down} {...statScale} />
+            <Stat label="PREV CLOSE" value={formatAmount(prevClose)} align="flex-end" {...statScale} />
           </View>
         </View>
-      </View>
-
-      <View style={styles.divider} />
-
-      <View style={styles.cardFooter}>
-        <View style={styles.footerCol}>
-          <Text style={styles.footerLabel}>OPEN</Text>
-          <Text style={styles.footerVal}>
-            {open.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Text>
-        </View>
-        <View style={styles.footerCol}>
-          <Text style={styles.footerLabel}>HIGH</Text>
-          <Text style={styles.footerVal}>
-            {high.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Text>
-        </View>
-        <View style={styles.footerCol}>
-          <Text style={styles.footerLabel}>LOW</Text>
-          <Text style={styles.footerVal}>
-            {low.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableRipple>
+    </Panel>
   );
 }
+
+const styles = StyleSheet.create({
+  head: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: space.lg,
+    paddingTop: space.lg,
+  },
+  headLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    flex: 1,
+    minWidth: 0,
+  },
+  quote: {
+    paddingHorizontal: space.lg,
+    paddingTop: space.md,
+  },
+  range: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    paddingHorizontal: space.lg,
+    paddingTop: space.lg,
+  },
+  rangeTrack: {
+    flex: 1,
+    height: 3,
+    borderRadius: radius.pill,
+  },
+  rangeMarker: {
+    position: 'absolute',
+    top: -3.5,
+    width: 10,
+    height: 10,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    marginLeft: -5,
+  },
+  strip: {
+    flexDirection: 'row',
+    marginTop: space.lg,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+});

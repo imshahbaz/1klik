@@ -1,31 +1,28 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { View } from 'react-native';
+import { ActivityIndicator } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
-import { ScreenScaffold } from '../../components/ScreenScaffold';
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { zerodhaAPI, rupeezyAPI } from '../../services/api';
 import { getFriendlyErrorMessage } from '../../utils/errorMessage';
-import { useAdaptiveLayout } from '../../theme/layout';
-import { getSafeBottomPadding } from '../../theme/safeArea';
-import { useZerodhaStyles } from '../../theme/zerodhaStyles';
 import ZerodhaCard from '../../components/brokers/ZerodhaCard';
 import RupeezyCard from '../../components/brokers/RupeezyCard';
+import Screen from '../../components/ui/Screen';
+import TopBar from '../../components/ui/TopBar';
+import Tabs from '../../components/ui/Tabs';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { getBrokerStatusDisplay } from '../../components/brokers/brokerStatus';
 
 export default function BrokersConfigScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const layout = useAdaptiveLayout(insets);
   const { user, appLoading } = useAuth();
-  const { isDarkMode, theme } = useTheme();
-  const styles = useZerodhaStyles(isDarkMode);
-  
+  const { theme } = useTheme();
+
   const [activeBrokerTab, setActiveBrokerTab] = useState<'zerodha' | 'rupeezy'>('zerodha');
 
   useRequireAuth();
@@ -389,28 +386,21 @@ export default function BrokersConfigScreen() {
 
   if (appLoading) {
     return (
-      <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
-        <View style={[styles.container, styles.centered]}>
-          <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={styles.loadingText}>Verifying secure session...</Text>
-        </View>
+      <View style={{ flex: 1, backgroundColor: theme.background, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
   if (!user) return null;
 
+  // The broker OAuth flows take over the whole screen; a close-only app bar
+  // makes it obvious the user is inside the broker's own page, not ours.
   if (showWebView) {
     const finalApiKey = apiKey || process.env.EXPO_PUBLIC_ZERODHA_API_KEY;
     return (
-      <View style={[styles.webViewContainer, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
-        <View style={styles.webViewHeader}>
-          <TouchableOpacity style={styles.webViewCloseButton} onPress={() => setShowWebView(false)}>
-            <Ionicons name="close-outline" size={24} color={theme.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.webViewHeaderTitle}>Kite Secure Login</Text>
-          <View style={{ width: 40 }} />
-        </View>
+      <View style={{ flex: 1, backgroundColor: theme.background, paddingBottom: insets.bottom }}>
+        <TopBar title="Kite secure login" onBack={() => setShowWebView(false)} />
         <WebView
           source={{ uri: `https://kite.zerodha.com/connect/login?v=3&api_key=${finalApiKey}` }}
           onNavigationStateChange={handleNavigationChange}
@@ -421,7 +411,7 @@ export default function BrokersConfigScreen() {
           javaScriptEnabled={true}
           domStorageEnabled={true}
           renderLoading={() => (
-            <View style={styles.webViewLoaderContainer}>
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.background }}>
               <ActivityIndicator size="large" color={theme.primary} />
             </View>
           )}
@@ -433,14 +423,8 @@ export default function BrokersConfigScreen() {
   if (showRupeezyWebView) {
     const finalAppId = rupeezyAppId;
     return (
-      <View style={[styles.webViewContainer, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
-        <View style={styles.webViewHeader}>
-          <TouchableOpacity style={styles.webViewCloseButton} onPress={() => setShowRupeezyWebView(false)}>
-            <Ionicons name="close-outline" size={24} color={theme.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.webViewHeaderTitle}>Rupeezy Secure Login</Text>
-          <View style={{ width: 40 }} />
-        </View>
+      <View style={{ flex: 1, backgroundColor: theme.background, paddingBottom: insets.bottom }}>
+        <TopBar title="Rupeezy secure login" onBack={() => setShowRupeezyWebView(false)} />
         <WebView
           source={{ uri: `https://flow.rupeezy.in?applicationId=${finalAppId}` }}
           onNavigationStateChange={handleRupeezyNavigationChange}
@@ -451,7 +435,7 @@ export default function BrokersConfigScreen() {
           javaScriptEnabled={true}
           domStorageEnabled={true}
           renderLoading={() => (
-            <View style={styles.webViewLoaderContainer}>
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.background }}>
               <ActivityIndicator size="large" color={theme.primary} />
             </View>
           )}
@@ -464,37 +448,34 @@ export default function BrokersConfigScreen() {
     color: zerodhaStatusColor,
     text: zerodhaConnectionText,
     content: zerodhaStatusContent,
-  } = getBrokerStatusDisplay(zerodhaLoading, zerodhaError, zerodhaUser, theme, styles);
+  } = getBrokerStatusDisplay(zerodhaLoading, zerodhaError, zerodhaUser, theme);
 
   const {
     color: rupeezyStatusColor,
     text: rupeezyConnectionText,
     content: rupeezyStatusContent,
-  } = getBrokerStatusDisplay(rupeezyLoading, rupeezyError, rupeezyUser, theme, styles);
+  } = getBrokerStatusDisplay(rupeezyLoading, rupeezyError, rupeezyUser, theme);
 
   return (
-    <ScreenScaffold styles={styles} layout={layout} insets={insets}>
-          {/* Top Switcher */}
-          <View style={[styles.tabContainer, { marginBottom: 24 }] as any}>
-            <TouchableOpacity
-              style={[styles.tabButton, activeBrokerTab === 'zerodha' && styles.activeTabButton] as any}
-              onPress={() => setActiveBrokerTab('zerodha')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.tabButtonLabel, activeBrokerTab === 'zerodha' && styles.activeTabButtonLabel] as any}>ZERODHA</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabButton, activeBrokerTab === 'rupeezy' && styles.activeTabButton] as any}
-              onPress={() => setActiveBrokerTab('rupeezy')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.tabButtonLabel, activeBrokerTab === 'rupeezy' && styles.activeTabButtonLabel] as any}>RUPEEZY</Text>
-            </TouchableOpacity>
-          </View>
-
+    <Screen
+      header={
+        <TopBar
+          title="Brokers"
+          bottom={
+            <Tabs
+              value={activeBrokerTab}
+              onChange={(val) => setActiveBrokerTab(val as 'zerodha' | 'rupeezy')}
+              items={[
+                { value: 'zerodha', label: 'Zerodha' },
+                { value: 'rupeezy', label: 'Rupeezy' },
+              ]}
+            />
+          }
+        />
+      }
+    >
           {activeBrokerTab === 'zerodha' && (
             <ZerodhaCard
-              styles={styles}
               theme={theme}
               zerodhaStatusColor={zerodhaStatusColor}
               zerodhaStatusContent={zerodhaStatusContent}
@@ -526,7 +507,6 @@ export default function BrokersConfigScreen() {
 
           {activeBrokerTab === 'rupeezy' && (
             <RupeezyCard
-              styles={styles}
               theme={theme}
               rupeezyStatusColor={rupeezyStatusColor}
               rupeezyStatusContent={rupeezyStatusContent}
@@ -545,7 +525,6 @@ export default function BrokersConfigScreen() {
               setRupeezyError={setRupeezyError}
             />
           )}
-
-        </ScreenScaffold>
+    </Screen>
   );
 }

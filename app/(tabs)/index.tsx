@@ -1,26 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { moderateScale } from 'react-native-size-matters';
+import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Avatar, Text, TouchableRipple } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { angelOneApi } from '../../services/api';
-import { useIndexStyles } from '../../theme/globalStyles';
-import { useAdaptiveLayout } from '../../theme/layout';
-import { getSafeBottomPadding } from '../../theme/safeArea';
+import { radius, space } from '../../theme/tokens';
 import MarketStatusCard from '../../components/home/MarketStatusCard';
 import ProfileMenu from '../../components/home/ProfileMenu';
+import Screen from '../../components/ui/Screen';
+import TopBar from '../../components/ui/TopBar';
+import { Panel, SectionHeader, Hairline } from '../../components/ui/Panel';
+import ListRow from '../../components/ui/Row';
+
+/** Shortcut tiles under the quote — the actions traders reach for most. */
+const SHORTCUTS = [
+  { key: 'screener', label: 'Screener', icon: 'scan-outline' as const, route: '/screener', auth: false },
+  { key: 'trade', label: 'Place order', icon: 'flash-outline' as const, route: '/trade', auth: true },
+  { key: 'calculator', label: 'Margin calc', icon: 'calculator-outline' as const, route: '/calculator', auth: false },
+];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const layout = useAdaptiveLayout(insets);
   const { user, appLoading, logout } = useAuth();
   const { isDarkMode, toggleTheme, theme } = useTheme();
-  const styles = useIndexStyles(isDarkMode);
   const [marketData, setMarketData] = useState<any>(null);
   const [cardLoading, setCardLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +38,6 @@ export default function HomeScreen() {
 
       const token = '99926033';
       const res = await angelOneApi.getLtp(token);
-
-      // Axios response returns wrapped in res.data, backend returns { data: ... }
       const data = res.data.data;
       if (data) {
         setMarketData(data);
@@ -61,11 +63,7 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (appLoading) return;
-
-      // Initial fetch with loader
       fetchMarketStatus(true);
-
-      // Auto-refresh data silently every 30 seconds to mimic live updates
       refreshIntervalRef.current = setInterval(() => {
         fetchMarketStatus(false);
       }, 30000);
@@ -81,73 +79,69 @@ export default function HomeScreen() {
 
   if (appLoading) {
     return (
-      <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
-        <View style={[styles.container, styles.centered]}>
-          <ActivityIndicator size="large" color={theme.textPrimary} />
-        </View>
+      <View style={{ flex: 1, backgroundColor: theme.background, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
   const displayName = user?.name || user?.username || '';
-
-  // Extract variables with fallback mock values to avoid crashes if API has an issue
   const ltp = marketData?.ltp || 0;
   const close = marketData?.close || marketData?.previousClose || ltp;
   const high = marketData?.high || 0;
   const low = marketData?.low || 0;
   const open = marketData?.open || 0;
   const symbol = marketData?.tradingSymbol || 'NIFTY';
-
   const change = ltp - close;
   const changePercent = close > 0 ? (change / close) * 100 : 0;
   const isBullish = change >= 0;
 
-  return (
-    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.homeScrollContent,
-          layout.centeredContent,
-          { paddingHorizontal: layout.horizontalPadding, paddingBottom: layout.tabBarHeight + 24 },
-        ]}
-        contentInsetAdjustmentBehavior="automatic"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View style={{ flex: 1, marginRight: 12 }}>
-            <Text style={styles.welcomeText}>Welcome{displayName ? ',' : ""}</Text>
-            {displayName ? <Text style={styles.nameText} numberOfLines={1} adjustsFontSizeToFit>{displayName}</Text> : null}
-          </View>
-          <TouchableOpacity
-            style={[styles.profileButton, user?.profile ? styles.profileButtonWithImage : null]}
-            onPress={() => setShowProfileMenu(true)}
-            activeOpacity={0.7}
-          >
-            {user?.profile ? (
-              <Image
-                source={{ uri: user.profile }}
-                contentFit="cover"
-                transition={120}
-                cachePolicy="memory-disk"
-                recyclingKey={user.profile}
-                style={styles.headerAvatar}
-              />
-            ) : (
-              <Ionicons
-                name={user ? "person-circle" : "person-circle-outline"}
-                size={32}
-                color={user ? theme.secondary : theme.textPrimary}
-              />
-            )}
-          </TouchableOpacity>
-        </View>
+  const go = (route: string, needsAuth: boolean) => {
+    if (needsAuth && !user) router.push('/login');
+    else router.push(route as any);
+  };
 
-        {/* Market Status Card */}
+  return (
+    <>
+      <Screen
+        header={
+          <TopBar
+            title="1Klik"
+            subtitle={displayName ? `Signed in as ${displayName}` : 'Not signed in'}
+            actions={[
+              {
+                icon: isDarkMode ? 'sunny-outline' : 'moon-outline',
+                onPress: () => toggleTheme(),
+                accessibilityLabel: 'Toggle theme',
+              },
+            ]}
+            trailing={
+              <TouchableRipple
+                onPress={() => setShowProfileMenu(true)}
+                borderless
+                rippleColor={theme.ripple}
+                style={styles.avatarButton}
+                accessibilityRole="button"
+                accessibilityLabel="Open profile menu"
+              >
+                {user?.profile ? (
+                  <Avatar.Image size={32} source={{ uri: user.profile }} />
+                ) : (
+                  <Avatar.Icon
+                    size={32}
+                    icon="account"
+                    style={{ backgroundColor: theme.chipBackground }}
+                    color={theme.textSecondary}
+                  />
+                )}
+              </TouchableRipple>
+            }
+          />
+        }
+      >
+        <SectionHeader title="Index" actionLabel="Refresh" onAction={() => fetchMarketStatus(true)} />
+
         <MarketStatusCard
-          styles={styles}
           theme={theme}
           cardLoading={cardLoading}
           marketData={marketData}
@@ -163,48 +157,65 @@ export default function HomeScreen() {
           low={low}
         />
 
-        {/* Quick Actions Section */}
-        <View style={{ backgroundColor: theme.card, borderRadius: 24, padding: 20, marginTop: 20, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 4 }}>
-          {/* Quick Actions Header */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <Text style={{ color: theme.textPrimary, fontSize: moderateScale(18), fontWeight: '800' }}>Quick Actions</Text>
-          </View>
-
-          {/* Quick Actions Grid */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/screener')} activeOpacity={0.7}>
-              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: theme.primaryBackground, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="filter" size={moderateScale(30)} color={theme.primary} />
+        <SectionHeader title="Quick actions" />
+        <View style={styles.shortcutRow}>
+          {SHORTCUTS.map((shortcut) => (
+            <Panel
+              key={shortcut.key}
+              padded={false}
+              style={styles.shortcut}
+              onPress={() => go(shortcut.route, shortcut.auth)}
+            >
+              <View style={styles.shortcutInner}>
+                <View style={[styles.shortcutIcon, { backgroundColor: theme.primaryBackground }]}>
+                  <Ionicons name={shortcut.icon} size={20} color={theme.primary} />
+                </View>
+                <Text
+                  numberOfLines={1}
+                  style={{ fontSize: 12, fontWeight: '600', color: theme.textPrimary, marginTop: space.sm }}
+                >
+                  {shortcut.label}
+                </Text>
               </View>
-              <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Screener</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => {
-              if (!user) {
-                router.push('/login');
-              } else {
-                router.push('/trade');
-              }
-            }} activeOpacity={0.7}>
-              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: theme.successBackground, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="pulse" size={moderateScale(30)} color={theme.success} />
-              </View>
-              <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Trade</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/calculator')} activeOpacity={0.7}>
-              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: theme.warningBackground, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="calculator" size={moderateScale(30)} color={theme.warningText} />
-              </View>
-              <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Calculator</Text>
-            </TouchableOpacity>
-          </View>
+            </Panel>
+          ))}
         </View>
-      </ScrollView>
 
-      {/* Side Menu Drawer overlay (Matching Screener Screen Layout!) */}
+        <SectionHeader title="Your desk" />
+        <Panel padded={false}>
+          <ListRow
+            title="Order book"
+            subtitle="Scheduled MTF and strategy orders"
+            icon="receipt-outline"
+            iconTint={theme.primary}
+            iconBackground={theme.primaryBackground}
+            showChevron
+            onPress={() => go('/trade', true)}
+          />
+          <Hairline inset={64} />
+          <ListRow
+            title="Broker connections"
+            subtitle="Zerodha Kite · Rupeezy"
+            icon="git-network-outline"
+            iconTint={theme.infoText}
+            iconBackground={theme.infoBackground}
+            showChevron
+            onPress={() => go('/brokers', true)}
+          />
+          <Hairline inset={64} />
+          <ListRow
+            title="Margin calculator"
+            subtitle="Size a position before you place it"
+            icon="calculator-outline"
+            iconTint={theme.warningText}
+            iconBackground={theme.warningBackground}
+            showChevron
+            onPress={() => go('/calculator', false)}
+          />
+        </Panel>
+      </Screen>
+
       <ProfileMenu
-        styles={styles}
         theme={theme}
         showProfileMenu={showProfileMenu}
         setShowProfileMenu={setShowProfileMenu}
@@ -214,6 +225,35 @@ export default function HomeScreen() {
         toggleTheme={toggleTheme}
         router={router}
       />
-    </View>
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  avatarButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shortcutRow: {
+    flexDirection: 'row',
+    gap: space.md,
+  },
+  shortcut: {
+    flex: 1,
+  },
+  shortcutInner: {
+    alignItems: 'center',
+    paddingVertical: space.lg,
+    paddingHorizontal: space.sm,
+  },
+  shortcutIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

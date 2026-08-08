@@ -1,8 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from 'react-native';
-import { moderateScale } from 'react-native-size-matters';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Dialog, Portal, Text, TouchableRipple } from 'react-native-paper';
 import { CustomAlert } from '../../context/AlertContext';
 import { useMargins } from '../../context/MarginContext';
 import { holdingsAPI } from '../../services/api';
@@ -11,14 +10,19 @@ import { rankMarginSymbols } from '../../utils/margins';
 import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import DatePickerModal from '../common/DatePickerModal';
 import HoldingCard from './HoldingCard';
+import Button from '../ui/Button';
+import { Field, SelectField } from '../ui/Field';
+import { EmptyState } from '../ui/Feedback';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { radius, space } from '../../theme/tokens';
 
-export default function ZerodhaHoldings({ styles, theme }: any) {
+/** Portfolio table plus the manual add/edit flow, shown under the Zerodha tab. */
+export default function ZerodhaHoldings({ theme }: any) {
   const [holdings, setHoldings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
 
-  // Add Holding Form State
   const { margins, loadingMargins } = useMargins();
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,11 +40,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
       setError(null);
       const res = await holdingsAPI.getHoldings();
       const data = res.data.data;
-      if (Array.isArray(data)) {
-        setHoldings(data);
-      } else {
-        setHoldings([]);
-      }
+      setHoldings(Array.isArray(data) ? data : []);
     } catch (err: any) {
       console.error('Failed to fetch holdings:', err);
       if (err.response?.status === 404) {
@@ -70,11 +70,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
     setSearchQuery(symbol);
     setNewQuantity(String(detail.quantity));
     setNewPrice(String(detail.price));
-    if (detail.buyDate) {
-      setNewBuyDate(new Date(detail.buyDate));
-    } else {
-      setNewBuyDate(new Date());
-    }
+    setNewBuyDate(detail.buyDate ? new Date(detail.buyDate) : new Date());
     setShowAddModal(true);
   }, []);
 
@@ -82,7 +78,6 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
     setExpandedSymbol((prev) => (prev === symbol ? null : symbol));
   }, []);
 
-  // Date Picker State
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickerDate, setPickerDate] = useState(new Date());
 
@@ -93,10 +88,7 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
     setPickerDate(new Date(pickerDate.getFullYear(), pickerDate.getMonth() + 1, 1));
   };
 
-  const filteredMargins = useMemo(
-    () => rankMarginSymbols(margins, searchQuery),
-    [margins, searchQuery]
-  );
+  const filteredMargins = useMemo(() => rankMarginSymbols(margins, searchQuery), [margins, searchQuery]);
 
   const handleAddHolding = async () => {
     try {
@@ -119,9 +111,9 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
             id: editingDetailId || 0,
             quantity: qty,
             price: prc,
-            buyDate: formatIsoDate(newBuyDate)
-          }
-        ]
+            buyDate: formatIsoDate(newBuyDate),
+          },
+        ],
       };
 
       if (editingDetailId) {
@@ -146,37 +138,41 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
     }
   };
 
-  const handleDeleteDetail = useCallback((symbol: string, detailId: number) => {
-    CustomAlert.alert(
-      'Delete Holding Entry',
-      'Are you sure you want to delete this specific buy entry? This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await holdingsAPI.deleteHoldingDetail(symbol, detailId);
-              fetchHoldings();
-              CustomAlert.alert('Success', 'Holding entry deleted successfully.');
-            } catch (err: any) {
-              console.error('Failed to delete holding detail:', err);
-              CustomAlert.alert('Error', getFriendlyErrorMessage(err, 'Could not delete the holding entry. Please try again.'));
-              setLoading(false);
-            }
-          }
-        }
-      ]
-    );
-  }, [fetchHoldings]);
+  const handleDeleteDetail = useCallback(
+    (symbol: string, detailId: number) => {
+      CustomAlert.alert(
+        'Delete Holding Entry',
+        'Are you sure you want to delete this specific buy entry? This cannot be undone.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                setLoading(true);
+                await holdingsAPI.deleteHoldingDetail(symbol, detailId);
+                fetchHoldings();
+                CustomAlert.alert('Success', 'Holding entry deleted successfully.');
+              } catch (err: any) {
+                console.error('Failed to delete holding detail:', err);
+                CustomAlert.alert(
+                  'Error',
+                  getFriendlyErrorMessage(err, 'Could not delete the holding entry. Please try again.')
+                );
+                setLoading(false);
+              }
+            },
+          },
+        ]
+      );
+    },
+    [fetchHoldings]
+  );
 
-  const handleDeleteHolding = useCallback((symbol: string) => {
-    CustomAlert.alert(
-      'Delete Holding',
-      `Are you sure you want to delete all manual holdings for ${symbol}?`,
-      [
+  const handleDeleteHolding = useCallback(
+    (symbol: string) => {
+      CustomAlert.alert('Delete Holding', `Are you sure you want to delete all manual holdings for ${symbol}?`, [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
@@ -189,14 +185,18 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
               fetchHoldings();
             } catch (err: any) {
               console.error('Failed to delete holding:', err);
-              CustomAlert.alert('Error', getFriendlyErrorMessage(err, 'Could not delete the holding. Please try again.'));
+              CustomAlert.alert(
+                'Error',
+                getFriendlyErrorMessage(err, 'Could not delete the holding. Please try again.')
+              );
               setLoading(false);
             }
-          }
-        }
-      ]
-    );
-  }, [fetchHoldings]);
+          },
+        },
+      ]);
+    },
+    [fetchHoldings]
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -204,160 +204,152 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
     }, [fetchHoldings])
   );
 
+  let body: React.ReactNode;
   if (loading) {
-    return (
-      <View style={[styles.formCard, { marginTop: 16, alignItems: 'center' }]}>
+    body = (
+      <View style={{ paddingVertical: 40, alignItems: 'center' }}>
         <ActivityIndicator size="small" color={theme.primary} />
-        <Text style={[styles.formSubtitle, { marginTop: 8 }]}>Loading holdings...</Text>
       </View>
     );
-  }
-
-  if (error) {
-    return (
-      <View style={[styles.formCard, { marginTop: 16 }]}>
-        <Text style={[styles.formTitle, { color: theme.danger }]}>Error</Text>
-        <Text style={styles.formSubtitle}>{error}</Text>
-      </View>
+  } else if (error) {
+    body = <EmptyState icon="cloud-offline-outline" title="Couldn't load holdings" message={error} tone="error" />;
+  } else if (holdings.length === 0) {
+    body = (
+      <EmptyState
+        icon="briefcase-outline"
+        title="No holdings"
+        message="Add a position manually to track its cost, MTF interest and break-even."
+        actionLabel="Add holding"
+        onAction={openAddModal}
+      />
     );
+  } else {
+    body = holdings.map((holding, index) => (
+      <HoldingCard
+        key={holding.symbol || index}
+        holding={holding}
+        theme={theme}
+        isExpanded={expandedSymbol === holding.symbol}
+        onToggle={toggleExpanded}
+        onEditDetail={openEditModal}
+        onDeleteDetail={handleDeleteDetail}
+        onDeleteHolding={handleDeleteHolding}
+      />
+    ));
   }
-
-  const renderEmptyState = () => (
-    <View style={[styles.formCard, { marginTop: 16 }]}>
-      <Text style={styles.formTitle}>Holdings</Text>
-      <Text style={styles.formSubtitle}>No holdings mapped.</Text>
-      <TouchableOpacity style={[styles.submitButton, { marginTop: 16 }]} onPress={openAddModal}>
-        <Ionicons name="add" size={18} color="#ffffff" />
-        <Text style={styles.submitButtonText}>Add Holding</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   return (
     <View>
-      {holdings.length === 0 ? renderEmptyState() : (
-        // No outer card here: each HoldingCard is already its own card, so
-        // wrapping them in a formCard double-pads and wastes horizontal width.
-        // The header sits as a plain row aligned to the screen padding.
-        <View style={{ marginTop: 16 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: moderateScale(4) }}>
-            <Text style={styles.formTitle}>Portfolio Holdings</Text>
-            <TouchableOpacity onPress={openAddModal} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="add-circle" size={20} color={theme.primary} />
-              <Text style={{ color: theme.primary, fontSize: moderateScale(13), fontWeight: '700' }}>Add</Text>
-            </TouchableOpacity>
-          </View>
+      <SectionHeader
+        title="Portfolio"
+        actionLabel={holdings.length > 0 ? '+ Add' : undefined}
+        onAction={holdings.length > 0 ? openAddModal : undefined}
+      />
+      <Panel padded={false}>{body}</Panel>
 
-          {holdings.map((holding, index) => (
-            <HoldingCard
-              key={holding.symbol || index}
-              holding={holding}
-              theme={theme}
-              isExpanded={expandedSymbol === holding.symbol}
-              onToggle={toggleExpanded}
-              onEditDetail={openEditModal}
-              onDeleteDetail={handleDeleteDetail}
-              onDeleteHolding={handleDeleteHolding}
-            />
-          ))}
-        </View>
-      )}
-
-      <Modal visible={showAddModal} transparent={true} animationType="fade" onRequestClose={() => setShowAddModal(false)}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}
+      <Portal>
+        <Dialog
+          visible={showAddModal}
+          onDismiss={() => setShowAddModal(false)}
+          style={[dialogStyles.dialog, { backgroundColor: theme.surface }]}
         >
-          <View style={[styles.formCard, { width: '100%', marginTop: 0, maxHeight: '90%' }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={styles.formTitle}>{editingDetailId ? 'Edit Holding' : 'Add Manual Holding'}</Text>
-              <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <Ionicons name="close" size={24} color={theme.textSecondary} />
-              </TouchableOpacity>
+          <Text style={[dialogStyles.title, { color: theme.textPrimary }]}>
+            {editingDetailId ? 'Edit holding' : 'Add holding'}
+          </Text>
+
+          <ScrollView
+            style={{ maxHeight: 400 }}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingHorizontal: space.xxl, paddingBottom: space.lg, gap: space.lg }}
+          >
+            <View style={{ zIndex: 10 }}>
+              <Field
+                label="Symbol"
+                icon="search-outline"
+                placeholder={loadingMargins ? 'Loading instruments…' : 'e.g. RELIANCE'}
+                value={newSymbol || searchQuery}
+                editable={!loadingMargins && !editingDetailId}
+                autoCapitalize="characters"
+                onChangeText={(val) => {
+                  setSearchQuery(val);
+                  setNewSymbol('');
+                  setShowDropdown(true);
+                }}
+              />
+
+              {showDropdown && searchQuery && filteredMargins.length > 0 && !loadingMargins && !editingDetailId ? (
+                <Panel
+                  padded={false}
+                  style={[dialogStyles.suggestions, { backgroundColor: theme.surfaceAlt }]}
+                >
+                  <ScrollView style={{ maxHeight: 180 }} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+                    {filteredMargins.slice(0, 10).map((marginItem: any, idx: number) => (
+                      <TouchableRipple
+                        key={marginItem.symbol || idx}
+                        rippleColor={theme.ripple}
+                        onPress={() => {
+                          setNewSymbol(marginItem.symbol);
+                          setSearchQuery('');
+                          setShowDropdown(false);
+                        }}
+                      >
+                        <View style={[dialogStyles.suggestion, { borderBottomColor: theme.divider }]}>
+                          <Text style={{ fontSize: 14, fontWeight: '600', color: theme.textPrimary }}>
+                            {marginItem.symbol}
+                          </Text>
+                        </View>
+                      </TouchableRipple>
+                    ))}
+                  </ScrollView>
+                </Panel>
+              ) : null}
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={[styles.inputGroup, { zIndex: 100 }]}>
-                <Text style={styles.inputLabel}>SYMBOL *</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="trending-up-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder={loadingMargins ? "Loading stocks..." : "e.g. RELIANCE"}
-                    placeholderTextColor={theme.placeholder}
-                    value={newSymbol || searchQuery}
-                    onChangeText={(val) => {
-                      setSearchQuery(val);
-                      setNewSymbol('');
-                      setShowDropdown(true);
-                    }}
-                    autoCapitalize="characters"
-                    autoCorrect={false}
-                    onFocus={() => setShowDropdown(true)}
-                    editable={!loadingMargins && !editingDetailId}
-                  />
-                  {loadingMargins && <ActivityIndicator size="small" color={theme.primary} />}
-                </View>
+            <Field
+              label="Quantity"
+              value={newQuantity}
+              onChangeText={setNewQuantity}
+              keyboardType="number-pad"
+              placeholder="0"
+              suffix="qty"
+              hint="min 1"
+              numericFace
+            />
 
-                {showDropdown && searchQuery && filteredMargins.length > 0 && !loadingMargins && !editingDetailId && (
-                  <View style={styles.verticalDropdownContainer}>
-                    <ScrollView style={{ maxHeight: 200 }} keyboardShouldPersistTaps="handled">
-                      {filteredMargins.slice(0, 10).map((marginItem: any, idx: number) => (
-                        <TouchableOpacity
-                          key={marginItem.symbol || idx}
-                          style={styles.suggestionRow}
-                          onPress={() => {
-                            setNewSymbol(marginItem.symbol);
-                            setSearchQuery('');
-                            setShowDropdown(false);
-                          }}
-                        >
-                          <Text style={styles.suggestionRowSymbol}>{marginItem.symbol}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
-                )}
-              </View>
+            <Field
+              label="Buy price"
+              value={newPrice}
+              onChangeText={setNewPrice}
+              keyboardType="decimal-pad"
+              placeholder="0.00"
+              prefix="₹"
+              hint="min 1"
+              numericFace
+            />
 
-              <View style={[styles.inputGroup, { zIndex: 1 }]}>
-                <Text style={styles.inputLabel}>QUANTITY (Min 1) *</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput style={styles.textInput} placeholder="10" placeholderTextColor={theme.placeholder} value={newQuantity} onChangeText={setNewQuantity} keyboardType="numeric" />
-                </View>
-              </View>
+            <SelectField
+              label="Buy date"
+              value={formatDateString(newBuyDate)}
+              icon="calendar-outline"
+              onPress={() => setShowDatePicker(true)}
+            />
+          </ScrollView>
 
-              <View style={[styles.inputGroup, { zIndex: 1 }]}>
-                <Text style={styles.inputLabel}>PRICE (Min 1) *</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput style={styles.textInput} placeholder="2500.50" placeholderTextColor={theme.placeholder} value={newPrice} onChangeText={setNewPrice} keyboardType="decimal-pad" />
-                </View>
-              </View>
-
-              <View style={[styles.inputGroup, { zIndex: 1 }]}>
-                <Text style={styles.inputLabel}>BUY DATE *</Text>
-                <TouchableOpacity style={styles.inputWrapper} onPress={() => setShowDatePicker(true)}>
-                  <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
-                  <Text style={[styles.textInput, { paddingVertical: 12 }]}>{formatDateString(newBuyDate)}</Text>
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity style={styles.submitButton} onPress={handleAddHolding} disabled={adding}>
-                {adding ? <ActivityIndicator size="small" color="#ffffff" /> : (
-                  <>
-                    <Ionicons name={editingDetailId ? "save-outline" : "checkmark-circle-outline"} size={20} color="#ffffff" />
-                    <Text style={styles.submitButtonText}>{editingDetailId ? 'Update Holding' : 'Save Holding'}</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </ScrollView>
+          <View style={dialogStyles.actions}>
+            <Button label="Cancel" variant="text" compact onPress={() => setShowAddModal(false)} />
+            <Button
+              label={editingDetailId ? 'Update' : 'Save'}
+              compact
+              loading={adding}
+              disabled={adding}
+              onPress={handleAddHolding}
+            />
           </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        </Dialog>
+      </Portal>
 
       {/* Buy-date picker — future dates are disabled (a buy can't be in the future). */}
       <DatePickerModal
-        styles={styles}
         theme={theme}
         visible={showDatePicker}
         pickerDate={pickerDate}
@@ -371,3 +363,37 @@ export default function ZerodhaHoldings({ styles, theme }: any) {
     </View>
   );
 }
+
+const dialogStyles = StyleSheet.create({
+  dialog: {
+    borderRadius: 28,
+    marginHorizontal: space.xl,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '600',
+    paddingHorizontal: space.xxl,
+    paddingTop: space.xxl,
+    paddingBottom: space.lg,
+  },
+  suggestions: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    marginTop: space.xs,
+    borderRadius: radius.sm,
+    elevation: 6,
+  },
+  suggestion: {
+    paddingHorizontal: space.md,
+    paddingVertical: space.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: space.sm,
+    padding: space.md,
+  },
+});

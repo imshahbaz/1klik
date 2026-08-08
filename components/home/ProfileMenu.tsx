@@ -1,10 +1,14 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Modal, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Portal, Switch, Text } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ListRow from '../ui/Row';
+import { Hairline } from '../ui/Panel';
+import { radius, space } from '../../theme/tokens';
 
 interface ProfileMenuProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly showProfileMenu: boolean;
   readonly setShowProfileMenu: (val: boolean) => void;
@@ -15,8 +19,12 @@ interface ProfileMenuProps {
   readonly router: any;
 }
 
+/**
+ * Material 3 bottom sheet. Anchoring account actions to the bottom edge puts
+ * them in thumb reach and matches the sheet pattern Android uses for
+ * contextual menus — the previous side drawer was a desktop-nav idiom.
+ */
 export default function ProfileMenu({
-  styles,
   theme,
   showProfileMenu,
   setShowProfileMenu,
@@ -24,130 +32,140 @@ export default function ProfileMenu({
   logout,
   isDarkMode,
   toggleTheme,
-  router
+  router,
 }: ProfileMenuProps) {
+  const insets = useSafeAreaInsets();
+  const close = () => setShowProfileMenu(false);
+
+  const identity = user?.name || user?.email || user?.mobile || user?.username || 'Guest';
+
   return (
-    <Modal
-      visible={showProfileMenu}
-      transparent={true}
-      animationType="none"
-      onRequestClose={() => setShowProfileMenu(false)}
-    >
-      <View style={styles.sideMenuOverlay}>
-        {/* Backdrop click dismiss */}
-        <TouchableOpacity
-          style={styles.backdrop}
-          activeOpacity={1}
-          onPress={() => setShowProfileMenu(false)}
-        />
+    <Portal>
+      <Modal
+        visible={showProfileMenu}
+        onDismiss={close}
+        contentContainerStyle={styles.host}
+        style={styles.modal}
+      >
+        {/* Tapping the area above the sheet dismisses it, as on a native sheet. */}
+        <Pressable style={{ flex: 1 }} onPress={close} accessibilityLabel="Close menu" />
 
-        {/* Drawer Panel */}
-        <View style={styles.drawerPanel}>
-          {/* Custom Navigation Header (Same style as Screener Screen!) */}
-          <View style={styles.drawerHeader}>
-            <TouchableOpacity style={styles.drawerBackButton} onPress={() => setShowProfileMenu(false)}>
-              <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
-            </TouchableOpacity>
-            <Text style={styles.drawerHeaderTitle}>Profile</Text>
-            <View style={{ width: 40 }} />
+        <View
+          style={[
+            styles.sheet,
+            { backgroundColor: theme.surface, paddingBottom: Math.max(insets.bottom, space.md) },
+          ]}
+        >
+          <View style={[styles.handle, { backgroundColor: theme.border }]} />
+
+          <View style={styles.identity}>
+            <View style={[styles.avatar, { backgroundColor: theme.primaryBackground }]}>
+              <Ionicons name="person" size={20} color={theme.primary} />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', color: theme.textPrimary }}>
+                {identity}
+              </Text>
+              <Text style={{ fontSize: 12, color: theme.textSecondary, marginTop: 1 }}>
+                {user ? 'Signed in' : 'Sign in to trade and connect brokers'}
+              </Text>
+            </View>
           </View>
 
-          {/* Drawer Body (Same style as Screener Screen!) */}
-          <View style={styles.drawerBody}>
-            {user ? (
-              <View style={styles.profileDetailsCard}>
-                <View style={styles.avatarCircle}>
-                  {user.profile ? (
-                    <Image
-                      source={{ uri: user.profile }}
-                      contentFit="cover"
-                      transition={120}
-                      cachePolicy="memory-disk"
-                      recyclingKey={user.profile}
-                      style={styles.drawerAvatar}
-                    />
-                  ) : (
-                    <Ionicons name="person" size={36} color={theme.secondary} />
-                  )}
-                </View>
-                <Text style={styles.profileLabel}>Logged In As</Text>
-                <Text style={styles.profileEmail} numberOfLines={1}>
-                  {user.name || user.email || user.mobile || user.username || 'User'}
-                </Text>
-                <View style={styles.profileDivider} />
+          <Hairline />
 
-                <View style={styles.themeToggleRow}>
-                  <Text style={styles.themeToggleLabel}>Dark Mode</Text>
-                  <Switch
-                    value={isDarkMode}
-                    onValueChange={toggleTheme}
-                    trackColor={{ false: theme.border, true: theme.primary }}
-                    thumbColor={theme.card}
-                  />
-                </View>
+          <ListRow
+            title="Dark mode"
+            icon={isDarkMode ? 'moon' : 'sunny'}
+            iconTint={theme.textSecondary}
+            trailing={<Switch value={isDarkMode} onValueChange={toggleTheme} color={theme.primary} />}
+          />
 
-                <TouchableOpacity
-                  style={styles.drawerSettingsButton}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    router.push('/settings');
-                  }}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="settings-outline" size={18} color={theme.textPrimary} />
-                  <Text style={styles.settingsButtonText}>Settings</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.drawerLogoutButton}
-                  onPress={async () => {
-                    await logout();
-                    setShowProfileMenu(false);
-                  }}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="log-out-outline" size={18} color="#ffffff" />
-                  <Text style={styles.logoutButtonText}>Logout</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.profileDetailsCard}>
-                <View style={styles.avatarCircleGray}>
-                  <Ionicons name="person-outline" size={36} color={theme.iconMuted} />
-                </View>
-                <Text style={styles.profileLabel}>Account Status</Text>
-                <Text style={styles.profileEmail}>Not logged in</Text>
-                <Text style={styles.profileSubtext}>
-                  Log in to unlock custom algorithmic strategies, live market status metrics, and portfolio integrations.
-                </Text>
-                <View style={styles.profileDivider} />
-
-                <View style={styles.themeToggleRow}>
-                  <Text style={styles.themeToggleLabel}>Dark Mode</Text>
-                  <Switch
-                    value={isDarkMode}
-                    onValueChange={toggleTheme}
-                    trackColor={{ false: theme.border, true: theme.primary }}
-                    thumbColor={theme.card}
-                  />
-                </View>
-
-                <TouchableOpacity
-                  style={styles.drawerLoginButton}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    router.push('/login');
-                  }}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="log-in-outline" size={18} color={theme.buttonPrimaryText} />
-                  <Text style={styles.loginButtonText}>Login</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
+          {user ? (
+            <>
+              <ListRow
+                title="Account settings"
+                icon="settings-outline"
+                showChevron
+                onPress={() => {
+                  close();
+                  router.push('/settings');
+                }}
+              />
+              <ListRow
+                title="Broker connections"
+                icon="git-network-outline"
+                showChevron
+                onPress={() => {
+                  close();
+                  router.push('/brokers');
+                }}
+              />
+              <Hairline />
+              <ListRow
+                title="Sign out"
+                icon="log-out-outline"
+                iconTint={theme.danger}
+                iconBackground={theme.dangerBackground}
+                onPress={async () => {
+                  await logout();
+                  close();
+                }}
+              />
+            </>
+          ) : (
+            <ListRow
+              title="Sign in"
+              subtitle="Unlock strategies, orders and portfolio sync"
+              icon="log-in-outline"
+              iconTint={theme.primary}
+              iconBackground={theme.primaryBackground}
+              showChevron
+              onPress={() => {
+                close();
+                router.push('/login');
+              }}
+            />
+          )}
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </Portal>
   );
 }
+
+const styles = StyleSheet.create({
+  modal: {
+    margin: 0,
+  },
+  host: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    // Only the top corners round — the sheet is anchored to the screen edge.
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: space.sm,
+  },
+  handle: {
+    width: 32,
+    height: 4,
+    borderRadius: radius.pill,
+    alignSelf: 'center',
+    marginBottom: space.md,
+  },
+  identity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    paddingHorizontal: space.lg,
+    paddingBottom: space.lg,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View } from 'react-native';
 import SwipeButton from '../common/SwipeButton';
 import StrategyDropdownModal from './StrategyDropdownModal';
+import { Field, SelectField, ToggleGroup } from '../ui/Field';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { Notice } from '../ui/Feedback';
+import { space } from '../../theme/tokens';
 
 interface StrategyTabProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly strategyOptions: string[];
   readonly strategyFormData: {
@@ -19,35 +22,14 @@ interface StrategyTabProps {
   readonly setPickerDate: (date: Date) => void;
   readonly setShowDatePicker: (show: boolean) => void;
   readonly editingStrategyOrderId: string | null;
-  readonly setEditingStrategyOrderId: (id: string | null) => void;
+  readonly setEditingStrategyOrderId?: (id: string | null) => void;
   readonly submittingStrategy: boolean;
   readonly handleSaveStrategyOrder: () => void;
   readonly formatDateString: (date: Date) => string;
 }
 
-const BROKERS: ('ZERODHA' | 'RUPEEZY')[] = ['ZERODHA', 'RUPEEZY'];
-
-/** Renders a segmented single-choice control. */
-const Segmented = ({ styles, options, value, onSelect }: any) => (
-  <View style={styles.segmentGroup}>
-    {options.map((opt: string) => {
-      const active = value === opt;
-      return (
-        <TouchableOpacity
-          key={opt}
-          style={[styles.segmentBtn, active && styles.segmentBtnActive]}
-          onPress={() => onSelect(opt)}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.segmentBtnText, active && styles.segmentBtnTextActive]}>{opt}</Text>
-        </TouchableOpacity>
-      );
-    })}
-  </View>
-);
-
+/** Automated-strategy allocation form: pick a strategy, an amount and a date. */
 export default function StrategyTab({
-  styles,
   theme,
   strategyOptions,
   strategyFormData,
@@ -56,108 +38,62 @@ export default function StrategyTab({
   setPickerDate,
   setShowDatePicker,
   editingStrategyOrderId,
-  setEditingStrategyOrderId,
-  submittingStrategy,
-  handleSaveStrategyOrder,
   formatDateString,
 }: StrategyTabProps) {
   const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
 
-  const resetForm = () => {
-    setEditingStrategyOrderId(null);
-    setStrategyFormData({ strategyName: 'RSI15MIN', amount: '', date: '', broker: 'ZERODHA' });
-  };
-
   return (
-    <View style={styles.orderPadCard}>
-      <View style={styles.orderPadBody}>
-        {/* Broker */}
-        <Text style={styles.orderFieldLabel}>BROKER</Text>
-        <Segmented
-          styles={styles}
-          options={BROKERS}
+    <View>
+      {editingStrategyOrderId ? (
+        <View style={{ paddingTop: space.lg }}>
+          <Notice tone="warn" message="Editing an existing strategy order" />
+        </View>
+      ) : null}
+
+      <SectionHeader title="Strategy allocation" />
+      <Panel style={{ gap: space.lg }}>
+        <ToggleGroup
+          label="Broker"
           value={strategyFormData.broker}
-          onSelect={(broker: string) => setStrategyFormData({ ...strategyFormData, broker })}
+          options={[
+            { value: 'ZERODHA', label: 'ZERODHA' },
+            { value: 'RUPEEZY', label: 'RUPEEZY' },
+          ]}
+          onChange={(val) => setStrategyFormData({ ...strategyFormData, broker: val })}
         />
 
-        {/* Strategy */}
-        <View style={styles.orderFieldGroup}>
-          <Text style={styles.orderFieldLabel}>STRATEGY</Text>
-          <TouchableOpacity
-            style={[styles.orderInput, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
-            onPress={() => setShowStrategyDropdown(true)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[styles.orderInputText, !strategyFormData.strategyName && { color: theme.placeholder }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-            >
-              {strategyFormData.strategyName || 'Select strategy'}
-            </Text>
-            <Ionicons name="chevron-down" size={16} color={theme.iconMuted} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Amount + Date, side by side */}
-        <View style={styles.orderRow}>
-          <View style={styles.orderCol}>
-            <Text style={styles.orderFieldLabel}>AMOUNT (₹)</Text>
-            <TextInput
-              style={styles.orderInput}
-              value={strategyFormData.amount}
-              onChangeText={(val) => setStrategyFormData({ ...strategyFormData, amount: val })}
-              keyboardType="numeric"
-              placeholder="e.g. 5000"
-              placeholderTextColor={theme.placeholder}
-            />
-          </View>
-
-          <View style={styles.orderCol}>
-            <Text style={styles.orderFieldLabel}>DATE</Text>
-            <TouchableOpacity
-              style={styles.orderInput}
-              onPress={() => {
-                setDatePickerTarget('strategy');
-                setPickerDate(strategyFormData.date ? new Date(strategyFormData.date) : new Date());
-                setShowDatePicker(true);
-              }}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={[styles.orderInputText, !strategyFormData.date && { color: theme.placeholder }]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                {strategyFormData.date ? formatDateString(new Date(strategyFormData.date)) : 'Select date'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Swipe-to-confirm action bar */}
-      <View style={styles.orderPadActionBar}>
-        <SwipeButton
-          styles={styles}
-          theme={theme}
-          label={editingStrategyOrderId ? 'Swipe to update order' : 'Swipe to place order'}
-          loadingLabel={editingStrategyOrderId ? 'Updating order…' : 'Placing order…'}
-          icon={editingStrategyOrderId ? 'checkmark-done' : 'flash'}
-          loading={submittingStrategy}
-          onSwipeSuccess={handleSaveStrategyOrder}
+        <SelectField
+          label="Strategy"
+          value={strategyFormData.strategyName}
+          placeholder="Select a strategy"
+          icon="flash-outline"
+          onPress={() => setShowStrategyDropdown(true)}
         />
 
-        {editingStrategyOrderId ? (
-          <TouchableOpacity style={styles.orderCancelLink} onPress={resetForm} disabled={submittingStrategy} activeOpacity={0.7}>
-            <Text style={styles.orderCancelLinkText}>Cancel edit</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
+        <Field
+          label="Amount"
+          value={strategyFormData.amount}
+          onChangeText={(val) => setStrategyFormData({ ...strategyFormData, amount: val })}
+          keyboardType="numeric"
+          placeholder="0"
+          prefix="₹"
+          numericFace
+        />
 
-      {/* Strategy dropdown picker */}
+        <SelectField
+          label="Start date"
+          value={strategyFormData.date ? formatDateString(new Date(strategyFormData.date)) : ''}
+          placeholder="Select a date"
+          icon="calendar-outline"
+          onPress={() => {
+            setDatePickerTarget('strategy');
+            setPickerDate(strategyFormData.date ? new Date(strategyFormData.date) : new Date());
+            setShowDatePicker(true);
+          }}
+        />
+      </Panel>
+
       <StrategyDropdownModal
-        styles={styles}
         theme={theme}
         visible={showStrategyDropdown}
         options={strategyOptions}
@@ -166,5 +102,29 @@ export default function StrategyTab({
         onClose={() => setShowStrategyDropdown(false)}
       />
     </View>
+  );
+}
+
+/** Pinned commit control, rendered by the parent into the screen's action bar. */
+export function StrategyAction({
+  theme,
+  editingStrategyOrderId,
+  submittingStrategy,
+  handleSaveStrategyOrder,
+}: {
+  readonly theme: any;
+  readonly editingStrategyOrderId: string | null;
+  readonly submittingStrategy: boolean;
+  readonly handleSaveStrategyOrder: () => void;
+}) {
+  return (
+    <SwipeButton
+      theme={theme}
+      label={editingStrategyOrderId ? 'Swipe to update order' : 'Swipe to place order'}
+      loadingLabel={editingStrategyOrderId ? 'Updating order…' : 'Placing order…'}
+      icon={editingStrategyOrderId ? 'checkmark-done' : 'flash'}
+      loading={submittingStrategy}
+      onSwipeSuccess={handleSaveStrategyOrder}
+    />
   );
 }

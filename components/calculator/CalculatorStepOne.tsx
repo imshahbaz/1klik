@@ -1,9 +1,14 @@
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Text, TouchableRipple } from 'react-native-paper';
+import Button from '../ui/Button';
+import { Field, ToggleGroup } from '../ui/Field';
+import { Tag } from '../ui/Feedback';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { radius, space } from '../../theme/tokens';
 
 interface CalculatorStepOneProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly errors: Record<string, string>;
   readonly setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
@@ -15,8 +20,8 @@ interface CalculatorStepOneProps {
   readonly setShowDropdown: (val: boolean) => void;
   readonly loadingMargins: boolean;
   readonly filteredMargins: any[];
-  readonly setSelectedLeverage: (val: string) => void;
   readonly selectedLeverage: string;
+  readonly setSelectedLeverage: (val: string) => void;
   readonly buyPrice: string;
   readonly setBuyPrice: (val: string) => void;
   readonly sellType: 'exact' | 'percent';
@@ -26,10 +31,16 @@ interface CalculatorStepOneProps {
   readonly handleNext: () => void;
 }
 
-const SymbolSearch = ({
-  styles,
+const formatLeverage = (raw: unknown) => {
+  const parsed = Number.parseFloat(String(raw ?? '').trim());
+  return !Number.isNaN(parsed) && parsed > 0 ? `${parsed.toFixed(2)}×` : '1×';
+};
+
+/** Step 1: which instrument, at what entry, and where the target sits. */
+export default function CalculatorStepOne({
   theme,
   errors,
+  setErrors,
   selectedSymbol,
   setSelectedSymbol,
   searchQuery,
@@ -38,179 +49,147 @@ const SymbolSearch = ({
   setShowDropdown,
   loadingMargins,
   filteredMargins,
-  setSelectedLeverage,
   selectedLeverage,
-}: any) => (
-  <>
-    <View style={styles.formInputGroup}>
-      <Text style={styles.formInputLabel}>SYMBOL</Text>
-      <View style={[styles.formInputWrapper, errors.stock ? styles.inputError : null]}>
-        <Ionicons name="trending-up-outline" size={18} color={theme.iconMuted} style={styles.formInputIcon} />
-        <TextInput
-          style={styles.formTextInput}
-          value={selectedSymbol || searchQuery}
-          onChangeText={(val) => {
-            setSearchQuery(val);
-            setSelectedSymbol('');
-            setShowDropdown(true);
-          }}
-          autoCapitalize="characters"
-          autoCorrect={false}
-          placeholder={loadingMargins ? "Loading stocks..." : "e.g. RELIANCE"}
-          placeholderTextColor={theme.placeholder}
-          onFocus={() => setShowDropdown(true)}
-          editable={!loadingMargins}
-        />
-        {loadingMargins && (
-          <ActivityIndicator size="small" color={theme.primary} style={{ marginRight: 8 }} />
-        )}
-      </View>
-      {errors.stock ? <Text style={styles.errorText}>{errors.stock}</Text> : null}
-
-      {showDropdown && searchQuery && filteredMargins.length > 0 && !loadingMargins ? (
-        <View style={styles.verticalDropdownContainer}>
-          <ScrollView style={{ maxHeight: 200 }} keyboardShouldPersistTaps="handled">
-            {filteredMargins.slice(0, 10).map((marginItem: any, idx: number) => {
-              const rawMargin = marginItem.requiredMargin ?? '';
-              const parsedMargin = Number.parseFloat(rawMargin.toString().trim());
-              let uiMarginStr = '1x';
-
-              if (!Number.isNaN(parsedMargin) && parsedMargin > 0) {
-                uiMarginStr = `${parsedMargin.toFixed(2)}x`;
-              }
-
-              return (
-                <TouchableOpacity
-                  key={marginItem.symbol || idx}
-                  style={styles.suggestionRow}
-                  onPress={() => {
-                    setSelectedSymbol(marginItem.symbol);
-                    setSelectedLeverage(String(rawMargin || 1));
-                    setSearchQuery('');
-                    setShowDropdown(false);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, marginRight: 8 }}>
-                    <Ionicons name="trending-up" size={14} color={theme.primary} />
-                    <Text style={styles.suggestionRowSymbol} numberOfLines={1} adjustsFontSizeToFit>{marginItem.symbol}</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={styles.suggestionRowBadge}>
-                      {uiMarginStr}
-                    </Text>
-                    <Ionicons name="chevron-forward" size={14} color={theme.iconMuted} />
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-      ) : null}
-    </View>
-
-    {selectedSymbol ? (
-      <View style={styles.leverageIndicatorBox}>
-        <Ionicons name="shield-checkmark-outline" size={18} color={theme.success} />
-        <Text style={styles.leverageIndicatorText}>
-          Leverage for <Text style={{ fontWeight: '700' }}>{selectedSymbol}</Text> is{' '}
-          <Text style={{ fontWeight: '700', color: theme.success }}>
-            {(() => {
-              const parsedMargin = Number.parseFloat(selectedLeverage?.toString().trim());
-              return !Number.isNaN(parsedMargin) && parsedMargin > 0 ? `${parsedMargin.toFixed(2)}x` : '1x';
-            })()}
-          </Text>
-        </Text>
-      </View>
-    ) : null}
-  </>
-);
-
-const EntryPriceInput = ({ styles, theme, errors, setErrors, buyPrice, setBuyPrice }: any) => (
-  <View style={styles.inputGroup}>
-    <Text style={styles.inputLabel}>Entry Price (₹)</Text>
-    <View style={[styles.inputWrapper, errors.buyPrice ? styles.inputError : null]}>
-      <Text style={styles.inputCurrencyPrefix}>₹</Text>
-      <TextInput
-        style={styles.textInput}
-        keyboardType="numeric"
-        placeholder="0.00"
-        placeholderTextColor={theme.placeholder}
-        value={buyPrice}
-        onChangeText={(t) => {
-          const clean = t.replace(/[^0-9.]/g, '');
-          setBuyPrice(clean);
-          setErrors((prev: any) => ({ ...prev, buyPrice: '' }));
-        }}
-      />
-    </View>
-    {errors.buyPrice ? <Text style={styles.errorText}>{errors.buyPrice}</Text> : null}
-  </View>
-);
-
-const ExitTargetSelector = ({ styles, theme, errors, setErrors, sellType, setSellType, sellPrice, setSellPrice }: any) => (
-  <View style={styles.exitStrategyBox}>
-    <View style={styles.exitHeaderRow}>
-      <Text style={styles.inputLabel}>Exit Target</Text>
-      <View style={styles.tabToggleBg}>
-        <TouchableOpacity
-          style={[styles.toggleBtn, sellType === 'exact' ? styles.toggleBtnActive : null]}
-          onPress={() => setSellType('exact')}
-        >
-          <Text style={[styles.toggleBtnText, sellType === 'exact' ? styles.toggleBtnTextActive : null]}>
-            Target Price
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.toggleBtn, sellType === 'percent' ? styles.toggleBtnActive : null]}
-          onPress={() => setSellType('percent')}
-        >
-          <Text style={[styles.toggleBtnText, sellType === 'percent' ? styles.toggleBtnTextActive : null]}>
-            Percentage
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-
-    <View style={[styles.inputWrapper, errors.sellPrice ? styles.inputError : null]}>
-      {sellType === 'exact' ? (
-        <Text style={styles.inputCurrencyPrefix}>₹</Text>
-      ) : null}
-      <TextInput
-        style={styles.textInput}
-        keyboardType="numeric"
-        placeholder={sellType === 'exact' ? "Exit target price" : "Percentage profit target"}
-        placeholderTextColor={theme.placeholder}
-        value={sellPrice}
-        onChangeText={(t) => {
-          const clean = t.replace(/[^0-9.]/g, '');
-          setSellPrice(clean);
-          setErrors((prev: any) => ({ ...prev, sellPrice: '' }));
-        }}
-      />
-      {sellType === 'percent' ? (
-        <Text style={styles.inputCurrencySuffix}>%</Text>
-      ) : null}
-    </View>
-    {errors.sellPrice ? <Text style={styles.errorText}>{errors.sellPrice}</Text> : null}
-  </View>
-);
-
-export default function CalculatorStepOne(props: CalculatorStepOneProps) {
+  setSelectedLeverage,
+  buyPrice,
+  setBuyPrice,
+  sellType,
+  setSellType,
+  sellPrice,
+  setSellPrice,
+  handleNext,
+}: CalculatorStepOneProps) {
   return (
-    <View style={props.styles.stepContent}>
-      <SymbolSearch {...props} />
-      <EntryPriceInput {...props} />
-      <ExitTargetSelector {...props} />
+    <View>
+      <SectionHeader title="Instrument" />
+      <Panel style={{ gap: space.lg }}>
+        <View style={{ zIndex: 10 }}>
+          <Field
+            label="Symbol"
+            icon="search-outline"
+            placeholder={loadingMargins ? 'Loading instruments…' : 'e.g. RELIANCE'}
+            value={selectedSymbol || searchQuery}
+            editable={!loadingMargins}
+            autoCapitalize="characters"
+            error={errors.stock}
+            onChangeText={(val) => {
+              setSearchQuery(val);
+              setSelectedSymbol('');
+              setShowDropdown(true);
+            }}
+          />
 
-      <TouchableOpacity
-        style={props.styles.primaryActionButton}
-        onPress={props.handleNext}
-        activeOpacity={0.85}
-      >
-        <Text style={props.styles.primaryActionText}>Position Sizing</Text>
-        <Ionicons name="arrow-forward" size={18} color="#ffffff" />
-      </TouchableOpacity>
+          {loadingMargins ? (
+            <View style={{ position: 'absolute', right: space.md, top: 40 }}>
+              <ActivityIndicator size="small" color={theme.primary} />
+            </View>
+          ) : null}
+
+          {showDropdown && searchQuery && filteredMargins.length > 0 && !loadingMargins ? (
+            <Panel padded={false} style={[styles.suggestions, { backgroundColor: theme.surfaceAlt }]}>
+              <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled style={{ maxHeight: 200 }}>
+                {filteredMargins.slice(0, 10).map((marginItem: any, idx: number) => (
+                  <TouchableRipple
+                    key={marginItem.symbol || idx}
+                    rippleColor={theme.ripple}
+                    onPress={() => {
+                      setSelectedSymbol(marginItem.symbol);
+                      setSelectedLeverage(String(marginItem.requiredMargin || 1));
+                      setSearchQuery('');
+                      setShowDropdown(false);
+                    }}
+                  >
+                    <View style={[styles.suggestion, { borderBottomColor: theme.divider }]}>
+                      <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: theme.textPrimary }}>
+                        {marginItem.symbol}
+                      </Text>
+                      <Tag label={formatLeverage(marginItem.requiredMargin)} tone="accent" />
+                    </View>
+                  </TouchableRipple>
+                ))}
+              </ScrollView>
+            </Panel>
+          ) : null}
+        </View>
+
+        {selectedSymbol ? (
+          <View style={[styles.leverage, { backgroundColor: theme.surfaceAlt }]}>
+            <Text style={{ fontSize: 13, color: theme.textSecondary }}>Available leverage</Text>
+            <Tag label={formatLeverage(selectedLeverage)} tone="up" />
+          </View>
+        ) : null}
+
+        <Field
+          label="Entry price"
+          value={buyPrice}
+          onChangeText={(t) => {
+            setBuyPrice(t.replace(/[^0-9.]/g, ''));
+            setErrors((prev: any) => ({ ...prev, buyPrice: '' }));
+          }}
+          keyboardType="numeric"
+          placeholder="0.00"
+          prefix="₹"
+          error={errors.buyPrice}
+          numericFace
+        />
+      </Panel>
+
+      <SectionHeader title="Exit target" />
+      <Panel style={{ gap: space.lg }}>
+        <ToggleGroup
+          value={sellType}
+          options={[
+            { value: 'exact', label: 'PRICE' },
+            { value: 'percent', label: 'PERCENT' },
+          ]}
+          onChange={(val) => setSellType(val as 'exact' | 'percent')}
+        />
+
+        <Field
+          label={sellType === 'exact' ? 'Target price' : 'Target gain'}
+          value={sellPrice}
+          onChangeText={(t) => {
+            setSellPrice(t.replace(/[^0-9.]/g, ''));
+            setErrors((prev: any) => ({ ...prev, sellPrice: '' }));
+          }}
+          keyboardType="numeric"
+          placeholder="0.00"
+          prefix={sellType === 'exact' ? '₹' : undefined}
+          suffix={sellType === 'percent' ? '%' : undefined}
+          error={errors.sellPrice}
+          numericFace
+        />
+      </Panel>
+
+      <View style={{ marginTop: space.xl }}>
+        <Button label="Continue to sizing" icon="arrow-forward" onPress={handleNext} />
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  suggestions: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    marginTop: space.xs,
+    borderRadius: radius.sm,
+    elevation: 6,
+  },
+  suggestion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: space.md,
+    paddingVertical: space.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  leverage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: space.md,
+    borderRadius: radius.sm,
+  },
+});

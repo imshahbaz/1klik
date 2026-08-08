@@ -125,61 +125,62 @@ function AppContent() {
       </Stack>
       <StyledStatusBar />
 
-      {/* No Internet Connection Modal */}
+      {/* No Internet Connection — blocking, so it is not dismissible */}
       <Modal
         visible={isConnected === false && themeLoaded}
         transparent={true}
         animationType="fade"
         onRequestClose={() => { }}
       >
-        <View style={modalStyles.overlay}>
-          <View style={[modalStyles.card, { backgroundColor: theme.card, borderColor: theme.borderLight }]}>
-            <View style={[modalStyles.iconCircle, { backgroundColor: theme.primaryBackground || 'rgba(59, 130, 246, 0.1)' }]}>
-              <Ionicons name="wifi-outline" size={32} color={theme.primary || '#3b82f6'} />
+        <View style={[modalStyles.overlay, { backgroundColor: theme.overlay }]}>
+          <View style={[modalStyles.card, { backgroundColor: theme.surface }]}>
+            <View style={[modalStyles.iconCircle, { backgroundColor: theme.chipBackground }]}>
+              <Ionicons name="cloud-offline-outline" size={26} color={theme.textSecondary} />
             </View>
             <Text style={[modalStyles.title, { color: theme.textPrimary }]}>
-              No Internet Connection
+              No connection
             </Text>
             <Text style={[modalStyles.subtitle, { color: theme.textSecondary }]}>
-              Please turn on your mobile data or connect to Wi-Fi to use 1Klik.
+              Turn on mobile data or connect to Wi-Fi. Live quotes and orders need a connection.
             </Text>
           </View>
         </View>
       </Modal>
 
-      {/* Unremovable App Update Modal */}
+      {/* Forced update — also blocking, with a single action */}
       <Modal
         visible={updateNeeded && themeLoaded}
         transparent={true}
         animationType="fade"
         onRequestClose={() => { }}
       >
-        <View style={modalStyles.overlay}>
-          <View style={[modalStyles.card, { backgroundColor: theme.card, borderColor: theme.borderLight }]}>
+        <View style={[modalStyles.overlay, { backgroundColor: theme.overlay }]}>
+          <View style={[modalStyles.card, { backgroundColor: theme.surface }]}>
             <View style={[modalStyles.iconCircle, { backgroundColor: theme.primaryBackground }]}>
-              <Ionicons name="cloud-download-outline" size={32} color={theme.primary} />
+              <Ionicons name="cloud-download-outline" size={26} color={theme.primary} />
             </View>
             <Text style={[modalStyles.title, { color: theme.textPrimary }]}>
-              Update Required
+              Update required
             </Text>
             <Text style={[modalStyles.subtitle, { color: theme.textSecondary }]}>
-              A newer version of 1Klik is available. Please update to the latest version to continue using the application.
+              A newer version of 1Klik is available. Update to continue trading.
             </Text>
-            <TouchableOpacity
-              style={[modalStyles.button, { backgroundColor: theme.primary, shadowColor: theme.primary }]}
-              onPress={async () => {
-                const targetUrl = downloadUrl;
-                try {
-                  await Linking.openURL(targetUrl);
-                } catch (err) {
-                  console.error("Failed to open update URL:", err);
-                }
-              }}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="download-outline" size={20} color="#ffffff" />
-              <Text style={modalStyles.buttonText}>Update Now</Text>
-            </TouchableOpacity>
+            <View style={modalStyles.actions}>
+              <TouchableOpacity
+                style={modalStyles.action}
+                onPress={async () => {
+                  const targetUrl = downloadUrl;
+                  try {
+                    await Linking.openURL(targetUrl);
+                  } catch (err) {
+                    console.error("Failed to open update URL:", err);
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[modalStyles.actionText, { color: theme.primary }]}>UPDATE NOW</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -190,6 +191,11 @@ function AppContent() {
           style={[
             StyleSheet.absoluteFill,
             {
+              // splash-icon.png is opaque with a near-black backdrop baked in,
+              // so this must stay black to hide the tile edge — and must match
+              // the expo-splash-screen backgroundColor in app.json, along with
+              // the 200dp image size, so the native splash hands over to this
+              // one without the logo jumping.
               backgroundColor: '#000000',
               opacity: splashOpacity,
               justifyContent: 'center',
@@ -235,6 +241,13 @@ function StyledStatusBar() {
   return <StatusBar style={isDarkMode ? "light" : "dark"} />;
 }
 
+import { PaperProvider } from 'react-native-paper';
+
+function PaperWrapper({ children }: { children: React.ReactNode }) {
+  const { paperTheme } = useTheme();
+  return <PaperProvider theme={paperTheme}>{children}</PaperProvider>;
+}
+
 export default function RootLayout() {
   return (
     <ErrorBoundary>
@@ -242,15 +255,17 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <AuthProvider>
             <ThemeProvider>
-              <AlertProvider>
-                <SecurityProvider>
-                  <MarginProvider>
-                    <StrategyProvider>
-                      <AppContent />
-                    </StrategyProvider>
-                  </MarginProvider>
-                </SecurityProvider>
-              </AlertProvider>
+              <PaperWrapper>
+                <AlertProvider>
+                  <SecurityProvider>
+                    <MarginProvider>
+                      <StrategyProvider>
+                        <AppContent />
+                      </StrategyProvider>
+                    </MarginProvider>
+                  </SecurityProvider>
+                </AlertProvider>
+              </PaperWrapper>
             </ThemeProvider>
           </AuthProvider>
         </SafeAreaProvider>
@@ -262,7 +277,6 @@ export default function RootLayout() {
 const modalStyles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -270,56 +284,50 @@ const modalStyles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 340,
-    borderRadius: 24,
-    borderWidth: 1,
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 8,
+    borderRadius: 28,
+    paddingTop: 24,
+    elevation: 6,
   },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    alignSelf: 'center',
   },
   title: {
     fontSize: moderateScale(22),
-    fontWeight: '900',
+    fontWeight: '600',
     textAlign: 'center',
-    letterSpacing: -0.5,
+    paddingHorizontal: 24,
+    marginTop: 16,
   },
   subtitle: {
     fontSize: moderateScale(14),
-    fontWeight: '500',
     textAlign: 'center',
-    lineHeight: 21,
+    lineHeight: 20,
+    paddingHorizontal: 24,
     marginTop: 12,
-    marginBottom: 24,
+    marginBottom: 12,
   },
-  button: {
-    width: '100%',
-    height: 50,
-    borderRadius: 14,
+  actions: {
     flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 12,
+  },
+  action: {
+    minWidth: 72,
+    height: 40,
+    borderRadius: 20,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
   },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: moderateScale(15),
-    fontWeight: '800',
-    letterSpacing: 0.2,
+  actionText: {
+    fontSize: moderateScale(14),
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });
 

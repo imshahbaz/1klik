@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, PanResponder, Text, View, ActivityIndicator, LayoutChangeEvent } from 'react-native';
+import { Animated, LayoutChangeEvent, PanResponder, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
+import { radius } from '../../theme/tokens';
 
 interface SwipeButtonProps {
-  readonly styles: any;
-  readonly theme: any;
+  readonly styles?: any;
+  readonly theme?: any;
   readonly label: string;
   readonly onSwipeSuccess: () => void;
   readonly loading?: boolean;
@@ -13,17 +16,17 @@ interface SwipeButtonProps {
   readonly icon?: keyof typeof Ionicons.glyphMap;
 }
 
-const THUMB = 44;
-const PAD = 4;
+const TRACK = 56;
+const PAD = 5;
+const THUMB = TRACK - PAD * 2;
 
 /**
- * Zerodha-style "swipe to confirm" action. The thumb is dragged to the right
- * end of the track to fire `onSwipeSuccess`; a partial drag springs back.
- * Uses core Animated + PanResponder so no GestureHandlerRootView is required.
+ * Swipe-to-confirm order action, the deliberate-commit control Indian brokers
+ * use so a stray tap can't place a trade. Built on Animated + PanResponder so
+ * it needs no gesture-handler root.
  */
 export default function SwipeButton({
-  styles,
-  theme,
+  theme: themeProp,
   label,
   onSwipeSuccess,
   loading = false,
@@ -31,14 +34,16 @@ export default function SwipeButton({
   color,
   icon = 'flash',
 }: SwipeButtonProps) {
-  const fill = color || theme.buttonPrimary || theme.primary;
+  const { theme: contextTheme } = useTheme();
+  const theme = themeProp || contextTheme;
+  const fill = color || theme.primary;
 
   const [trackW, setTrackW] = useState(0);
   const maxX = Math.max(0, trackW - THUMB - PAD * 2);
 
   const translateX = useRef(new Animated.Value(0)).current;
 
-  // Refs keep the (recreated-once) PanResponder reading the latest values.
+  // Refs keep the (created-once) PanResponder reading the latest values.
   const maxRef = useRef(0);
   maxRef.current = maxX;
   const cbRef = useRef(onSwipeSuccess);
@@ -89,29 +94,78 @@ export default function SwipeButton({
   const fillWidth = Animated.add(translateX, new Animated.Value(THUMB + PAD * 2));
 
   return (
-    <View style={styles.swipeTrack} onLayout={onTrackLayout}>
+    <View
+      style={[styles.track, { backgroundColor: theme.surfaceSunken, borderColor: theme.border }]}
+      onLayout={onTrackLayout}
+    >
       {loading ? (
-        <View style={styles.swipeLoadingOverlay}>
+        <View style={styles.loading}>
           <ActivityIndicator size="small" color={fill} />
-          <Text style={[styles.swipeLabel, { color: fill }]}>{loadingLabel}</Text>
+          <Text style={{ color: fill, fontSize: 14, fontWeight: '700', marginLeft: 10 }}>
+            {loadingLabel}
+          </Text>
         </View>
       ) : (
         <>
           <Animated.View
-            style={[styles.swipeFill, { backgroundColor: fill, width: fillWidth }]}
+            style={[styles.fill, { backgroundColor: fill, width: fillWidth }]}
             pointerEvents="none"
           />
-          <Animated.Text style={[styles.swipeLabel, { color: fill, opacity: labelOpacity }]}>
+          <Animated.Text
+            style={[
+              styles.label,
+              { color: theme.textSecondary, opacity: labelOpacity },
+            ]}
+          >
             {label}
           </Animated.Text>
           <Animated.View
-            style={[styles.swipeThumb, { backgroundColor: fill, transform: [{ translateX }] }]}
+            style={[styles.thumb, { backgroundColor: fill, transform: [{ translateX }] }]}
+            accessibilityRole="adjustable"
+            accessibilityLabel={label}
             {...panResponder.panHandlers}
           >
-            <Ionicons name={icon} size={20} color="#ffffff" />
+            <Ionicons name={icon} size={20} color={theme.buttonPrimaryText} />
           </Animated.View>
         </>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  track: {
+    height: TRACK,
+    borderRadius: radius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  fill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    opacity: 0.16,
+  },
+  label: {
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+  },
+  thumb: {
+    position: 'absolute',
+    left: PAD,
+    width: THUMB,
+    height: THUMB,
+    borderRadius: radius.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

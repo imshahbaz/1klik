@@ -1,23 +1,24 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
+import { AppState, Linking, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Avatar, Switch, Text } from 'react-native-paper';
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { notificationAPI, userPreferenceAPI } from '../../services/api';
 import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import { checkNotificationPermission, getFCMToken, requestUserPermission } from '../../services/notificationService';
-import { useAdaptiveLayout } from '../../theme/layout';
-import { useSettingsStyles } from '../../theme/settingsStyles';
+import Screen from '../../components/ui/Screen';
+import TopBar from '../../components/ui/TopBar';
+import Button from '../../components/ui/Button';
+import ListRow from '../../components/ui/Row';
+import { Field } from '../../components/ui/Field';
+import { Notice } from '../../components/ui/Feedback';
+import { Hairline, Panel, SectionHeader } from '../../components/ui/Panel';
+import { space } from '../../theme/tokens';
 
 export default function SettingsScreen() {
-  const insets = useSafeAreaInsets();
-  const layout = useAdaptiveLayout(insets);
-  const { user, refreshUserData } = useAuth();
-  const { isDarkMode, theme } = useTheme();
-  const styles = useSettingsStyles(isDarkMode);
+  const { user, refreshUserData, logout } = useAuth();
+  const { isDarkMode, toggleTheme, theme } = useTheme();
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -70,7 +71,7 @@ export default function SettingsScreen() {
         'Push notifications are disabled for this app. Please enable them in your device settings.',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Open Settings', onPress: () => Linking.openSettings() }
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
         ]
       );
     }
@@ -82,7 +83,7 @@ export default function SettingsScreen() {
       'To disable notifications, please turn them off in your device system settings.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Open Settings', onPress: () => Linking.openSettings() }
+        { text: 'Open Settings', onPress: () => Linking.openSettings() },
       ]
     );
   };
@@ -101,9 +102,6 @@ export default function SettingsScreen() {
     }
   }, [user]);
 
-  // Auto-dismiss the success/error feedback (toast-style) so it can't linger on
-  // the screen across tab switches. The form itself is left intact — only the
-  // transient notification clears, and the data updates on its own.
   useEffect(() => {
     if (!successMessage && !errorMessage) return;
     const timer = setTimeout(() => {
@@ -113,7 +111,6 @@ export default function SettingsScreen() {
     return () => clearTimeout(timer);
   }, [successMessage, errorMessage]);
 
-  // Validates username: must start with letter, only letters and numbers
   const validateUsername = (val: string) => {
     if (!val) {
       return 'Username cannot be empty';
@@ -128,11 +125,9 @@ export default function SettingsScreen() {
   };
 
   const handleUsernameChange = (text: string) => {
-    // Strip spaces immediately
     const cleanText = text.replace(/\s/g, '');
     setUsername(cleanText);
 
-    // Perform validation
     if (cleanText.length > 0) {
       setValidationError(validateUsername(cleanText));
     } else {
@@ -159,12 +154,8 @@ export default function SettingsScreen() {
         throw new Error('User ID not found. Please log in again.');
       }
 
-      // Password can be empty/null for Google sign-in users
       await userPreferenceAPI.updateUsername(userId, username, '');
-
-      // Refresh AuthContext data
       await refreshUserData();
-
       setSuccessMessage('Username updated successfully!');
     } catch (err: any) {
       console.error('Failed to update username:', err);
@@ -175,159 +166,105 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.safeArea, layout.screenPadding]}>
-
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        enabled={Platform.OS === 'ios'}
-        style={styles.keyboardFrame}
-        keyboardVerticalOffset={insets.top + 60}
-      >
-        <KeyboardAwareScrollView
-          contentContainerStyle={[
-            styles.scrollContainer,
-            { paddingHorizontal: layout.horizontalPadding, paddingBottom: layout.tabBarHeight + 24 },
-          ]}
-          contentInsetAdjustmentBehavior="automatic"
-          keyboardShouldPersistTaps="handled"
-          extraKeyboardSpace={64}
-        >
-          <View style={[styles.container, layout.centeredContent]}>
-            {/* Header Description */}
-            <Text style={styles.sectionTitle}>Account Customization</Text>
-            <Text style={styles.sectionSubtitle}>
-              Update your account details and username. Changes will reflect on your home dashboard greeting.
+    <Screen header={<TopBar title="Account" />}>
+      <SectionHeader title="Signed in as" />
+      <Panel>
+        <View style={styles.identity}>
+          {user?.profile ? (
+            <Avatar.Image size={48} source={{ uri: user.profile }} />
+          ) : (
+            <Avatar.Icon
+              size={48}
+              icon="account"
+              style={{ backgroundColor: theme.primaryBackground }}
+              color={theme.primary}
+            />
+          )}
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', color: theme.textPrimary }}>
+              {user?.name || '1Klik User'}
             </Text>
-
-            {/* Profile Info Summary Card */}
-            <View style={styles.infoCard}>
-              <View style={styles.avatarContainer}>
-                {user?.profile ? (
-                  <View style={styles.avatarImageWrapper}>
-                    {/* Placeholder image tag with profile URL */}
-                    <Text style={styles.avatarInitial}>{user.name?.[0]?.toUpperCase() || 'U'}</Text>
-                  </View>
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Ionicons name="person" size={28} color={theme.iconMuted} />
-                  </View>
-                )}
-              </View>
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoName} numberOfLines={1}>
-                  {user?.name || '1Klik User'}
-                </Text>
-                <Text style={styles.infoEmail} numberOfLines={1}>
-                  {user?.email || 'No email associated'}
-                </Text>
-              </View>
-            </View>
-
-            {/* Form Container */}
-            <View style={styles.formCard}>
-              <Text style={styles.inputLabel}>Username</Text>
-
-              <View style={[
-                styles.inputWrapper,
-                validationError ? styles.inputWrapperError : null,
-                !validationError && username ? styles.inputWrapperSuccess : null
-              ]}>
-                <Ionicons name="at-outline" size={20} color={theme.iconMuted} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  value={username}
-                  onChangeText={handleUsernameChange}
-                  placeholder="enter_username"
-                  placeholderTextColor={theme.placeholder}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  maxLength={20}
-                  editable={!loading}
-                />
-                {username.length > 0 && !loading && (
-                  <TouchableOpacity onPress={() => handleUsernameChange('')}>
-                    <Ionicons name="close-circle" size={18} color={theme.iconMuted} />
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {/* Real-time validation message / guidance */}
-              {validationError ? (
-                <View style={styles.helperRow}>
-                  <Ionicons name="alert-circle-outline" size={14} color={theme.danger} />
-                  <Text style={[styles.helperText, styles.errorText]}>{validationError}</Text>
-                </View>
-              ) : (
-                <View style={styles.helperRow}>
-                  <Ionicons name="information-circle-outline" size={14} color={theme.textSecondary} />
-                  <Text style={styles.helperText}>
-                    Only letters and numbers are allowed. Must start with a letter.
-                  </Text>
-                </View>
-              )}
-
-              {/* Status Feedbacks */}
-              {successMessage && (
-                <View style={[styles.alertBox, styles.successAlert]}>
-                  <Ionicons name="checkmark-circle-outline" size={18} color={theme.success} />
-                  <Text style={styles.successAlertText}>{successMessage}</Text>
-                </View>
-              )}
-
-              {errorMessage && (
-                <View style={[styles.alertBox, styles.errorAlert]}>
-                  <Ionicons name="warning-outline" size={18} color={theme.danger} />
-                  <Text style={styles.errorAlertText}>{errorMessage}</Text>
-                </View>
-              )}
-
-              {/* Save Button */}
-              <TouchableOpacity
-                style={[
-                  styles.saveButton,
-                  loading || !!validationError || !username ? styles.saveButtonDisabled : null
-                ]}
-                onPress={handleSave}
-                disabled={loading || !!validationError || !username}
-                activeOpacity={0.85}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color={theme.buttonPrimaryText} />
-                ) : (
-                  <>
-                    <Ionicons name="save-outline" size={18} color={theme.buttonPrimaryText} />
-                    <Text style={styles.saveButtonText}>Update Username</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-
-            {/* App Settings Container */}
-            <View style={styles.formCard}>
-              <Text style={styles.sectionTitle}>App Preferences</Text>
-              <Text style={styles.sectionSubtitle}>
-                Customize your app experience.
-              </Text>
-
-              <View style={styles.themeToggleRow}>
-                <Text style={styles.themeToggleLabel}>Push Notifications</Text>
-                {checkingPermission ? (
-                  <ActivityIndicator size="small" color={theme.primary} />
-                ) : (
-                  <Switch
-                    value={notificationsEnabled}
-                    onValueChange={handleNotificationToggle}
-                    trackColor={{ false: theme.border, true: theme.primary }}
-                    thumbColor={theme.card}
-                  />
-                )}
-              </View>
-            </View>
-
+            <Text numberOfLines={1} style={{ fontSize: 12.5, color: theme.textSecondary, marginTop: 2 }}>
+              {user?.email || 'No email associated'}
+            </Text>
           </View>
-        </KeyboardAwareScrollView>
-      </KeyboardAvoidingView>
-    </View>
+        </View>
+      </Panel>
+
+      <SectionHeader title="Profile" />
+      <Panel style={{ gap: space.lg }}>
+        <Field
+          label="Username"
+          value={username}
+          onChangeText={handleUsernameChange}
+          placeholder="username"
+          prefix="@"
+          maxLength={20}
+          editable={!loading}
+          error={validationError}
+          hint="letters & numbers"
+          onClear={() => handleUsernameChange('')}
+        />
+
+        {successMessage ? <Notice tone="up" message={successMessage} /> : null}
+        {errorMessage ? <Notice tone="down" message={errorMessage} /> : null}
+
+        <Button
+          label="Save changes"
+          icon="checkmark-outline"
+          onPress={handleSave}
+          loading={loading}
+          disabled={loading || !!validationError || !username}
+        />
+      </Panel>
+
+      <SectionHeader title="Preferences" />
+      <Panel padded={false}>
+        <ListRow
+          title="Push notifications"
+          subtitle="Order fills, strategy triggers and alerts"
+          icon="notifications-outline"
+          trailing={
+            checkingPermission ? (
+              <ActivityIndicator size="small" color={theme.primary} />
+            ) : (
+              <Switch value={notificationsEnabled} onValueChange={handleNotificationToggle} color={theme.primary} />
+            )
+          }
+        />
+        <Hairline inset={64} />
+        <ListRow
+          title="Dark theme"
+          subtitle="Recommended for low-light trading"
+          icon={isDarkMode ? 'moon-outline' : 'sunny-outline'}
+          trailing={<Switch value={isDarkMode} onValueChange={() => toggleTheme()} color={theme.primary} />}
+        />
+      </Panel>
+
+      <SectionHeader title="Session" />
+      <Panel padded={false}>
+        <ListRow
+          title="Sign out"
+          subtitle="You'll need to sign in again to trade"
+          icon="log-out-outline"
+          iconTint={theme.danger}
+          iconBackground={theme.dangerBackground}
+          onPress={() =>
+            CustomAlert.alert('Sign out', 'Are you sure you want to sign out of 1Klik?', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Sign out', style: 'destructive', onPress: () => logout() },
+            ])
+          }
+        />
+      </Panel>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  identity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.lg,
+  },
+});

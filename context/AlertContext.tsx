@@ -162,50 +162,32 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ? (insets.top || 20) 
     : (StatusBar.currentHeight || 0) + 12;
 
-  // Custom Alert buttons styling & layout
+  // Material dialogs use text-only actions aligned to the bottom-right, with
+  // the confirming action last — the reverse of the stacked filled buttons a
+  // web modal would show.
   const renderAlertButtons = () => {
     const buttons = alertConfig?.buttons || [{ text: 'OK', style: 'default' }];
-    const isRowLayout = buttons.length === 2;
 
     const renderButton = (btn: AlertButton, index: number) => {
-      let btnBg = theme.primary;
-      let textCol = '#ffffff';
-      let borderStyle = {};
-
-      if (btn.style === 'cancel') {
-        btnBg = isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)';
-        textCol = theme.textSecondary;
-        borderStyle = {
-          borderWidth: 1.5,
-          borderColor: theme.border,
-        };
-      } else if (btn.style === 'destructive') {
-        btnBg = theme.danger;
-      }
+      let textCol = theme.primary;
+      if (btn.style === 'cancel') textCol = theme.textSecondary;
+      else if (btn.style === 'destructive') textCol = theme.danger;
 
       return (
         <TouchableOpacity
           key={index}
-          style={[
-            styles.alertButton,
-            { backgroundColor: btnBg, flex: isRowLayout ? 1 : undefined },
-            borderStyle
-          ]}
+          style={styles.alertButton}
           onPress={() => handleAlertButtonPress(btn.onPress)}
-          activeOpacity={0.8}
+          activeOpacity={0.7}
         >
           <Text style={[styles.alertButtonText, { color: textCol }]}>
-            {btn.text || 'OK'}
+            {(btn.text || 'OK').toUpperCase()}
           </Text>
         </TouchableOpacity>
       );
     };
 
-    return (
-      <View style={[styles.buttonsContainer, isRowLayout ? styles.buttonsRow : styles.buttonsColumn]}>
-        {buttons.map((btn, idx) => renderButton(btn, idx))}
-      </View>
-    );
+    return <View style={styles.buttonsContainer}>{buttons.map((btn, idx) => renderButton(btn, idx))}</View>;
   };
 
   return (
@@ -223,28 +205,16 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           activeOpacity={1}
           onPress={handleAlertDismiss}
         >
-          <View 
-            style={[
-              styles.alertCard, 
-              { 
-                backgroundColor: theme.card,
-                borderColor: theme.border
-              }
-            ]}
+          <View
+            style={[styles.alertCard, { backgroundColor: theme.surface }]}
             onStartShouldSetResponder={() => true}
           >
-            {/* Header Icon base on style */}
-            <View style={styles.alertHeaderRow}>
-              <View style={[styles.alertIconCircle, { backgroundColor: theme.primaryBackground }]}>
-                <Ionicons name="information-circle-outline" size={24} color={theme.primary} />
-              </View>
-              <Text style={[styles.alertTitle, { color: theme.textPrimary }]} numberOfLines={2}>
-                {alertConfig?.title || 'Alert'}
-              </Text>
-            </View>
+            <Text style={[styles.alertTitle, { color: theme.textPrimary }]} numberOfLines={3}>
+              {alertConfig?.title || 'Alert'}
+            </Text>
 
             {alertConfig?.message ? (
-              <ScrollView style={styles.messageScrollView} showsVerticalScrollIndicator={true}>
+              <ScrollView style={styles.messageScrollView} showsVerticalScrollIndicator>
                 <Text style={[styles.alertMessage, { color: theme.textSecondary }]}>
                   {alertConfig.message}
                 </Text>
@@ -318,65 +288,46 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     maxHeight: '86%',
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 8,
-  },
-  alertHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 10,
-  },
-  alertIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    // 28dp is the Material 3 dialog radius — one of the few places in the app
+    // where a large corner is correct.
+    borderRadius: 28,
+    paddingTop: 24,
+    elevation: 6,
   },
   alertTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    flex: 1,
-    letterSpacing: 0,
+    fontSize: 22,
+    fontWeight: '600',
+    paddingHorizontal: 24,
   },
   messageScrollView: {
     maxHeight: 220,
-    marginBottom: 16,
+    marginTop: 16,
+    paddingHorizontal: 24,
   },
   alertMessage: {
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: '500',
+    fontSize: 14,
+    lineHeight: 20,
   },
   buttonsContainer: {
-    gap: 8,
-  },
-  buttonsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     flexWrap: 'wrap',
-  },
-  buttonsColumn: {
-    flexDirection: 'column',
+    gap: 8,
+    padding: 12,
+    paddingTop: 24,
   },
   alertButton: {
-    minHeight: 44,
-    borderRadius: 12,
+    minWidth: 72,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   alertButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
-    letterSpacing: 0.2,
+    letterSpacing: 0.5,
   },
   notificationContainer: {
     position: 'absolute',
@@ -388,18 +339,20 @@ const styles = StyleSheet.create({
   notificationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
-    borderWidth: 1,
+    // Matches Android's heads-up notification shade: pill-ish, elevated, and
+    // clearly floating over whatever screen is beneath it.
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
     padding: 12,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
   },
   notificationIconCircle: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },

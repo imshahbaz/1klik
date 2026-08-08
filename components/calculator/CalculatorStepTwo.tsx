@@ -1,9 +1,14 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, TextInput } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+import Button from '../ui/Button';
+import { Field, SelectField, ToggleGroup } from '../ui/Field';
+import { Tag } from '../ui/Feedback';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { radius, space } from '../../theme/tokens';
 
 interface CalculatorStepTwoProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly errors: Record<string, string>;
   readonly setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
@@ -21,8 +26,8 @@ interface CalculatorStepTwoProps {
   readonly calculateReturns: () => void;
 }
 
+/** Step 2: how long the position is held and how large it is. */
 export default function CalculatorStepTwo({
-  styles,
   theme,
   errors,
   setErrors,
@@ -37,120 +42,85 @@ export default function CalculatorStepTwo({
   quantity,
   setQuantity,
   setActiveStep,
-  calculateReturns
+  calculateReturns,
 }: CalculatorStepTwoProps) {
   return (
-    <View style={styles.stepContent}>
-      {/* Date fields */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Entry Date</Text>
-        <TouchableOpacity
-          style={styles.inputWrapper}
+    <View>
+      <SectionHeader title="Holding period" />
+      <Panel style={{ gap: space.lg }}>
+        <SelectField
+          label="Entry date"
+          value={entryDate}
+          placeholder="YYYY-MM-DD"
+          icon="calendar-outline"
           onPress={() => {
             setDatePickerTarget('entry');
             if (entryDate) setPickerDate(new Date(entryDate));
             setShowDatePicker(true);
           }}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
-          <Text style={[styles.textInput, { color: entryDate ? theme.textPrimary : theme.textSecondary }]}>
-            {entryDate || 'YYYY-MM-DD'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+        />
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Exit Date (Optional)</Text>
-        <TouchableOpacity
-          style={styles.inputWrapper}
+        <SelectField
+          label="Exit date (optional)"
+          value={exitDate}
+          placeholder="Select exit date"
+          icon="calendar-outline"
           onPress={() => {
             setDatePickerTarget('exit');
             if (exitDate) setPickerDate(new Date(exitDate));
             else if (entryDate) setPickerDate(new Date(entryDate));
             setShowDatePicker(true);
           }}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
-          <Text style={[styles.textInput, { color: exitDate ? theme.textPrimary : theme.textSecondary }]}>
-            {exitDate || 'Select Exit Date'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+        />
 
-      {/* Days held projection */}
-      <View style={styles.daysHeldPreviewBox}>
-        <Text style={styles.daysHeldPreviewLabel}>Calculated Holding Days</Text>
-        <View style={styles.daysHeldBadge}>
-          <Text style={styles.daysHeldBadgeText}>{daysHeld} Days</Text>
+        {/* Days held drives the MTF interest accrual, so it's surfaced live. */}
+        <View style={[styles.days, { backgroundColor: theme.surfaceAlt }]}>
+          <Text style={{ fontSize: 13, color: theme.textSecondary }}>Days held</Text>
+          <Tag label={`${daysHeld} ${daysHeld === 1 ? 'DAY' : 'DAYS'}`} tone="accent" />
         </View>
-      </View>
+      </Panel>
 
-      {/* Quantity Type Switcher */}
-      <View style={styles.exitStrategyBox}>
-        <View style={styles.exitHeaderRow}>
-          <Text style={styles.inputLabel}>Entry Method</Text>
-          <View style={styles.tabToggleBg}>
-            <TouchableOpacity
-              style={[styles.toggleBtn, quantityType === 'quantity' ? styles.toggleBtnActive : null]}
-              onPress={() => setQuantityType('quantity')}
-            >
-              <Text style={[styles.toggleBtnText, quantityType === 'quantity' ? styles.toggleBtnTextActive : null]}>
-                By Shares
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.toggleBtn, quantityType === 'investment' ? styles.toggleBtnActive : null]}
-              onPress={() => setQuantityType('investment')}
-            >
-              <Text style={[styles.toggleBtnText, quantityType === 'investment' ? styles.toggleBtnTextActive : null]}>
-                By Capital
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+      <SectionHeader title="Position size" />
+      <Panel style={{ gap: space.lg }}>
+        <ToggleGroup
+          value={quantityType}
+          options={[
+            { value: 'quantity', label: 'BY SHARES' },
+            { value: 'investment', label: 'BY CAPITAL' },
+          ]}
+          onChange={(val) => setQuantityType(val as 'quantity' | 'investment')}
+        />
 
-        <View style={[styles.inputWrapper, errors.quantity ? styles.inputError : null]}>
-          {quantityType === 'investment' ? (
-            <Text style={styles.inputCurrencyPrefix}>₹</Text>
-          ) : null}
-          <TextInput
-            style={styles.textInput}
-            keyboardType="numeric"
-            placeholder={quantityType === 'quantity' ? "Number of shares" : "Total capital amount"}
-            placeholderTextColor={theme.placeholder}
-            value={quantity}
-            onChangeText={(t) => {
-              const clean = t.replace(/[^0-9.]/g, '');
-              setQuantity(clean);
-              setErrors((prev) => ({ ...prev, quantity: '' }));
-            }}
-          />
-        </View>
-        {errors.quantity ? <Text style={styles.errorText}>{errors.quantity}</Text> : null}
-      </View>
+        <Field
+          label={quantityType === 'quantity' ? 'Number of shares' : 'Capital to deploy'}
+          value={quantity}
+          onChangeText={(t) => {
+            setQuantity(t.replace(/[^0-9.]/g, ''));
+            setErrors((prev) => ({ ...prev, quantity: '' }));
+          }}
+          keyboardType={quantityType === 'quantity' ? 'number-pad' : 'numeric'}
+          placeholder={quantityType === 'quantity' ? '10' : '50000'}
+          prefix={quantityType === 'investment' ? '₹' : undefined}
+          suffix={quantityType === 'quantity' ? 'qty' : undefined}
+          error={errors.quantity}
+          numericFace
+        />
+      </Panel>
 
-      {/* Action buttons */}
-      <View style={styles.actionButtonsRow}>
-        <TouchableOpacity
-          style={styles.secondaryActionButton}
-          onPress={() => setActiveStep(1)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="arrow-back" size={18} color={theme.iconMuted} />
-          <Text style={styles.secondaryActionText}>Back</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.calculateActionButton}
-          onPress={calculateReturns}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="calculator" size={18} color="#ffffff" />
-          <Text style={styles.calculateActionText}>Calculate</Text>
-        </TouchableOpacity>
+      <View style={{ flexDirection: 'row', gap: space.md, marginTop: space.xl }}>
+        <Button label="Back" variant="outlined" onPress={() => setActiveStep(1)} style={{ flex: 1 }} />
+        <Button label="Calculate" icon="calculator-outline" onPress={calculateReturns} style={{ flex: 1.4 }} />
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  days: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: space.md,
+    borderRadius: radius.sm,
+  },
+});
