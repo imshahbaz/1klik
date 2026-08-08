@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { View } from 'react-native';
-import { Card, Chip, Button as PaperButton, Text as PaperText } from 'react-native-paper';
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Menu, Text, TouchableRipple } from 'react-native-paper';
+import { Tag } from '../ui/Feedback';
+import { numeric, space } from '../../theme/tokens';
 
 interface HistoryRowProps {
   readonly styles?: any;
@@ -23,24 +25,22 @@ interface HistoryRowProps {
   readonly onDelete: () => void;
 }
 
-function resolveStatusColors(
-  status: string | undefined,
-  statusColor: string | undefined,
-  theme: any
-): { bg: string; fg: string } {
-  if (statusColor) {
-    return { bg: `${statusColor}22`, fg: statusColor };
-  }
+type Tone = 'neutral' | 'up' | 'down' | 'warn';
+
+function resolveTone(status: string | undefined): Tone {
   const upper = status?.toUpperCase();
-  if (upper === 'PENDING') {
-    return { bg: theme.warningBackground || 'rgba(245, 158, 11, 0.2)', fg: theme.warningText || '#d97706' };
-  }
-  if (upper === 'EXECUTED' || upper === 'COMPLETED') {
-    return { bg: theme.successBackground || 'rgba(16, 185, 129, 0.2)', fg: theme.success || '#10b981' };
-  }
-  return { bg: theme.borderLight || '#1c1c1e', fg: theme.textSecondary || '#94a3b8' };
+  if (upper === 'PENDING' || upper === 'SCHEDULED') return 'warn';
+  if (upper === 'EXECUTED' || upper === 'COMPLETED') return 'up';
+  if (upper === 'REJECTED' || upper === 'CONFLICT' || upper === 'CANCELLED') return 'down';
+  return 'neutral';
 }
 
+/**
+ * One line of the order book. A coloured keyline on the leading edge encodes
+ * status so the book can be skimmed vertically, and row actions live behind an
+ * overflow menu — the Android list-item convention — instead of taking up two
+ * permanent buttons per row.
+ */
 export default function HistoryRow({
   theme,
   badgeLabel,
@@ -57,89 +57,112 @@ export default function HistoryRow({
   onEdit,
   onDelete,
 }: HistoryRowProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const displayStatus = statusLabel || orderStatus;
-  const { bg: statusBg, fg: statusFg } = resolveStatusColors(displayStatus, statusColor, theme);
-  const hasStrategy = Boolean(strategyName || targetPercentage);
+  const tone = resolveTone(displayStatus);
+  const keyline =
+    statusColor ||
+    { neutral: theme.border, up: theme.up, down: theme.down, warn: theme.warningText }[tone];
+
+  const detail = [strategyName, targetPercentage ? `+${targetPercentage}%` : null, footerText]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
-    <Card style={{ backgroundColor: theme.card, borderRadius: 16, marginBottom: 10, elevation: 2 }}>
-      <Card.Content style={{ gap: 8 }}>
-        {/* Top Header */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-            <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ color: theme.primary, fontWeight: '800', fontSize: 10 }}>
-              {badgeLabel}
-            </Chip>
-            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }} numberOfLines={1}>
-              {title}
-            </PaperText>
-            {broker ? (
-              <Chip compact style={{ backgroundColor: theme.borderLight }} textStyle={{ color: theme.textSecondary, fontSize: 10 }}>
-                {broker}
-              </Chip>
-            ) : null}
-          </View>
-          <PaperText variant="titleSmall" style={{ fontWeight: '800', color: theme.textPrimary }}>
+    <View style={[styles.row, { borderBottomColor: theme.divider }]}>
+      <View style={[styles.keyline, { backgroundColor: keyline }]} />
+
+      <View style={styles.body}>
+        <View style={styles.line}>
+          <Tag label={badgeLabel} tone={badgeLabel === 'BUY' ? 'up' : 'accent'} />
+          <Text numberOfLines={1} style={{ flex: 1, fontSize: 14.5, fontWeight: '700', color: theme.textPrimary }}>
+            {title}
+          </Text>
+          <Text style={[numeric, { fontSize: 14, fontWeight: '700', color: theme.textPrimary }]}>
             {meta}
-          </PaperText>
+          </Text>
         </View>
 
-        {/* Strategy / Status Row */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View style={{ flex: 1, marginRight: 8 }}>
-            {hasStrategy ? (
-              <PaperText variant="bodySmall" style={{ color: theme.textSecondary, fontWeight: '600' }} numberOfLines={1}>
-                {strategyName} {strategyName && targetPercentage ? '• ' : ''}{targetPercentage ? `Target: +${targetPercentage}%` : ''}
-              </PaperText>
-            ) : footerText ? (
-              <PaperText variant="bodySmall" style={{ color: theme.textSecondary }} numberOfLines={1}>
-                {footerText}
-              </PaperText>
-            ) : null}
-          </View>
-
-          {displayStatus ? (
-            <Chip compact style={{ backgroundColor: statusBg }} textStyle={{ color: statusFg, fontWeight: '800', fontSize: 10 }}>
-              {displayStatus.toUpperCase()}
-            </Chip>
-          ) : null}
+        <View style={[styles.line, { marginTop: 5 }]}>
+          <Text numberOfLines={1} style={{ flex: 1, fontSize: 12, color: theme.textSecondary }}>
+            {broker ? `${broker} · ` : ''}
+            {detail || '—'}
+          </Text>
+          {displayStatus ? <Tag label={displayStatus.toUpperCase()} tone={tone} /> : null}
         </View>
-
-        {hasStrategy && footerText ? (
-          <PaperText variant="labelSmall" style={{ color: theme.textSecondary }}>
-            {footerText}
-          </PaperText>
-        ) : null}
 
         {reason ? (
-          <PaperText variant="bodySmall" style={{ color: theme.danger, fontWeight: '600' }}>
-            Reason: {reason}
-          </PaperText>
+          <Text style={{ fontSize: 12, color: theme.down, marginTop: 5 }} numberOfLines={2}>
+            {reason}
+          </Text>
         ) : null}
+      </View>
 
-        {/* Action Buttons */}
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
-          <PaperButton
-            compact
-            mode="text"
-            onPress={onEdit}
-            icon={({ size }) => <Ionicons name="create-outline" size={size || 14} color={theme.textSecondary} />}
-            textColor={theme.textSecondary}
+      <Menu
+        visible={menuOpen}
+        onDismiss={() => setMenuOpen(false)}
+        anchor={
+          <TouchableRipple
+            onPress={() => setMenuOpen(true)}
+            borderless
+            rippleColor={theme.ripple}
+            style={styles.overflow}
+            accessibilityRole="button"
+            accessibilityLabel={`Actions for ${title}`}
           >
-            Edit
-          </PaperButton>
-
-          <PaperButton
-            compact
-            mode="text"
-            onPress={onDelete}
-            icon={({ size }) => <Ionicons name="trash-outline" size={size || 14} color={theme.danger} />}
-            textColor={theme.danger}
-          >
-            Cancel
-          </PaperButton>
-        </View>
-      </Card.Content>
-    </Card>
+            <Ionicons name="ellipsis-vertical" size={18} color={theme.textTertiary} />
+          </TouchableRipple>
+        }
+      >
+        <Menu.Item
+          onPress={() => {
+            setMenuOpen(false);
+            onEdit();
+          }}
+          title="Modify"
+          leadingIcon="pencil-outline"
+        />
+        <Menu.Item
+          onPress={() => {
+            setMenuOpen(false);
+            onDelete();
+          }}
+          title="Cancel order"
+          leadingIcon="trash-can-outline"
+          titleStyle={{ color: theme.danger }}
+        />
+      </Menu>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  keyline: {
+    width: 3,
+    alignSelf: 'stretch',
+  },
+  body: {
+    flex: 1,
+    minWidth: 0,
+    paddingLeft: space.md,
+    paddingVertical: space.md,
+  },
+  line: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+  },
+  overflow: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: space.xs,
+  },
+});

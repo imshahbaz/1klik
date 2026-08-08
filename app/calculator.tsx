@@ -1,17 +1,15 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, View } from 'react-native';
-import { Text as PaperText, ProgressBar } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native';
+import { ProgressBar } from 'react-native-paper';
 import CalculatorResults from '../components/calculator/CalculatorResults';
 import CalculatorStepOne from '../components/calculator/CalculatorStepOne';
 import CalculatorStepTwo from '../components/calculator/CalculatorStepTwo';
 import DatePickerModal from '../components/common/DatePickerModal';
-import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
+import Screen from '../components/ui/Screen';
+import TopBar from '../components/ui/TopBar';
 import { useMargins } from '../context/MarginContext';
 import { useTheme } from '../context/ThemeContext';
-import { useCalculatorStyles } from '../theme/calculatorStyles';
-import { useAdaptiveLayout } from '../theme/layout';
-import { getSafeBottomPadding } from '../theme/safeArea';
 import {
   BROKERAGE_PER_LEG,
   STT_DELIVERY_RATE,
@@ -26,10 +24,8 @@ import {
 import { rankMarginSymbols } from '../utils/margins';
 
 export default function CalculatorScreen() {
-  const insets = useSafeAreaInsets();
-  const layout = useAdaptiveLayout(insets);
-  const { isDarkMode, theme } = useTheme();
-  const styles = useCalculatorStyles(isDarkMode);
+  const router = useRouter();
+  const { theme } = useTheme();
 
   // Navigation Steps
   const [view, setView] = useState<'form' | 'results'>('form');
@@ -215,54 +211,44 @@ export default function CalculatorScreen() {
     ? (entryDate ? new Date(entryDate) : new Date())
     : (exitDate ? new Date(exitDate) : new Date());
 
-  const safeBottomInset = getSafeBottomPadding(insets.bottom);
-  const scrollBottomPadding = safeBottomInset + 60;
+  let subtitle = 'Result';
+  if (view === 'form') {
+    subtitle = activeStep === 1 ? 'Step 1 of 2 · Entry & target' : 'Step 2 of 2 · Holding & size';
+  }
+
+  const handleBack = () => {
+    // Walk back through the flow before leaving the screen entirely, so the
+    // app bar's back arrow mirrors the system back button.
+    if (view === 'results') setView('form');
+    else if (activeStep === 2) setActiveStep(1);
+    else router.back();
+  };
 
   return (
-    <View style={[styles.safeArea, layout.screenPadding, { paddingBottom: safeBottomInset }]}>
-      {/* Steps Indicator / Result Header */}
-      {view === 'form' && (
-        <View style={{ paddingHorizontal: layout.horizontalPadding, paddingTop: insets.top + 12, paddingBottom: 16 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-            <PaperText variant="labelMedium" style={{ color: theme.primary, fontWeight: '800' }}>
-              STEP {activeStep} OF 2
-            </PaperText>
-            <PaperText variant="bodySmall" style={{ color: theme.textSecondary, fontWeight: '600' }}>
-              {activeStep === 1 ? 'Configure Entry & Target' : 'Holding Days & Size'}
-            </PaperText>
-          </View>
-          <ProgressBar progress={activeStep === 1 ? 0.5 : 1.0} color={theme.primary} style={{ borderRadius: 4, height: 6 }} />
-        </View>
-      )}
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        enabled={Platform.OS === 'ios' && view === 'form'}
-        style={styles.keyboardFrame}
-        keyboardVerticalOffset={insets.top + 60}
-      >
-        <KeyboardAwareScrollView
-          contentContainerStyle={[
-            styles.scrollContainer,
-            { paddingHorizontal: layout.horizontalPadding, paddingBottom: scrollBottomPadding },
-            view === 'results' ? styles.resultsScrollContainer : null,
-          ]}
-          contentInsetAdjustmentBehavior="automatic"
-          keyboardShouldPersistTaps="handled"
-          extraKeyboardSpace={72}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={[
-            styles.container,
-            layout.centeredContent,
-            view === 'results' ? styles.resultsContentContainer : null,
-          ]}>
-            {(() => {
+    <Screen
+      inTabs={false}
+      header={
+        <TopBar
+          title="Margin calculator"
+          subtitle={subtitle}
+          onBack={handleBack}
+          bottom={
+            view === 'form' ? (
+              <ProgressBar
+                progress={activeStep === 1 ? 0.5 : 1}
+                color={theme.primary}
+                style={[styles.progress, { backgroundColor: theme.surfaceSunken }]}
+              />
+            ) : undefined
+          }
+        />
+      }
+    >
+      {(() => {
               if (view === 'form') {
                 if (activeStep === 1) {
                   return (
                     <CalculatorStepOne
-                      styles={styles}
                       theme={theme}
                       errors={errors}
                       setErrors={setErrors}
@@ -288,7 +274,6 @@ export default function CalculatorScreen() {
                 } else {
                   return (
                     <CalculatorStepTwo
-                      styles={styles}
                       theme={theme}
                       errors={errors}
                       setErrors={setErrors}
@@ -310,7 +295,6 @@ export default function CalculatorScreen() {
               } else if (view === 'results' && results) {
                 return (
                   <CalculatorResults
-                    styles={styles}
                     theme={theme}
                     results={results}
                     setView={setView}
@@ -320,14 +304,10 @@ export default function CalculatorScreen() {
                 );
               }
               return null;
-            })()}
-          </View>
-        </KeyboardAwareScrollView>
-      </KeyboardAvoidingView>
+      })()}
 
       {/* Date Picker Modal */}
       <DatePickerModal
-        styles={styles}
         theme={theme}
         visible={showDatePicker}
         pickerDate={pickerDate}
@@ -359,6 +339,13 @@ export default function CalculatorScreen() {
           return false;
         }}
       />
-    </View>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  progress: {
+    height: 3,
+    marginTop: 0,
+  },
+});

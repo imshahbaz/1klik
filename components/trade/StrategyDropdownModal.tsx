@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View, ScrollView } from 'react-native';
-import { Portal, Modal as PaperModal, Surface, Text as PaperText, IconButton, TouchableRipple, Divider } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Dialog, Portal, Text, TouchableRipple } from 'react-native-paper';
+import { useTheme } from '../../context/ThemeContext';
+import { space } from '../../theme/tokens';
 
 interface StrategyDropdownModalProps {
   readonly styles?: any;
-  readonly theme: any;
+  readonly theme?: any;
   readonly visible: boolean;
   readonly options: readonly string[];
   readonly selected: string;
@@ -13,88 +15,102 @@ interface StrategyDropdownModalProps {
   readonly onClose: () => void;
 }
 
+/**
+ * Material "simple dialog" picker — a titled list of full-bleed choices with
+ * the current one checked. Selecting commits and dismisses; there is no
+ * separate confirm step.
+ */
 export default function StrategyDropdownModal({
-  theme,
+  theme: themeProp,
   visible,
   options,
   selected,
   onSelect,
   onClose,
 }: StrategyDropdownModalProps) {
+  const { theme: contextTheme } = useTheme();
+  const theme = themeProp || contextTheme;
+
   return (
     <Portal>
-      <PaperModal
+      <Dialog
         visible={visible}
         onDismiss={onClose}
-        contentContainerStyle={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 20,
-        }}
+        style={[styles.dialog, { backgroundColor: theme.surface }]}
       >
-        <Surface
-          style={{
-            backgroundColor: theme.card,
-            borderRadius: 24,
-            width: '100%',
-            maxWidth: 340,
-            maxHeight: 380,
-            padding: 16,
-            elevation: 5,
-          }}
-          elevation={4}
-        >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
-              Select Strategy
-            </PaperText>
-            <IconButton
-              icon={({ size, color }) => <Ionicons name="close" size={size || 20} color={color || theme.textSecondary} />}
-              onPress={onClose}
-            />
-          </View>
+        <Text style={[styles.title, { color: theme.textPrimary }]}>Select strategy</Text>
 
-          <Divider style={{ backgroundColor: theme.border, marginBottom: 8 }} />
-
-          <ScrollView style={{ width: '100%' }}>
-            {options.length > 0 ? (
-              options.map((name) => {
-                const isSelected = selected === name;
-                return (
-                  <TouchableRipple
-                    key={name}
-                    style={{
-                      borderRadius: 12,
-                      backgroundColor: isSelected ? theme.primaryBackground : 'transparent',
-                      marginBottom: 4,
-                    }}
-                    onPress={() => {
-                      onSelect(name);
-                      onClose();
-                    }}
-                  >
-                    <View
+        <ScrollView style={{ maxHeight: 340 }}>
+          {options.length > 0 ? (
+            options.map((name) => {
+              const isSelected = selected === name;
+              return (
+                <TouchableRipple key={name} rippleColor={theme.ripple} onPress={() => {
+                  onSelect(name);
+                  onClose();
+                }}>
+                  <View style={styles.option}>
+                    <Text
                       style={{
-                        padding: 14,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
+                        flex: 1,
+                        fontSize: 15,
+                        fontWeight: isSelected ? '700' : '500',
+                        color: isSelected ? theme.primary : theme.textPrimary,
                       }}
                     >
-                      <PaperText variant="bodyMedium" style={{ color: isSelected ? theme.primary : theme.textPrimary, fontWeight: isSelected ? '800' : '600' }}>
-                        {name}
-                      </PaperText>
-                      {isSelected ? <Ionicons name="checkmark" size={18} color={theme.primary} /> : null}
-                    </View>
-                  </TouchableRipple>
-                );
-              })
-            ) : (
-              <PaperText style={{ color: theme.placeholder, padding: 12 }}>No strategies available</PaperText>
-            )}
-          </ScrollView>
-        </Surface>
-      </PaperModal>
+                      {name}
+                    </Text>
+                    {isSelected ? <Ionicons name="checkmark" size={20} color={theme.primary} /> : null}
+                  </View>
+                </TouchableRipple>
+              );
+            })
+          ) : (
+            <Text style={{ color: theme.placeholder, padding: space.xxl }}>No strategies available</Text>
+          )}
+        </ScrollView>
+
+        <View style={styles.actions}>
+          <TouchableRipple onPress={onClose} rippleColor={theme.ripple} style={styles.action}>
+            <Text style={{ fontSize: 14, fontWeight: '700', letterSpacing: 0.5, color: theme.primary }}>
+              CANCEL
+            </Text>
+          </TouchableRipple>
+        </View>
+      </Dialog>
     </Portal>
   );
 }
+
+const styles = StyleSheet.create({
+  dialog: {
+    borderRadius: 28,
+    marginHorizontal: space.xxl,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '600',
+    paddingHorizontal: space.xxl,
+    paddingTop: space.xxl,
+    paddingBottom: space.lg,
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: space.xxl,
+    paddingVertical: space.lg,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: space.md,
+  },
+  action: {
+    minWidth: 72,
+    height: 40,
+    paddingHorizontal: space.md,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

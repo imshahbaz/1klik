@@ -1,71 +1,66 @@
 import React from 'react';
-import { View } from 'react-native';
-import { Card, Text as PaperText, ActivityIndicator, List } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Text } from 'react-native-paper';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { EmptyState } from '../ui/Feedback';
+import { space } from '../../theme/tokens';
 
 interface NewsSectionProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly newsLoading: boolean;
   readonly news: any[];
 }
 
-export default function NewsSection({
-  styles,
-  theme,
-  newsLoading,
-  news
-}: NewsSectionProps) {
-  return (
-    <View style={styles.section}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-        <Ionicons name="newspaper" size={20} color={theme.primary} />
-        <PaperText variant="titleMedium" style={{ marginLeft: 8, fontWeight: '900', color: theme.textPrimary, letterSpacing: -0.5 }}>
-          MARKET HEADLINES
-        </PaperText>
-      </View>
+/** Headline feed for the symbol, as a hairline-separated list. */
+export default function NewsSection({ theme, newsLoading, news }: NewsSectionProps) {
+  let body: React.ReactNode;
 
-      <View style={{ gap: 12 }}>
-        {(() => {
-          if (newsLoading) {
-            return <ActivityIndicator size="large" color={theme.primary} style={{ marginVertical: 32 }} />;
-          }
-          if (news.length > 0) {
-            return news.map((item, index) => (
-              <Card
-                key={item.id || item.title || index}
-                style={{ backgroundColor: theme.card, borderRadius: 16, elevation: 1 }}
-              >
-                <Card.Content>
-                  <List.Item
-                    title={item.title}
-                    titleNumberOfLines={3}
-                    titleStyle={{ color: theme.textPrimary, fontWeight: '700', fontSize: 14, lineHeight: 20 }}
-                    description={
-                      item.published
-                        ? `${new Date(item.published * 1000).toLocaleString()}`
-                        : undefined
-                    }
-                    descriptionStyle={{ color: theme.textSecondary, fontSize: 11, marginTop: 4 }}
-                    left={(props) => (
-                      <List.Icon {...props} icon="newspaper-variant-outline" color={theme.primary} />
-                    )}
-                  />
-                </Card.Content>
-              </Card>
-            ));
-          }
-          return (
-            <Card style={{ backgroundColor: theme.card, borderRadius: 24, borderStyle: 'dashed' }}>
-              <Card.Content style={{ alignItems: 'center', paddingVertical: 24 }}>
-                <PaperText variant="labelMedium" style={{ color: theme.textSecondary, fontWeight: '800' }}>
-                  NO NEWS AVAILABLE FOR THIS SYMBOL
-                </PaperText>
-              </Card.Content>
-            </Card>
-          );
-        })()}
+  if (newsLoading) {
+    body = (
+      <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+        <ActivityIndicator size="small" color={theme.primary} />
       </View>
+    );
+  } else if (news.length > 0) {
+    body = news.map((item, index) => (
+      <View
+        key={item.id || item.title || index}
+        style={[
+          styles.item,
+          { borderBottomColor: theme.divider, borderBottomWidth: index === news.length - 1 ? 0 : StyleSheet.hairlineWidth },
+        ]}
+      >
+        <Text numberOfLines={3} style={{ fontSize: 14, fontWeight: '600', color: theme.textPrimary, lineHeight: 20 }}>
+          {item.title}
+        </Text>
+        {item.published ? (
+          <Text style={{ fontSize: 11.5, color: theme.textTertiary, marginTop: 5 }}>
+            {new Date(item.published * 1000).toLocaleString('en-IN', {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </Text>
+        ) : null}
+      </View>
+    ));
+  } else {
+    body = <EmptyState icon="newspaper-outline" title="No headlines" message="Nothing published for this symbol." />;
+  }
+
+  return (
+    <View>
+      <SectionHeader title="Headlines" />
+      <Panel padded={false}>{body}</Panel>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  item: {
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+  },
+});

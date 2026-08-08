@@ -1,13 +1,16 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { ActivityIndicator, Card, Text as PaperText, SegmentedButtons } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 import { CustomAlert } from '../../context/AlertContext';
 import { FormattedMtfOrder, FormattedStrategyOrder } from '../../utils/tradeFormatters';
 import HistoryRow from './HistoryRow';
+import Tabs from '../ui/Tabs';
+import { Panel } from '../ui/Panel';
+import { EmptyState } from '../ui/Feedback';
+import { space } from '../../theme/tokens';
 
 interface HistoryTabProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly loadingHistory: boolean;
   readonly mtfOrders: FormattedMtfOrder[];
@@ -29,8 +32,8 @@ interface HistoryTabProps {
   readonly formatIsoDate: (date: Date) => string;
 }
 
+/** Order book, split by order type and rendered as a continuous table. */
 export default function HistoryTab({
-  styles,
   theme,
   loadingHistory,
   mtfOrders,
@@ -49,56 +52,40 @@ export default function HistoryTab({
   setEditingStrategyOrderId,
   handleDeleteStrategyOrder,
   parseTargetDate,
-  formatIsoDate
+  formatIsoDate,
 }: HistoryTabProps) {
   const [activeSubTab, setActiveSubTab] = useState<'mtf' | 'strategy'>('mtf');
 
   return (
-    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 0, borderWidth: 1, borderColor: theme.borderLight }}>
-      <Card.Content style={{ gap: 16 }}>
-        {/* Title */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
-            Order History
-          </PaperText>
-          {loadingHistory && <ActivityIndicator size="small" color={theme.primary} />}
-        </View>
-
-        {/* Sub-Tab SegmentedButtons */}
-        <SegmentedButtons
+    <View style={{ paddingTop: space.lg }}>
+      <Panel padded={false}>
+        <Tabs
           value={activeSubTab}
-          onValueChange={(val) => setActiveSubTab(val as 'mtf' | 'strategy')}
-          buttons={[
-            {
-              value: 'mtf',
-              label: `MTF ORDERS (${mtfOrders.length})`,
-              style: { backgroundColor: activeSubTab === 'mtf' ? theme.primaryBackground : 'transparent' },
-              labelStyle: { color: activeSubTab === 'mtf' ? theme.primary : theme.textSecondary, fontWeight: '700' },
-            },
-            {
-              value: 'strategy',
-              label: `STRATEGY (${strategyOrders.length})`,
-              style: { backgroundColor: activeSubTab === 'strategy' ? theme.primaryBackground : 'transparent' },
-              labelStyle: { color: activeSubTab === 'strategy' ? theme.primary : theme.textSecondary, fontWeight: '700' },
-            },
+          onChange={(val) => setActiveSubTab(val as 'mtf' | 'strategy')}
+          items={[
+            { value: 'mtf', label: 'MTF', count: mtfOrders.length },
+            { value: 'strategy', label: 'Strategy', count: strategyOrders.length },
           ]}
         />
 
-        {/* MTF Content */}
-        {activeSubTab === 'mtf' && (
+        {loadingHistory ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="small" color={theme.primary} />
+          </View>
+        ) : null}
+
+        {!loadingHistory && activeSubTab === 'mtf' ? (
           <View>
             {mtfOrders.length === 0 ? (
-              <View style={{ alignItems: 'center', paddingVertical: 32 }}>
-                <Ionicons name="receipt-outline" size={32} color={theme.iconMuted} />
-                <PaperText variant="bodyMedium" style={{ color: theme.textSecondary, marginTop: 8 }}>
-                  No MTF orders found
-                </PaperText>
-              </View>
+              <EmptyState
+                icon="receipt-outline"
+                title="No MTF orders"
+                message="Orders you schedule from the Execute tab appear here."
+              />
             ) : (
               mtfOrders.map((log) => (
                 <HistoryRow
                   key={log.id}
-                  styles={styles}
                   theme={theme}
                   badgeLabel="BUY"
                   title={log.symbol}
@@ -108,8 +95,8 @@ export default function HistoryTab({
                   statusColor={log.statusColor}
                   strategyName={log.strategyName}
                   targetPercentage={log.targetPercentage}
-                  meta={`${log.qty} Qty`}
-                  footerText={log.targetDate ? `Target: ${log.targetDate}` : ''}
+                  meta={`${log.qty} qty`}
+                  footerText={log.targetDate || ''}
                   reason={log.reason}
                   onEdit={() => {
                     setTradeSymbol(log.symbol);
@@ -132,29 +119,26 @@ export default function HistoryTab({
               ))
             )}
           </View>
-        )}
+        ) : null}
 
-        {/* Strategy Content */}
-        {activeSubTab === 'strategy' && (
+        {!loadingHistory && activeSubTab === 'strategy' ? (
           <View>
             {strategyOrders.length === 0 ? (
-              <View style={{ alignItems: 'center', paddingVertical: 32 }}>
-                <Ionicons name="flash-outline" size={32} color={theme.iconMuted} />
-                <PaperText variant="bodyMedium" style={{ color: theme.textSecondary, marginTop: 8 }}>
-                  No strategy orders triggered
-                </PaperText>
-              </View>
+              <EmptyState
+                icon="flash-outline"
+                title="No strategy orders"
+                message="Allocations you schedule from the Strategy tab appear here."
+              />
             ) : (
               strategyOrders.map((log) => (
                 <HistoryRow
                   key={log.id}
-                  styles={styles}
                   theme={theme}
                   badgeLabel="AUTO"
                   title={log.strategyName}
                   broker={log.broker}
                   meta={`₹${log.amount.toLocaleString('en-IN')}`}
-                  footerText={log.date ? `Target: ${log.date}` : ''}
+                  footerText={log.date || ''}
                   reason={log.reason}
                   onEdit={() => {
                     setStrategyFormData({
@@ -165,18 +149,15 @@ export default function HistoryTab({
                     });
                     setEditingStrategyOrderId(log.id);
                     setActiveTab('strategy');
-                    CustomAlert.alert(
-                      'Loaded to Strategy Tab',
-                      `Strategy order details loaded into form.`
-                    );
+                    CustomAlert.alert('Loaded to Strategy Tab', 'Strategy order details loaded into form.');
                   }}
                   onDelete={() => handleDeleteStrategyOrder(log.id)}
                 />
               ))
             )}
           </View>
-        )}
-      </Card.Content>
-    </Card>
+        ) : null}
+      </Panel>
+    </View>
   );
 }

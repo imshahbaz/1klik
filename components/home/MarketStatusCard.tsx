@@ -1,10 +1,13 @@
 import React from 'react';
-import { View } from 'react-native';
-import { Card, Text as PaperText, ActivityIndicator, Divider, Button as PaperButton, Chip } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Text, TouchableRipple } from 'react-native-paper';
+import { Delta, Money, Stat, formatAmount } from '../ui/Price';
+import { EmptyState, Tag } from '../ui/Feedback';
+import { Panel } from '../ui/Panel';
+import { numeric, radius, space } from '../../theme/tokens';
 
 interface MarketStatusCardProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly cardLoading: boolean;
   readonly marketData: any;
@@ -20,8 +23,12 @@ interface MarketStatusCardProps {
   readonly low: number;
 }
 
+/**
+ * Primary index quote. Laid out like a broker's instrument header: exchange
+ * keyline, oversized last-traded price in tabular figures, signed change, then
+ * a hairline-separated OHLC strip.
+ */
 export default function MarketStatusCard({
-  styles,
   theme,
   cardLoading,
   marketData,
@@ -34,107 +41,147 @@ export default function MarketStatusCard({
   changePercent,
   open,
   high,
-  low
+  low,
 }: MarketStatusCardProps) {
   if (cardLoading && !marketData) {
     return (
-      <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 16 }}>
-        <Card.Content style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 24 }}>
-          <ActivityIndicator size="small" color={theme.iconMuted} />
-          <PaperText style={[styles.loadingText, { marginTop: 12, color: theme.textSecondary }]}>Fetching Live Market Status...</PaperText>
-        </Card.Content>
-      </Card>
+      <Panel style={{ minHeight: 168, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="small" color={theme.primary} />
+        <Text style={{ color: theme.textSecondary, fontSize: 13, marginTop: space.md }}>
+          Fetching live quote…
+        </Text>
+      </Panel>
     );
   }
 
   if (error && !marketData) {
     return (
-      <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 16 }}>
-        <Card.Content style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 16 }}>
-          <Ionicons name="alert-circle-outline" size={28} color={theme.danger} />
-          <PaperText style={{ color: theme.danger, marginVertical: 8, textAlign: 'center', fontWeight: '600' }}>{error}</PaperText>
-          <PaperButton mode="contained" onPress={() => fetchMarketStatus(true)} buttonColor={theme.primary}>
-            Retry
-          </PaperButton>
-        </Card.Content>
-      </Card>
+      <Panel padded={false}>
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="Quote unavailable"
+          message={error}
+          actionLabel="Retry"
+          onAction={() => fetchMarketStatus(true)}
+          tone="error"
+        />
+      </Panel>
     );
   }
 
-  return (
-    <Card style={{ backgroundColor: theme.card, borderRadius: 24, elevation: 3 }} onPress={() => fetchMarketStatus(true)}>
-      <Card.Content>
-        {/* Card Header */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="analytics-outline" size={18} color={theme.iconMuted} />
-            <PaperText variant="titleSmall" style={{ marginLeft: 6, fontWeight: '700', color: theme.textSecondary }}>
-              Market Status
-            </PaperText>
-          </View>
-          <Chip
-            compact
-            style={{
-              backgroundColor: isBullish ? theme.successBackground : theme.dangerBackground,
-              borderRadius: 12,
-            }}
-            textStyle={{
-              color: isBullish ? theme.success : theme.danger,
-              fontSize: 11,
-              fontWeight: '800',
-            }}
-          >
-            {isBullish ? 'BULLISH' : 'BEARISH'}
-          </Chip>
-        </View>
+  const prevClose = ltp - change;
+  const tint = isBullish ? theme.up : theme.down;
+  // Where the last price sits within the day's range, for the range bar.
+  const span = Math.max(high - low, 0.0001);
+  const position = Math.min(Math.max((ltp - low) / span, 0), 1);
 
-        {/* Card Body */}
-        <View style={{ marginBottom: 16 }}>
-          <PaperText variant="titleMedium" style={{ fontWeight: '700', color: theme.textSecondary }}>
-            {symbol}
-          </PaperText>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
-            <PaperText variant="headlineMedium" style={{ fontWeight: '900', color: theme.textPrimary }}>
-              {ltp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </PaperText>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons
-                name={isBullish ? "caret-up" : "caret-down"}
-                size={16}
-                color={isBullish ? theme.success : theme.danger}
-              />
-              <PaperText style={{ color: isBullish ? theme.success : theme.danger, fontWeight: '700', marginLeft: 4 }}>
-                {isBullish ? '+' : ''}
-                {change.toFixed(2)} ({changePercent.toFixed(2)}%)
-              </PaperText>
+  return (
+    <Panel padded={false}>
+      <TouchableRipple onPress={() => fetchMarketStatus(true)} rippleColor={theme.ripple}>
+        <View>
+          <View style={styles.head}>
+            <View style={styles.headLeft}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: theme.textPrimary }} numberOfLines={1}>
+                {symbol}
+              </Text>
+              <Tag label="NSE" />
+            </View>
+            <View style={styles.live}>
+              <View style={[styles.dot, { backgroundColor: tint }]} />
+              <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 0.7, color: theme.textTertiary }}>
+                LIVE
+              </Text>
             </View>
           </View>
-        </View>
 
-        <Divider style={{ backgroundColor: theme.border, marginVertical: 12 }} />
+          <View style={styles.quote}>
+            <Money value={ltp} size={34} weight="700" color={theme.textPrimary} />
+            <View style={{ marginTop: space.xs }}>
+              <Delta change={change} percent={changePercent} size={14} pill />
+            </View>
+          </View>
 
-        {/* Card Footer */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-          <View style={{ alignItems: 'center' }}>
-            <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '600' }}>OPEN</PaperText>
-            <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700', marginTop: 2 }}>
-              {open.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </PaperText>
+          {/* Day range: low ── marker ── high */}
+          <View style={styles.range}>
+            <Text style={[numeric, { fontSize: 11, color: theme.textTertiary }]}>{formatAmount(low)}</Text>
+            <View style={[styles.rangeTrack, { backgroundColor: theme.surfaceSunken }]}>
+              <View
+                style={[
+                  styles.rangeMarker,
+                  { left: `${position * 100}%`, backgroundColor: tint, borderColor: theme.surface },
+                ]}
+              />
+            </View>
+            <Text style={[numeric, { fontSize: 11, color: theme.textTertiary }]}>{formatAmount(high)}</Text>
           </View>
-          <View style={{ alignItems: 'center' }}>
-            <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '600' }}>HIGH</PaperText>
-            <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700', marginTop: 2 }}>
-              {high.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </PaperText>
-          </View>
-          <View style={{ alignItems: 'center' }}>
-            <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '600' }}>LOW</PaperText>
-            <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700', marginTop: 2 }}>
-              {low.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </PaperText>
+
+          <View style={[styles.strip, { borderTopColor: theme.divider }]}>
+            <Stat label="OPEN" value={formatAmount(open)} />
+            <Stat label="HIGH" value={formatAmount(high)} align="center" tint={theme.up} />
+            <Stat label="LOW" value={formatAmount(low)} align="center" tint={theme.down} />
+            <Stat label="PREV CLOSE" value={formatAmount(prevClose)} align="flex-end" />
           </View>
         </View>
-      </Card.Content>
-    </Card>
+      </TouchableRipple>
+    </Panel>
   );
 }
+
+const styles = StyleSheet.create({
+  head: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: space.lg,
+    paddingTop: space.lg,
+  },
+  headLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    flex: 1,
+    minWidth: 0,
+  },
+  live: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: radius.pill,
+  },
+  quote: {
+    paddingHorizontal: space.lg,
+    paddingTop: space.md,
+  },
+  range: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    paddingHorizontal: space.lg,
+    paddingTop: space.lg,
+  },
+  rangeTrack: {
+    flex: 1,
+    height: 3,
+    borderRadius: radius.pill,
+  },
+  rangeMarker: {
+    position: 'absolute',
+    top: -3.5,
+    width: 10,
+    height: 10,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    marginLeft: -5,
+  },
+  strip: {
+    flexDirection: 'row',
+    marginTop: space.lg,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+});

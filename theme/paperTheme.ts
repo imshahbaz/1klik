@@ -1,82 +1,77 @@
-import { MD3LightTheme, MD3DarkTheme, MD3Theme } from 'react-native-paper';
-import { lightColors, darkColors } from './colors';
+import { MD3LightTheme, MD3DarkTheme, MD3Theme, configureFonts } from 'react-native-paper';
+import { Platform } from 'react-native';
+import { lightColors, darkColors, Colors } from './colors';
+import { radius } from './tokens';
 
-export const paperLightTheme: MD3Theme = {
-  ...MD3LightTheme,
+/**
+ * Roboto is the Android system face; naming it explicitly keeps weights
+ * consistent with the platform instead of falling back to Paper's defaults.
+ */
+const fontConfig = Platform.select({
+  android: {
+    displayLarge: { fontFamily: 'sans-serif' },
+    displayMedium: { fontFamily: 'sans-serif' },
+    displaySmall: { fontFamily: 'sans-serif' },
+    headlineLarge: { fontFamily: 'sans-serif-medium' },
+    headlineMedium: { fontFamily: 'sans-serif-medium' },
+    headlineSmall: { fontFamily: 'sans-serif-medium' },
+    titleLarge: { fontFamily: 'sans-serif-medium' },
+    titleMedium: { fontFamily: 'sans-serif-medium' },
+    titleSmall: { fontFamily: 'sans-serif-medium' },
+    labelLarge: { fontFamily: 'sans-serif-medium' },
+    labelMedium: { fontFamily: 'sans-serif-medium' },
+    labelSmall: { fontFamily: 'sans-serif-medium' },
+    bodyLarge: { fontFamily: 'sans-serif' },
+    bodyMedium: { fontFamily: 'sans-serif' },
+    bodySmall: { fontFamily: 'sans-serif' },
+  },
+  default: {},
+});
+
+const buildTheme = (base: MD3Theme, c: Colors): MD3Theme => ({
+  ...base,
+  roundness: radius.md / 4,
+  fonts: configureFonts({ config: fontConfig as any }),
   colors: {
-    ...MD3LightTheme.colors,
-    primary: lightColors.primary,
-    onPrimary: '#ffffff',
-    primaryContainer: lightColors.primaryBackground,
-    onPrimaryContainer: lightColors.primary,
-    secondary: lightColors.primary,
-    onSecondary: '#ffffff',
-    secondaryContainer: lightColors.primaryBackground,
-    onSecondaryContainer: lightColors.primary,
-    tertiary: lightColors.primary,
-    tertiaryContainer: lightColors.primaryBackground,
-    onTertiaryContainer: lightColors.primary,
-    background: lightColors.background,
-    onBackground: lightColors.textPrimary,
-    surface: lightColors.card,
-    onSurface: lightColors.textPrimary,
-    surfaceVariant: lightColors.borderLight,
-    onSurfaceVariant: lightColors.textSecondary,
-    surfaceDisabled: lightColors.borderLight,
-    onSurfaceDisabled: lightColors.placeholder,
-    outline: lightColors.border,
-    outlineVariant: lightColors.borderLight,
-    error: lightColors.danger,
+    ...base.colors,
+    primary: c.primary,
+    onPrimary: c.buttonPrimaryText,
+    primaryContainer: c.primaryBackground,
+    onPrimaryContainer: c.primary,
+    secondary: c.primary,
+    onSecondary: c.buttonPrimaryText,
+    secondaryContainer: c.primaryBackground,
+    onSecondaryContainer: c.primary,
+    tertiary: c.secondary,
+    tertiaryContainer: c.infoBackground,
+    onTertiaryContainer: c.infoText,
+    background: c.background,
+    onBackground: c.textPrimary,
+    surface: c.surface,
+    onSurface: c.textPrimary,
+    surfaceVariant: c.surfaceAlt,
+    onSurfaceVariant: c.textSecondary,
+    surfaceDisabled: c.disabledButton,
+    onSurfaceDisabled: c.disabledText,
+    outline: c.border,
+    outlineVariant: c.divider,
+    error: c.danger,
     onError: '#ffffff',
-    errorContainer: lightColors.dangerBackground,
-    onErrorContainer: lightColors.danger,
+    errorContainer: c.dangerBackground,
+    onErrorContainer: c.danger,
+    backdrop: c.overlay,
+    // Flat surfaces at every tier — separation comes from tone and hairlines,
+    // not from Material's tonal elevation overlays.
     elevation: {
       level0: 'transparent',
-      level1: lightColors.card,
-      level2: lightColors.card,
-      level3: lightColors.card,
-      level4: lightColors.card,
-      level5: lightColors.card,
+      level1: c.surface,
+      level2: c.surface,
+      level3: c.surfaceAlt,
+      level4: c.surfaceAlt,
+      level5: c.surfaceAlt,
     },
   },
-};
+});
 
-export const paperDarkTheme: MD3Theme = {
-  ...MD3DarkTheme,
-  colors: {
-    ...MD3DarkTheme.colors,
-    primary: darkColors.primary,
-    onPrimary: '#ffffff',
-    primaryContainer: darkColors.primaryBackground,
-    onPrimaryContainer: darkColors.primary,
-    secondary: darkColors.primary,
-    onSecondary: '#ffffff',
-    secondaryContainer: darkColors.primaryBackground,
-    onSecondaryContainer: darkColors.primary,
-    tertiary: darkColors.primary,
-    tertiaryContainer: darkColors.primaryBackground,
-    onTertiaryContainer: darkColors.primary,
-    background: darkColors.background,
-    onBackground: darkColors.textPrimary,
-    surface: darkColors.card,
-    onSurface: darkColors.textPrimary,
-    surfaceVariant: darkColors.borderLight,
-    onSurfaceVariant: darkColors.textSecondary,
-    surfaceDisabled: darkColors.borderLight,
-    onSurfaceDisabled: darkColors.placeholder,
-    outline: darkColors.border,
-    outlineVariant: darkColors.borderLight,
-    error: darkColors.danger,
-    onError: '#ffffff',
-    errorContainer: darkColors.dangerBackground,
-    onErrorContainer: darkColors.danger,
-    elevation: {
-      level0: 'transparent',
-      level1: darkColors.card,
-      level2: darkColors.card,
-      level3: darkColors.card,
-      level4: darkColors.card,
-      level5: darkColors.card,
-    },
-  },
-};
+export const paperLightTheme = buildTheme(MD3LightTheme, lightColors);
+export const paperDarkTheme = buildTheme(MD3DarkTheme, darkColors);

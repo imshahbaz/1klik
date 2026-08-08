@@ -1,20 +1,19 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import { Card, Text as PaperText, ActivityIndicator, Chip, IconButton } from 'react-native-paper';
-import { ScaledSheet } from 'react-native-size-matters';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator } from 'react-native-paper';
 import FinancialChart from '../components/FinancialChart';
 import { useTheme } from '../context/ThemeContext';
 import { newsApi, strategyAPI } from '../services/api';
-import { getSafeBottomPadding } from '../theme/safeArea';
 import AIAnalysisSection from '../components/chart/AIAnalysisSection';
 import NewsSection from '../components/chart/NewsSection';
+import Screen from '../components/ui/Screen';
+import TopBar from '../components/ui/TopBar';
+import { Panel, SectionHeader } from '../components/ui/Panel';
 
 export default function ChartScreen() {
   const { symbol } = useLocalSearchParams<{ symbol: string }>();
-  const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { theme } = useTheme();
 
   const [chartData, setChartData] = useState<any[]>([]);
@@ -23,7 +22,7 @@ export default function ChartScreen() {
   const [newsLoading, setNewsLoading] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [aiLoading, setAiLoading] = useState(false);
-  const [isChartExpanded, setIsChartExpanded] = useState(false);
+  const [isChartExpanded, setIsChartExpanded] = useState(true);
 
   useEffect(() => {
     if (!symbol) return;
@@ -77,98 +76,53 @@ export default function ChartScreen() {
     };
   }, [symbol]);
 
-  const safeBottomInset = getSafeBottomPadding(insets.bottom);
-  const scrollBottomPadding = safeBottomInset + 60;
-
   return (
-    <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top, paddingBottom: safeBottomInset }]}>
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={[styles.contentContainer, { paddingBottom: scrollBottomPadding }]}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Technical Chart Section */}
-        <View style={styles.section}>
-          <Card
-            style={{ backgroundColor: theme.card, borderRadius: 24, elevation: 3 }}
-            onPress={() => setIsChartExpanded(!isChartExpanded)}
-          >
-            <Card.Content style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-                <IconButton
-                  icon={({ size }) => <Ionicons name="stats-chart" size={size || 18} color={theme.primary} />}
-                  containerColor={theme.primaryBackground}
-                  size={20}
-                />
-                <View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <PaperText variant="titleMedium" style={{ fontWeight: '900', color: theme.textPrimary }}>
-                      Technical Chart
-                    </PaperText>
-                    {!isChartExpanded && (
-                      <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ color: theme.primary, fontSize: 9, fontWeight: '900' }}>
-                        EXPAND
-                      </Chip>
-                    )}
-                  </View>
-                  <PaperText variant="labelSmall" style={{ color: theme.textSecondary, letterSpacing: 1, marginTop: 2 }}>
-                    REAL-TIME MARKET MOVEMENT
-                  </PaperText>
-                </View>
+    <Screen
+      inTabs={false}
+      header={
+        <TopBar
+          title={symbol || 'Chart'}
+          subtitle="NSE · daily"
+          onBack={() => router.back()}
+          actions={[
+            {
+              icon: isChartExpanded ? 'contract-outline' : 'expand-outline',
+              onPress: () => setIsChartExpanded((prev) => !prev),
+              accessibilityLabel: isChartExpanded ? 'Collapse chart' : 'Expand chart',
+            },
+          ]}
+        />
+      }
+    >
+      {isChartExpanded ? (
+        <>
+          <SectionHeader title="Price history" />
+          <Panel padded={false} style={styles.chart}>
+            {chartLoading ? (
+              <View style={styles.chartLoading}>
+                <ActivityIndicator size="large" color={theme.primary} />
               </View>
-              <IconButton
-                icon={({ size }) => <Ionicons name={isChartExpanded ? "chevron-up" : "chevron-down"} size={size || 18} color={isChartExpanded ? "#ffffff" : theme.textPrimary} />}
-                containerColor={isChartExpanded ? theme.primary : theme.borderLight}
-                size={20}
-              />
-            </Card.Content>
-          </Card>
+            ) : (
+              <FinancialChart rawData={chartData} theme={theme} height={340} />
+            )}
+          </Panel>
+        </>
+      ) : null}
 
-          {isChartExpanded && (
-            <Card style={{ backgroundColor: theme.card, borderRadius: 24, overflow: 'hidden', height: 400, marginTop: 12 }}>
-              {chartLoading ? (
-                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                  <ActivityIndicator size="large" color={theme.primary} />
-                </View>
-              ) : (
-                <FinancialChart rawData={chartData} theme={theme} height={400} />
-              )}
-            </Card>
-          )}
-        </View>
+      <AIAnalysisSection theme={theme} aiLoading={aiLoading} aiAnalysis={aiAnalysis} />
 
-        {/* AI Analysis Section */}
-        <AIAnalysisSection
-          styles={styles}
-          theme={theme}
-          aiLoading={aiLoading}
-          aiAnalysis={aiAnalysis}
-        />
-
-        {/* News Section */}
-        <NewsSection
-          styles={styles}
-          theme={theme}
-          newsLoading={newsLoading}
-          news={news}
-        />
-      </ScrollView>
-    </View>
+      <NewsSection theme={theme} newsLoading={newsLoading} news={news} />
+    </Screen>
   );
 }
 
-const styles = ScaledSheet.create({
-  container: {
+const styles = StyleSheet.create({
+  chart: {
+    height: 340,
+  },
+  chartLoading: {
     flex: 1,
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: '16@ms',
-    gap: '24@ms',
-  },
-  section: {
-    gap: '16@ms',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

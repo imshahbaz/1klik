@@ -1,24 +1,24 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { AppState, KeyboardAvoidingView, Linking, Platform, View } from 'react-native';
-import { Card, Text as PaperText, TextInput as PaperTextInput, Button as PaperButton, Switch as PaperSwitch, Avatar, ActivityIndicator, Surface, HelperText } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
+import { AppState, Linking, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Avatar, Switch, Text } from 'react-native-paper';
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { notificationAPI, userPreferenceAPI } from '../../services/api';
 import { getFriendlyErrorMessage } from '../../utils/errorMessage';
 import { checkNotificationPermission, getFCMToken, requestUserPermission } from '../../services/notificationService';
-import { useAdaptiveLayout } from '../../theme/layout';
-import { useSettingsStyles } from '../../theme/settingsStyles';
+import Screen from '../../components/ui/Screen';
+import TopBar from '../../components/ui/TopBar';
+import Button from '../../components/ui/Button';
+import ListRow from '../../components/ui/Row';
+import { Field } from '../../components/ui/Field';
+import { Notice } from '../../components/ui/Feedback';
+import { Hairline, Panel, SectionHeader } from '../../components/ui/Panel';
+import { space } from '../../theme/tokens';
 
 export default function SettingsScreen() {
-  const insets = useSafeAreaInsets();
-  const layout = useAdaptiveLayout(insets);
-  const { user, refreshUserData } = useAuth();
-  const { isDarkMode, theme } = useTheme();
-  const styles = useSettingsStyles(isDarkMode);
+  const { user, refreshUserData, logout } = useAuth();
+  const { isDarkMode, toggleTheme, theme } = useTheme();
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export default function SettingsScreen() {
         'Push notifications are disabled for this app. Please enable them in your device settings.',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Open Settings', onPress: () => Linking.openSettings() }
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
         ]
       );
     }
@@ -83,7 +83,7 @@ export default function SettingsScreen() {
       'To disable notifications, please turn them off in your device system settings.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Open Settings', onPress: () => Linking.openSettings() }
+        { text: 'Open Settings', onPress: () => Linking.openSettings() },
       ]
     );
   };
@@ -166,145 +166,105 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.safeArea, layout.screenPadding]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        enabled={Platform.OS === 'ios'}
-        style={styles.keyboardFrame}
-        keyboardVerticalOffset={insets.top + 60}
-      >
-        <KeyboardAwareScrollView
-          contentContainerStyle={[
-            styles.scrollContainer,
-            { paddingHorizontal: layout.horizontalPadding, paddingBottom: layout.tabBarHeight + 24 },
-          ]}
-          contentInsetAdjustmentBehavior="automatic"
-          keyboardShouldPersistTaps="handled"
-          extraKeyboardSpace={64}
-        >
-          <View style={[styles.container, layout.centeredContent, { gap: 16 }]}>
-            {/* Profile Info Summary Card */}
-            <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
-              <Card.Content style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-                {user?.profile ? (
-                  <Avatar.Image size={56} source={{ uri: user.profile }} />
-                ) : (
-                  <Avatar.Icon size={56} icon="account" style={{ backgroundColor: theme.primaryBackground }} color={theme.primary} />
-                )}
-                <View style={{ flex: 1 }}>
-                  <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }} numberOfLines={1}>
-                    {user?.name || '1Klik User'}
-                  </PaperText>
-                  <PaperText variant="bodySmall" style={{ color: theme.textSecondary, marginTop: 2 }} numberOfLines={1}>
-                    {user?.email || 'No email associated'}
-                  </PaperText>
-                </View>
-              </Card.Content>
-            </Card>
-
-            {/* Username Customization Card */}
-            <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
-              <Card.Content style={{ gap: 12 }}>
-                <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
-                  Account Customization
-                </PaperText>
-                <PaperText variant="bodySmall" style={{ color: theme.textSecondary, marginBottom: 8 }}>
-                  Update your account details and username. Changes will reflect on your home dashboard.
-                </PaperText>
-
-                <PaperTextInput
-                  mode="outlined"
-                  label="Username"
-                  value={username}
-                  onChangeText={handleUsernameChange}
-                  placeholder="enter_username"
-                  placeholderTextColor={theme.placeholder}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  maxLength={20}
-                  editable={!loading}
-                  textColor={theme.textPrimary}
-                  outlineColor={validationError ? theme.danger : theme.border}
-                  activeOutlineColor={theme.primary}
-                  left={<PaperTextInput.Affix text="@" />}
-                  right={
-                    username.length > 0 && !loading ? (
-                      <PaperTextInput.Icon icon="close-circle" onPress={() => handleUsernameChange('')} />
-                    ) : undefined
-                  }
-                  style={{ backgroundColor: theme.card }}
-                />
-
-                {validationError ? (
-                  <HelperText type="error" visible={true}>
-                    {validationError}
-                  </HelperText>
-                ) : (
-                  <HelperText type="info" visible={true}>
-                    Only letters and numbers are allowed. Must start with a letter.
-                  </HelperText>
-                )}
-
-                {successMessage && (
-                  <Surface style={{ padding: 12, borderRadius: 12, backgroundColor: theme.successBackground, flexDirection: 'row', alignItems: 'center', gap: 8 }} elevation={0}>
-                    <Ionicons name="checkmark-circle-outline" size={18} color={theme.success} />
-                    <PaperText variant="bodyMedium" style={{ color: theme.success, fontWeight: '700' }}>{successMessage}</PaperText>
-                  </Surface>
-                )}
-
-                {errorMessage && (
-                  <Surface style={{ padding: 12, borderRadius: 12, backgroundColor: theme.dangerBackground, flexDirection: 'row', alignItems: 'center', gap: 8 }} elevation={0}>
-                    <Ionicons name="warning-outline" size={18} color={theme.danger} />
-                    <PaperText variant="bodyMedium" style={{ color: theme.danger, fontWeight: '700' }}>{errorMessage}</PaperText>
-                  </Surface>
-                )}
-
-                <PaperButton
-                  mode="contained"
-                  onPress={handleSave}
-                  disabled={loading || !!validationError || !username}
-                  loading={loading}
-                  buttonColor={theme.primary}
-                  textColor="#ffffff"
-                  icon={({ size }) => <Ionicons name="save-outline" size={size || 18} color="#ffffff" />}
-                  style={{ borderRadius: 14, marginTop: 8 }}
-                  contentStyle={{ height: 50 }}
-                  labelStyle={{ fontSize: 15, fontWeight: '700' }}
-                >
-                  Update Username
-                </PaperButton>
-              </Card.Content>
-            </Card>
-
-            {/* App Preferences Card */}
-            <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
-              <Card.Content style={{ gap: 12 }}>
-                <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
-                  App Preferences
-                </PaperText>
-                <PaperText variant="bodySmall" style={{ color: theme.textSecondary, marginBottom: 8 }}>
-                  Customize your push notifications and system preferences.
-                </PaperText>
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 }}>
-                  <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700' }}>
-                    Push Notifications
-                  </PaperText>
-                  {checkingPermission ? (
-                    <ActivityIndicator size="small" color={theme.primary} />
-                  ) : (
-                    <PaperSwitch
-                      value={notificationsEnabled}
-                      onValueChange={handleNotificationToggle}
-                      color={theme.primary}
-                    />
-                  )}
-                </View>
-              </Card.Content>
-            </Card>
+    <Screen header={<TopBar title="Account" />}>
+      <SectionHeader title="Signed in as" />
+      <Panel>
+        <View style={styles.identity}>
+          {user?.profile ? (
+            <Avatar.Image size={48} source={{ uri: user.profile }} />
+          ) : (
+            <Avatar.Icon
+              size={48}
+              icon="account"
+              style={{ backgroundColor: theme.primaryBackground }}
+              color={theme.primary}
+            />
+          )}
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', color: theme.textPrimary }}>
+              {user?.name || '1Klik User'}
+            </Text>
+            <Text numberOfLines={1} style={{ fontSize: 12.5, color: theme.textSecondary, marginTop: 2 }}>
+              {user?.email || 'No email associated'}
+            </Text>
           </View>
-        </KeyboardAwareScrollView>
-      </KeyboardAvoidingView>
-    </View>
+        </View>
+      </Panel>
+
+      <SectionHeader title="Profile" />
+      <Panel style={{ gap: space.lg }}>
+        <Field
+          label="Username"
+          value={username}
+          onChangeText={handleUsernameChange}
+          placeholder="username"
+          prefix="@"
+          maxLength={20}
+          editable={!loading}
+          error={validationError}
+          hint="letters & numbers"
+          onClear={() => handleUsernameChange('')}
+        />
+
+        {successMessage ? <Notice tone="up" message={successMessage} /> : null}
+        {errorMessage ? <Notice tone="down" message={errorMessage} /> : null}
+
+        <Button
+          label="Save changes"
+          icon="checkmark-outline"
+          onPress={handleSave}
+          loading={loading}
+          disabled={loading || !!validationError || !username}
+        />
+      </Panel>
+
+      <SectionHeader title="Preferences" />
+      <Panel padded={false}>
+        <ListRow
+          title="Push notifications"
+          subtitle="Order fills, strategy triggers and alerts"
+          icon="notifications-outline"
+          trailing={
+            checkingPermission ? (
+              <ActivityIndicator size="small" color={theme.primary} />
+            ) : (
+              <Switch value={notificationsEnabled} onValueChange={handleNotificationToggle} color={theme.primary} />
+            )
+          }
+        />
+        <Hairline inset={64} />
+        <ListRow
+          title="Dark theme"
+          subtitle="Recommended for low-light trading"
+          icon={isDarkMode ? 'moon-outline' : 'sunny-outline'}
+          trailing={<Switch value={isDarkMode} onValueChange={() => toggleTheme()} color={theme.primary} />}
+        />
+      </Panel>
+
+      <SectionHeader title="Session" />
+      <Panel padded={false}>
+        <ListRow
+          title="Sign out"
+          subtitle="You'll need to sign in again to trade"
+          icon="log-out-outline"
+          iconTint={theme.danger}
+          iconBackground={theme.dangerBackground}
+          onPress={() =>
+            CustomAlert.alert('Sign out', 'Are you sure you want to sign out of 1Klik?', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Sign out', style: 'destructive', onPress: () => logout() },
+            ])
+          }
+        />
+      </Panel>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  identity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.lg,
+  },
+});

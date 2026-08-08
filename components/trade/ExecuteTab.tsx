@@ -1,15 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { View, ScrollView } from 'react-native';
-import { Card, Text as PaperText, TextInput as PaperTextInput, SegmentedButtons, TouchableRipple, Chip, Surface } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Text, TouchableRipple } from 'react-native-paper';
 import SwipeButton from '../common/SwipeButton';
 import StrategyDropdownModal from './StrategyDropdownModal';
+import { Field, SelectField, ToggleGroup } from '../ui/Field';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { Tag } from '../ui/Feedback';
+import { numeric, radius, space } from '../../theme/tokens';
 
 export const EXECUTE_STRATEGIES = ['TARGET PROFIT', 'TRAILING PROFIT'] as const;
 export type ExecuteStrategy = (typeof EXECUTE_STRATEGIES)[number];
 
 interface ExecuteTabProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly tradeBroker: 'ZERODHA' | 'RUPEEZY';
   readonly setTradeBroker: (broker: 'ZERODHA' | 'RUPEEZY') => void;
@@ -36,8 +40,12 @@ interface ExecuteTabProps {
   readonly formatDateString: (date: Date) => string;
 }
 
+/**
+ * MTF order ticket. Fields run top to bottom in the order a trader fills them —
+ * where, what, how much, when — with the commit control pinned by the parent so
+ * it stays reachable while the keyboard is up.
+ */
 export default function ExecuteTab({
-  styles,
   theme,
   tradeBroker,
   setTradeBroker,
@@ -57,105 +65,77 @@ export default function ExecuteTab({
   setPickerDate,
   setShowDatePicker,
   editingMtfOrderId,
-  executingTrade,
-  handleExecuteOrder,
   formatDateString,
 }: ExecuteTabProps) {
   const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
 
   return (
-    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 0, borderWidth: 1, borderColor: theme.borderLight }}>
-      <Card.Content style={{ gap: 18 }}>
-        {/* Broker SegmentedButtons */}
-        <View>
-          <PaperText variant="labelMedium" style={{ color: theme.textSecondary, marginBottom: 8, fontWeight: '700' }}>
-            BROKER
-          </PaperText>
-          <SegmentedButtons
-            value={tradeBroker}
-            onValueChange={(val) => setTradeBroker(val as 'ZERODHA' | 'RUPEEZY')}
-            buttons={[
-              {
-                value: 'ZERODHA',
-                label: 'ZERODHA',
-                style: { backgroundColor: tradeBroker === 'ZERODHA' ? theme.primaryBackground : 'transparent' },
-                labelStyle: { color: tradeBroker === 'ZERODHA' ? theme.primary : theme.textSecondary, fontWeight: '700' },
-              },
-              {
-                value: 'RUPEEZY',
-                label: 'RUPEEZY',
-                style: { backgroundColor: tradeBroker === 'RUPEEZY' ? theme.primaryBackground : 'transparent' },
-                labelStyle: { color: tradeBroker === 'RUPEEZY' ? theme.primary : theme.textSecondary, fontWeight: '700' },
-              },
-            ]}
-          />
+    <View>
+      {editingMtfOrderId ? (
+        <View style={{ paddingTop: space.lg }}>
+          <Panel raised style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+            <Ionicons name="create-outline" size={16} color={theme.warningText} />
+            <Text style={{ flex: 1, fontSize: 13, fontWeight: '600', color: theme.warningText }}>
+              Editing an existing order
+            </Text>
+          </Panel>
         </View>
+      ) : null}
 
-        {/* Strategy Dropdown */}
-        <View>
-          <PaperText variant="labelMedium" style={{ color: theme.textSecondary, marginBottom: 8, fontWeight: '700' }}>
-            STRATEGY
-          </PaperText>
-          <TouchableRipple
-            style={{
-              padding: 14,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: theme.border,
-            }}
-            onPress={() => setShowStrategyDropdown(true)}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700' }}>
-                {tradeStrategyName}
-              </PaperText>
-              <Ionicons name="chevron-down" size={18} color={theme.iconMuted} />
-            </View>
-          </TouchableRipple>
-        </View>
+      <SectionHeader title="Order ticket" />
+      <Panel style={{ gap: space.lg }}>
+        <ToggleGroup
+          label="Broker"
+          value={tradeBroker}
+          options={[
+            { value: 'ZERODHA', label: 'ZERODHA' },
+            { value: 'RUPEEZY', label: 'RUPEEZY' },
+          ]}
+          onChange={(val) => setTradeBroker(val as 'ZERODHA' | 'RUPEEZY')}
+        />
 
-        {/* Target percentage input if TARGET PROFIT */}
+        <SelectField
+          label="Exit strategy"
+          value={tradeStrategyName}
+          onPress={() => setShowStrategyDropdown(true)}
+          icon="trending-up-outline"
+        />
+
         {tradeStrategyName === 'TARGET PROFIT' ? (
-          <PaperTextInput
-            mode="outlined"
-            label="TARGET %"
+          <Field
+            label="Target"
+            hint="0.4 – 20"
             value={tradeTargetPercentage}
             onChangeText={setTradeTargetPercentage}
             keyboardType="numeric"
-            placeholder="0.4 – 20"
-            placeholderTextColor={theme.placeholder}
-            textColor={theme.textPrimary}
-            outlineColor={theme.border}
-            activeOutlineColor={theme.primary}
-            right={<PaperTextInput.Affix text="%" textStyle={{ color: theme.textSecondary }} />}
-            style={{ backgroundColor: theme.card }}
+            placeholder="0.00"
+            suffix="%"
+            numericFace
           />
         ) : null}
 
-        {/* Symbol */}
+        {/* Symbol lookup: results drop directly under the field, as an Android
+            autocomplete does, rather than inside a separate overlay. */}
         <View style={{ zIndex: 10 }}>
-          <PaperTextInput
-            mode="outlined"
-            label="SYMBOL"
+          <Field
+            label="Symbol"
             value={tradeSymbol}
             onChangeText={(val) => {
               setTradeSymbol(val);
               setSearchQuery(val);
             }}
             autoCapitalize="characters"
-            autoCorrect={false}
-            placeholder="Search e.g. RELIANCE"
-            placeholderTextColor={theme.placeholder}
-            textColor={theme.textPrimary}
-            outlineColor={theme.border}
-            activeOutlineColor={theme.primary}
-            left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="search-outline" size={size || 18} color={color || theme.iconMuted} />} />}
-            style={{ backgroundColor: theme.card }}
+            placeholder="e.g. RELIANCE"
+            icon="search-outline"
+            onClear={() => {
+              setTradeSymbol('');
+              setSearchQuery('');
+            }}
           />
 
           {searchQuery && filteredMargins.length > 0 ? (
-            <Surface style={{ backgroundColor: theme.card, borderRadius: 12, marginTop: 4, elevation: 4, maxHeight: 200 }} elevation={3}>
-              <ScrollView keyboardShouldPersistTaps="handled">
+            <Panel padded={false} style={[styles.suggestions, { backgroundColor: theme.surfaceAlt }]}>
+              <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled>
                 {filteredMargins.map((marginItem: any, idx: number) => {
                   const rawMargin = marginItem.requiredMargin || marginItem.leverage || '';
                   let marginStr = rawMargin.toString().trim();
@@ -170,91 +150,65 @@ export default function ExecuteTab({
                   return (
                     <TouchableRipple
                       key={marginItem.symbol || idx}
+                      rippleColor={theme.ripple}
                       onPress={() => {
                         setTradeSymbol(marginItem.symbol);
                         setSearchQuery('');
                       }}
                     >
-                      <View style={{ padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.borderLight }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <Ionicons name="trending-up" size={16} color={theme.primary} />
-                          <PaperText variant="titleSmall" style={{ color: theme.textPrimary, fontWeight: '700' }}>
-                            {marginItem.symbol}
-                          </PaperText>
-                        </View>
-                        <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ fontSize: 11, fontWeight: '700', color: theme.primary }}>
-                          {marginStr}
-                        </Chip>
+                      <View style={[styles.suggestion, { borderBottomColor: theme.divider }]}>
+                        <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: theme.textPrimary }}>
+                          {marginItem.symbol}
+                        </Text>
+                        <Tag label={marginStr} tone="accent" />
                       </View>
                     </TouchableRipple>
                   );
                 })}
               </ScrollView>
-            </Surface>
+            </Panel>
           ) : null}
         </View>
 
-        {/* Quantity */}
-        <PaperTextInput
-          mode="outlined"
-          label="QUANTITY"
+        <Field
+          label="Quantity"
           value={tradeQty}
           onChangeText={setTradeQty}
           keyboardType="number-pad"
           placeholder="0"
-          placeholderTextColor={theme.placeholder}
-          textColor={theme.textPrimary}
-          outlineColor={theme.border}
-          activeOutlineColor={theme.primary}
-          style={{ backgroundColor: theme.card }}
+          suffix="qty"
+          numericFace
         />
 
-        {/* Prominent Full-Width Target Date Selector */}
-        <View>
-          <PaperText variant="labelMedium" style={{ color: theme.textSecondary, marginBottom: 8, fontWeight: '700' }}>
-            TARGET DATE
-          </PaperText>
-          <TouchableRipple
-            style={{
-              padding: 14,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: theme.border,
-              backgroundColor: theme.card,
-            }}
-            onPress={() => {
-              setDatePickerTarget('execute');
-              setPickerDate(new Date(targetDate));
-              setShowDatePicker(true);
-            }}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <Ionicons name="calendar-outline" size={20} color={theme.primary} />
-                <PaperText variant="titleMedium" style={{ color: theme.textPrimary, fontWeight: '700' }}>
-                  {formatDateString(targetDate)}
-                </PaperText>
-              </View>
-              <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ color: theme.primary, fontWeight: '800', fontSize: 11 }}>
-                Change Date
-              </Chip>
-            </View>
-          </TouchableRipple>
-        </View>
+        <SelectField
+          label="Target date"
+          value={formatDateString(targetDate)}
+          icon="calendar-outline"
+          onPress={() => {
+            setDatePickerTarget('execute');
+            setPickerDate(new Date(targetDate));
+            setShowDatePicker(true);
+          }}
+        />
+      </Panel>
 
-        {/* Swipe Button */}
-        <View style={{ marginTop: 8 }}>
-          <SwipeButton
-            styles={styles}
-            theme={theme}
-            label={editingMtfOrderId ? 'Swipe to update order' : 'Swipe to place order'}
-            loadingLabel={editingMtfOrderId ? 'Updating order…' : 'Placing order…'}
-            icon={editingMtfOrderId ? 'checkmark-done' : 'flash'}
-            loading={executingTrade}
-            onSwipeSuccess={handleExecuteOrder}
-          />
-        </View>
-      </Card.Content>
+      {/* Ticket summary — the numbers worth re-reading before committing. */}
+      <SectionHeader title="Summary" />
+      <Panel padded={false}>
+        <SummaryLine theme={theme} label="Broker" value={tradeBroker} />
+        <SummaryLine theme={theme} label="Symbol" value={tradeSymbol.toUpperCase() || '—'} />
+        <SummaryLine theme={theme} label="Quantity" value={tradeQty || '0'} mono />
+        <SummaryLine
+          theme={theme}
+          label="Strategy"
+          value={
+            tradeStrategyName === 'TARGET PROFIT' && tradeTargetPercentage
+              ? `TARGET +${tradeTargetPercentage}%`
+              : tradeStrategyName
+          }
+        />
+        <SummaryLine theme={theme} label="Executes on" value={formatDateString(targetDate)} last />
+      </Panel>
 
       <StrategyDropdownModal
         theme={theme}
@@ -264,6 +218,90 @@ export default function ExecuteTab({
         onSelect={(name) => setTradeStrategyName(name as ExecuteStrategy)}
         onClose={() => setShowStrategyDropdown(false)}
       />
-    </Card>
+    </View>
   );
 }
+
+/** Pinned commit control, rendered by the parent into the screen's action bar. */
+export function ExecuteAction({
+  theme,
+  editingMtfOrderId,
+  executingTrade,
+  handleExecuteOrder,
+}: {
+  readonly theme: any;
+  readonly editingMtfOrderId: string | null;
+  readonly executingTrade: boolean;
+  readonly handleExecuteOrder: () => void;
+}) {
+  return (
+    <SwipeButton
+      theme={theme}
+      label={editingMtfOrderId ? 'Swipe to update order' : 'Swipe to place order'}
+      loadingLabel={editingMtfOrderId ? 'Updating order…' : 'Placing order…'}
+      icon={editingMtfOrderId ? 'checkmark-done' : 'flash'}
+      loading={executingTrade}
+      onSwipeSuccess={handleExecuteOrder}
+    />
+  );
+}
+
+function SummaryLine({
+  theme,
+  label,
+  value,
+  mono = false,
+  last = false,
+}: {
+  readonly theme: any;
+  readonly label: string;
+  readonly value: string;
+  readonly mono?: boolean;
+  readonly last?: boolean;
+}) {
+  return (
+    <View
+      style={[
+        styles.summaryLine,
+        { borderBottomColor: theme.divider, borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth },
+      ]}
+    >
+      <Text style={{ fontSize: 13, color: theme.textSecondary }}>{label}</Text>
+      <Text
+        numberOfLines={1}
+        style={[mono && numeric, { fontSize: 13.5, fontWeight: '700', color: theme.textPrimary, marginLeft: space.md }]}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  suggestions: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    marginTop: space.xs,
+    maxHeight: 220,
+    borderRadius: radius.sm,
+    // Suggestions genuinely float above the form, so this is one of the few
+    // places elevation is warranted.
+    elevation: 6,
+  },
+  suggestion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: space.md,
+    paddingVertical: space.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  summaryLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+  },
+});

@@ -1,35 +1,30 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { View } from 'react-native';
-import { Card, Text as PaperText, ActivityIndicator, Chip, Surface, Divider } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
+import { Text, TouchableRipple } from 'react-native-paper';
 import { strategyAPI } from '../../services/api';
-import { useScreenerStyles } from '../../theme/screenerStyles';
-import { useAdaptiveLayout } from '../../theme/layout';
 import { useTheme } from '../../context/ThemeContext';
-import { getSafeBottomPadding } from '../../theme/safeArea';
-import StrategyModal from '../../components/screener/StrategyModal';
+import { numeric, size, space } from '../../theme/tokens';
+import StrategyChips from '../../components/screener/StrategyChips';
 import ScreenerResults from '../../components/screener/ScreenerResults';
+import Screen from '../../components/ui/Screen';
+import TopBar from '../../components/ui/TopBar';
+import { Skeleton, Tag } from '../../components/ui/Feedback';
 
 const STRATEGY_ICONS: Record<string, { iconName: any; badgeText: string }> = {
   RSI15MIN: { iconName: 'flash-outline', badgeText: '15 MIN SCAN' },
-  DAILY: { iconName: 'calendar-outline', badgeText: 'DAILY SCAN' },
+  DAILY: { iconName: 'today-outline', badgeText: 'DAILY SCAN' },
   SWING: { iconName: 'trending-up-outline', badgeText: 'SWING SCAN' },
-  WEEKLY: { iconName: 'time-outline', badgeText: 'WEEKLY SCAN' },
-  MONTHLY: { iconName: 'analytics-outline', badgeText: 'MONTHLY SCAN' },
+  WEEKLY: { iconName: 'calendar-outline', badgeText: 'WEEKLY SCAN' },
+  MONTHLY: { iconName: 'stats-chart-outline', badgeText: 'MONTHLY SCAN' },
 };
 
 export default function ScreenerScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const layout = useAdaptiveLayout(insets);
-  const { isDarkMode, theme } = useTheme();
-  const styles = useScreenerStyles(isDarkMode);
+  const { theme } = useTheme();
 
   const [strategies, setStrategies] = useState<any[]>([]);
   const [selectedStrategy, setSelectedStrategy] = useState<string | null>(null);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
 
   const [strategiesLoading, setStrategiesLoading] = useState(true);
   const [strategiesError, setStrategiesError] = useState<string | null>(null);
@@ -63,7 +58,6 @@ export default function ScreenerScreen() {
 
   const handleStrategyPress = useCallback(async (strategyName: string) => {
     setSelectedStrategy(strategyName);
-    setDropdownVisible(false);
     try {
       setScanLoading(true);
       setScanError(null);
@@ -86,176 +80,139 @@ export default function ScreenerScreen() {
     return { iconName: 'analytics-outline', badgeText: 'STRATEGY SCAN' };
   }, []);
 
-  const renderStockResultItem = useCallback(({ item }: { item: any }) => {
-    const symbol = item.symbol || item.nsecode || item.nseCode || item.stockName || item.name || 'N/A';
-    const companyName = item.name || item.companyName || item.stockDescription || '';
+  const renderStockResultItem = useCallback(
+    ({ item }: { item: any }) => {
+      const symbol = item.symbol || item.nsecode || item.nseCode || item.stockName || item.name || 'N/A';
+      const companyName = item.name || item.companyName || item.stockDescription || '';
 
-    const rawPrice = item.ltp || item.close || item.lastPrice || item.price;
-    let priceText = '—';
-    if (typeof rawPrice === 'number') {
-      priceText = `₹${rawPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    } else if (rawPrice) {
-      priceText = `₹${rawPrice}`;
-    }
+      const rawPrice = item.ltp || item.close || item.lastPrice || item.price;
+      let priceText = '—';
+      if (typeof rawPrice === 'number') {
+        priceText = rawPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      } else if (rawPrice) {
+        priceText = String(rawPrice);
+      }
 
-    const rawMargin = item.margin || item.leverage || item.marginAllowed || '';
-    let marginStr = rawMargin.toString().trim();
-    const parsedMargin = Number.parseFloat(marginStr);
-    if (Number.isNaN(parsedMargin) || parsedMargin <= 0) {
-      marginStr = '1x';
-    } else {
-      const suffix = marginStr.endsWith('%') ? '%' : 'x';
-      marginStr = `${parsedMargin.toFixed(2)}${suffix}`;
-    }
+      const rawMargin = item.margin || item.leverage || item.marginAllowed || '';
+      let marginStr = rawMargin.toString().trim();
+      const parsedMargin = Number.parseFloat(marginStr);
+      if (Number.isNaN(parsedMargin) || parsedMargin <= 0) {
+        marginStr = '1x';
+      } else {
+        const suffix = marginStr.endsWith('%') ? '%' : 'x';
+        marginStr = `${parsedMargin.toFixed(2)}${suffix}`;
+      }
 
-    return (
-      <Card
-        style={{ backgroundColor: theme.card, borderRadius: 16, marginBottom: 8, elevation: 2 }}
-        onPress={() => {
-          if (symbol !== 'N/A') {
-            router.push(`/chartPage?symbol=${encodeURIComponent(symbol)}`);
-          }
-        }}
-      >
-        <Card.Content style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View style={{ flex: 1, marginRight: 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+      return (
+        <TouchableRipple
+          rippleColor={theme.ripple}
+          onPress={() => {
+            if (symbol !== 'N/A') {
+              router.push(`/chartPage?symbol=${encodeURIComponent(symbol)}`);
+            }
+          }}
+        >
+          <View style={[styles.quoteRow, { borderBottomColor: theme.divider }]}>
+            <View style={styles.quoteLeft}>
+              <Text numberOfLines={1} style={{ fontSize: 14.5, fontWeight: '700', color: theme.textPrimary }}>
                 {symbol}
-              </PaperText>
-              <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ color: theme.primary, fontSize: 10, fontWeight: '800' }}>
-                {marginStr.toUpperCase()}
-              </Chip>
+              </Text>
+              {companyName ? (
+                <Text numberOfLines={1} style={{ fontSize: 11.5, color: theme.textSecondary, marginTop: 2 }}>
+                  {companyName}
+                </Text>
+              ) : null}
             </View>
-            {companyName ? (
-              <PaperText variant="bodySmall" style={{ color: theme.textSecondary, marginTop: 2 }} numberOfLines={1}>
-                {companyName}
-              </PaperText>
-            ) : null}
-          </View>
 
-          <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
-            {priceText}
-          </PaperText>
-        </Card.Content>
-      </Card>
-    );
-  }, [theme, router]);
+            <View style={styles.quoteRight}>
+              <Text style={[numeric, { fontSize: 14.5, fontWeight: '700', color: theme.textPrimary }]}>
+                {priceText}
+              </Text>
+              <Tag label={marginStr.toUpperCase()} tone="accent" style={{ marginTop: 3 }} />
+            </View>
+          </View>
+        </TouchableRipple>
+      );
+    },
+    [theme, router]
+  );
 
   const renderStockSkeletons = () => (
-    <View style={styles.skeletonRow}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Card key={i} style={{ backgroundColor: theme.card, borderRadius: 16, marginBottom: 8, height: 60, opacity: 0.6 }}>
-          <Card.Content style={{ justifyContent: 'center', flex: 1 }}>
-            <View style={{ width: '40%', height: 16, backgroundColor: theme.borderLight, borderRadius: 4 }} />
-          </Card.Content>
-        </Card>
+    <View>
+      {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+        <View key={i} style={[styles.quoteRow, { borderBottomColor: theme.divider }]}>
+          <View style={styles.quoteLeft}>
+            <Skeleton width="45%" height={13} />
+            <View style={{ height: 6 }} />
+            <Skeleton width="70%" height={10} />
+          </View>
+          <Skeleton width={62} height={13} />
+        </View>
       ))}
     </View>
   );
 
-  const activeMetadata = selectedStrategy ? getStrategyMetadata(selectedStrategy) : null;
-
   return (
-    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
-      <View style={[styles.container, layout.centeredContent, { paddingHorizontal: layout.horizontalPadding }]}>
-        {/* Title */}
-        <View style={{ marginVertical: 8 }}>
-          <PaperText variant="headlineMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
-            Screener
-          </PaperText>
-          <PaperText variant="bodyMedium" style={{ color: theme.textSecondary, marginTop: 4 }}>
-            Scan markets with automated quantitative strategies
-          </PaperText>
-        </View>
-
-        {/* Strategy Selector Container + Floating Dropdown Overlay */}
-        <View style={{ zIndex: 1000, marginVertical: 12 }}>
-          {(() => {
-            if (strategiesLoading) {
-              return (
-                <Card style={{ backgroundColor: theme.card, borderRadius: 16, padding: 12 }}>
-                  <Card.Content style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <ActivityIndicator size="small" color={theme.primary} />
-                    <PaperText variant="bodyMedium" style={{ color: theme.textSecondary }}>Loading strategies...</PaperText>
-                  </Card.Content>
-                </Card>
-              );
-            }
-            if (strategiesError) {
-              return (
-                <Card style={{ backgroundColor: theme.card, borderRadius: 16, padding: 12 }} onPress={fetchStrategies}>
-                  <Card.Content style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <PaperText variant="bodyMedium" style={{ color: theme.danger }}>{strategiesError}</PaperText>
-                    <Ionicons name="refresh" size={16} color={theme.danger} />
-                  </Card.Content>
-                </Card>
-              );
-            }
-            return (
-              <View style={{ zIndex: 1000, position: 'relative' }}>
-                <Card
-                  style={{
-                    backgroundColor: theme.card,
-                    borderRadius: 16,
-                    borderColor: selectedStrategy ? theme.primary : theme.border,
-                    borderWidth: 1,
-                    elevation: 2,
-                  }}
-                  onPress={() => setDropdownVisible(!dropdownVisible)}
-                >
-                  <Card.Content style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                      <Surface style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: theme.primaryBackground, alignItems: 'center', justifyContent: 'center' }} elevation={0}>
-                        <Ionicons name={activeMetadata ? activeMetadata.iconName : "funnel-outline"} size={16} color={theme.primary} />
-                      </Surface>
-                      {selectedStrategy && activeMetadata ? (
-                        <View style={{ flex: 1 }}>
-                          <PaperText variant="titleSmall" style={{ color: theme.textPrimary, fontWeight: '800' }} numberOfLines={1}>
-                            {selectedStrategy}
-                          </PaperText>
-                        </View>
-                      ) : (
-                        <PaperText variant="bodyMedium" style={{ color: theme.textSecondary, fontWeight: '600' }}>
-                          Select a scanning strategy...
-                        </PaperText>
-                      )}
-                    </View>
-                    <Ionicons name={dropdownVisible ? "chevron-up" : "chevron-down"} size={18} color={theme.iconMuted} />
-                  </Card.Content>
-                </Card>
-
-                {/* Attached Inline Dropdown Menu */}
-                <StrategyModal
-                  theme={theme}
-                  dropdownVisible={dropdownVisible}
-                  setDropdownVisible={setDropdownVisible}
-                  strategies={strategies}
-                  selectedStrategy={selectedStrategy}
-                  handleStrategyPress={handleStrategyPress}
-                  getStrategyMetadata={getStrategyMetadata}
-                />
-              </View>
-            );
-          })()}
-        </View>
-
-        <Divider style={{ backgroundColor: theme.border, marginVertical: 12 }} />
-
-        {/* Scan Results Area */}
-        <ScreenerResults
-          styles={styles}
-          theme={theme}
-          layout={layout}
-          selectedStrategy={selectedStrategy}
-          scanLoading={scanLoading}
-          scanError={scanError}
-          scanResults={scanResults}
-          renderStockSkeletons={renderStockSkeletons}
-          handleStrategyPress={handleStrategyPress}
-          renderStockResultItem={renderStockResultItem}
+    <Screen
+      scroll={false}
+      gutter={false}
+      header={
+        <TopBar
+          title="Screener"
+          subtitle={selectedStrategy ? `${scanResults.length} matches` : 'Quantitative market scans'}
+          actions={[
+            {
+              icon: 'refresh-outline',
+              onPress: () => (selectedStrategy ? handleStrategyPress(selectedStrategy) : fetchStrategies()),
+              accessibilityLabel: 'Rerun scan',
+            },
+          ]}
+          bottom={
+            <StrategyChips
+              strategies={strategies}
+              selectedStrategy={selectedStrategy}
+              onSelect={handleStrategyPress}
+              loading={strategiesLoading}
+              error={strategiesError}
+              onRetry={fetchStrategies}
+              getStrategyMetadata={getStrategyMetadata}
+            />
+          }
         />
-      </View>
-    </View>
+      }
+    >
+      <ScreenerResults
+        theme={theme}
+        layout={null}
+        selectedStrategy={selectedStrategy}
+        scanLoading={scanLoading}
+        scanError={scanError}
+        scanResults={scanResults}
+        renderStockSkeletons={renderStockSkeletons}
+        handleStrategyPress={handleStrategyPress}
+        renderStockResultItem={renderStockResultItem}
+        bottomInset={space.xxl}
+      />
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  quoteRow: {
+    minHeight: size.row,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  quoteLeft: {
+    flex: 1,
+    minWidth: 0,
+    marginRight: space.md,
+  },
+  quoteRight: {
+    alignItems: 'flex-end',
+  },
+});

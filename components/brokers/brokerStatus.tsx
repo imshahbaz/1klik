@@ -1,5 +1,6 @@
 import React from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { View } from 'react-native';
+import { ActivityIndicator, Text } from 'react-native-paper';
 
 export interface BrokerStatusDisplay {
   color: string;
@@ -17,34 +18,36 @@ export function getBrokerStatusDisplay(
   error: string | null,
   user: any,
   theme: any,
-  styles: any
+  _styles?: any
 ): BrokerStatusDisplay {
-  let color = theme.success;
-  if (loading) color = theme.primary;
-  else if (error) color = theme.danger;
+  let color = theme.up;
+  if (loading) color = theme.warningText;
+  else if (error) color = theme.down;
 
   let text: BrokerStatusDisplay['text'] = 'CONNECTED';
   if (loading) text = 'LOADING';
   else if (error) text = 'INACTIVE';
 
+  const title = { fontSize: 15, fontWeight: '700' as const, color: theme.textPrimary };
+
   let content: React.ReactNode;
   if (loading) {
     content = (
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <ActivityIndicator size="small" color={theme.primary} />
-        <Text style={styles.connectionTitle}>Connecting...</Text>
+        <ActivityIndicator size={14} color={theme.primary} />
+        <Text style={title}>Connecting…</Text>
       </View>
     );
   } else if (error) {
     content = (
-      <Text style={[styles.connectionTitle, { color: theme.danger }]} numberOfLines={1}>
-        Connection Inactive
+      <Text style={[title, { color: theme.down }]} numberOfLines={1}>
+        Session inactive
       </Text>
     );
   } else {
     content = (
-      <Text style={styles.connectionTitle} numberOfLines={1}>
-        {typeof user === 'string' ? 'Active Session' : (user?.userName || user?.name || 'Active Session')}
+      <Text style={title} numberOfLines={1}>
+        {typeof user === 'string' ? 'Active session' : user?.userName || user?.name || 'Active session'}
       </Text>
     );
   }

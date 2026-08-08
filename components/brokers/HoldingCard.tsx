@@ -1,9 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity } from 'react-native';
-import { Card, Text as PaperText, Chip, Button as PaperButton, Divider, Surface } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Text, TouchableRipple } from 'react-native-paper';
 import { buyCharges, sellCharges, mtfInterest, breakEvenSellAmount } from '../../utils/charges';
 import type { Holding } from '../../services/api/types';
+import { Tag } from '../ui/Feedback';
+import { Stat } from '../ui/Price';
+import Button from '../ui/Button';
+import { numeric, radius, space } from '../../theme/tokens';
 
 interface HoldingCardProps {
   readonly holding: Holding;
@@ -18,6 +22,11 @@ interface HoldingCardProps {
 const formatINR = (value: number) =>
   value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+/**
+ * A position in the portfolio table. Collapsed it shows the four numbers that
+ * matter — quantity, average, last price, P&L — on two lines; expanding reveals
+ * the cost breakdown and per-lot entries.
+ */
 function HoldingCardBase({
   holding,
   theme,
@@ -35,7 +44,7 @@ function HoldingCardBase({
     }));
 
     const totalQty = details.reduce((acc: number, detail: any) => acc + detail.quantity, 0);
-    const totalCost = details.reduce((acc: number, detail: any) => acc + (detail.quantity * detail.price), 0);
+    const totalCost = details.reduce((acc: number, detail: any) => acc + detail.quantity * detail.price, 0);
     const avgPrice = totalQty > 0 ? totalCost / totalQty : 0;
 
     const ltp = Number(holding.ltp) || 0;
@@ -108,132 +117,195 @@ function HoldingCardBase({
   } = metrics;
 
   const isProfit = pnl >= 0;
+  const tint = isProfit ? theme.up : theme.down;
 
   return (
-    <Card
-      style={{
-        backgroundColor: theme.card,
-        borderRadius: 20,
-        marginBottom: 12,
-        borderLeftWidth: 5,
-        borderLeftColor: isProfit ? theme.success : theme.danger,
-        elevation: 2,
-      }}
-      onPress={() => onToggle(holding.symbol)}
-    >
-      <Card.Content style={{ gap: 12 }}>
-        {/* Header */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+    <View style={[styles.wrap, { borderBottomColor: theme.divider }]}>
+      <TouchableRipple onPress={() => onToggle(holding.symbol)} rippleColor={theme.ripple}>
+        <View style={styles.summary}>
+          <View style={styles.summaryLeft}>
+            <View style={styles.symbolRow}>
+              <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '700', color: theme.textPrimary }}>
                 {holding.symbol}
-              </PaperText>
-              {leverage > 1 && (
-                <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ color: theme.primary, fontSize: 10, fontWeight: '800' }}>
-                  {leverage}x MTF
-                </Chip>
-              )}
+              </Text>
+              {leverage > 1 ? <Tag label={`${leverage}× MTF`} tone="accent" /> : null}
             </View>
-            <PaperText variant="bodySmall" style={{ color: theme.textSecondary, marginTop: 2 }}>
-              {totalQty} Shares
-            </PaperText>
+            <Text style={[numeric, { fontSize: 12, color: theme.textSecondary, marginTop: 3 }]}>
+              {totalQty} qty · avg ₹{formatINR(avgPrice)}
+            </Text>
           </View>
 
-          <View style={{ alignItems: 'flex-end' }}>
-            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+          <View style={styles.summaryRight}>
+            <Text style={[numeric, { fontSize: 15, fontWeight: '700', color: theme.textPrimary }]}>
               ₹{formatINR(ltp)}
-            </PaperText>
-            <PaperText variant="bodySmall" style={{ color: isProfit ? theme.success : theme.danger, fontWeight: '700', marginTop: 2 }}>
-              {isProfit ? '+' : ''}₹{formatINR(pnl)} ({pnlPercent.toFixed(2)}%)
-            </PaperText>
+            </Text>
+            <Text style={[numeric, { fontSize: 12, fontWeight: '700', color: tint, marginTop: 3 }]}>
+              {isProfit ? '+' : '−'}₹{formatINR(Math.abs(pnl))} ({pnlPercent.toFixed(2)}%)
+            </Text>
           </View>
+
+          <Ionicons
+            name={isExpanded ? 'chevron-up' : 'chevron-down'}
+            size={16}
+            color={theme.textTertiary}
+            style={{ marginLeft: space.sm }}
+          />
         </View>
+      </TouchableRipple>
 
-        {isExpanded && (
-          <View style={{ gap: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.borderLight }}>
-            <Surface style={{ flexDirection: 'row', padding: 12, borderRadius: 14, backgroundColor: theme.borderLight }} elevation={0}>
-              <View style={{ flex: 1 }}>
-                <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '700' }}>AVG. PRICE</PaperText>
-                <PaperText variant="titleSmall" style={{ color: theme.textPrimary, fontWeight: '800', marginTop: 2 }}>₹{formatINR(avgPrice)}</PaperText>
-              </View>
-              <Divider style={{ width: 1, height: '100%', marginHorizontal: 12 }} />
-              <View style={{ flex: 1 }}>
-                <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '700' }}>INVESTED MARGIN</PaperText>
-                <PaperText variant="titleSmall" style={{ color: theme.textPrimary, fontWeight: '800', marginTop: 2 }}>₹{formatINR(totalMarginUsed)}</PaperText>
-              </View>
-            </Surface>
-
-            {/* Break-even box */}
-            <Surface style={{ padding: 12, borderRadius: 14, backgroundColor: theme.warningBackground, gap: 6 }} elevation={0}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700' }}>Break-Even Target</PaperText>
-                <PaperText variant="titleMedium" style={{ color: theme.primary, fontWeight: '900' }}>₹{formatINR(breakEvenPrice)}</PaperText>
-              </View>
-              {totalBuyCharges > 0 && (
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <PaperText variant="bodySmall" style={{ color: theme.textSecondary }}>Past Buy Charges</PaperText>
-                  <PaperText variant="bodySmall" style={{ color: theme.danger, fontWeight: '700' }}>- ₹{formatINR(totalBuyCharges)}</PaperText>
-                </View>
-              )}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <PaperText variant="bodySmall" style={{ color: theme.textSecondary }}>Est. Sell Charges</PaperText>
-                <PaperText variant="bodySmall" style={{ color: theme.danger, fontWeight: '700' }}>- ₹{formatINR(estSellCharges)}</PaperText>
-              </View>
-              {totalInterest > 0 && (
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <PaperText variant="bodySmall" style={{ color: theme.warningText, fontWeight: '700' }}>Accrued MTF Interest</PaperText>
-                  <PaperText variant="bodySmall" style={{ color: theme.warningText, fontWeight: '800' }}>- ₹{formatINR(totalInterest)}</PaperText>
-                </View>
-              )}
-            </Surface>
-
-            {/* Holding Breakdown */}
-            <View>
-              <PaperText variant="labelMedium" style={{ color: theme.textSecondary, fontWeight: '800', marginBottom: 8 }}>
-                HOLDING BREAKDOWN
-              </PaperText>
-              {detailsWithInterest.map((detail: any, dIndex: number) => {
-                const buyDateStr = detail.buyDate ? new Date(detail.buyDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : 'N/A';
-                return (
-                  <View key={detail.id || dIndex} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: theme.borderLight }}>
-                    <View style={{ flex: 1 }}>
-                      <PaperText variant="bodySmall" style={{ color: theme.textSecondary }}>
-                        {buyDateStr} {detail.days > 0 ? `(${detail.days}d)` : ''}
-                      </PaperText>
-                      <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700' }}>
-                        {detail.quantity} @ ₹{detail.price?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                      </PaperText>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                      <TouchableOpacity onPress={() => onEditDetail(holding.symbol, detail)}>
-                        <Ionicons name="pencil" size={18} color={theme.textSecondary} />
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => onDeleteDetail(holding.symbol, detail.id)}>
-                        <Ionicons name="trash-outline" size={18} color={theme.danger} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-
-            <PaperButton
-              mode="contained"
-              buttonColor={theme.danger}
-              onPress={() => onDeleteHolding(holding.symbol)}
-              icon={({ size }) => <Ionicons name="trash-outline" size={size || 16} color="#ffffff" />}
-              style={{ borderRadius: 12, marginTop: 8 }}
-            >
-              Delete Holding
-            </PaperButton>
+      {isExpanded && (
+        <View style={[styles.detail, { borderTopColor: theme.divider }]}>
+          <View style={[styles.metrics, { backgroundColor: theme.surfaceAlt }]}>
+            <Stat label="AVG PRICE" value={`₹${formatINR(avgPrice)}`} />
+            <Stat label="MARGIN USED" value={`₹${formatINR(totalMarginUsed)}`} align="center" />
+            <Stat label="BREAK-EVEN" value={`₹${formatINR(breakEvenPrice)}`} align="flex-end" tint={theme.primary} />
           </View>
-        )}
-      </Card.Content>
-    </Card>
+
+          {/* Everything that has to be earned back before the position is flat. */}
+          <View style={{ gap: 6 }}>
+            {totalBuyCharges > 0 ? (
+              <CostLine theme={theme} label="Buy charges paid" value={totalBuyCharges} />
+            ) : null}
+            <CostLine theme={theme} label="Est. sell charges" value={estSellCharges} />
+            {totalInterest > 0 ? (
+              <CostLine theme={theme} label="Accrued MTF interest" value={totalInterest} warn />
+            ) : null}
+          </View>
+
+          <View>
+            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 0.8, color: theme.textTertiary }}>
+              LOTS
+            </Text>
+            {detailsWithInterest.map((detail: any, dIndex: number) => {
+              const buyDateStr = detail.buyDate
+                ? new Date(detail.buyDate).toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: '2-digit',
+                  })
+                : 'N/A';
+              return (
+                <View
+                  key={detail.id || dIndex}
+                  style={[styles.lot, { borderBottomColor: theme.divider }]}
+                >
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={[numeric, { fontSize: 13.5, fontWeight: '600', color: theme.textPrimary }]}>
+                      {detail.quantity} @ ₹{formatINR(detail.price || 0)}
+                    </Text>
+                    <Text style={{ fontSize: 11.5, color: theme.textSecondary, marginTop: 2 }}>
+                      {buyDateStr}
+                      {detail.days > 0 ? ` · ${detail.days}d held` : ''}
+                    </Text>
+                  </View>
+
+                  <TouchableRipple
+                    borderless
+                    rippleColor={theme.ripple}
+                    onPress={() => onEditDetail(holding.symbol, detail)}
+                    style={styles.lotAction}
+                    accessibilityLabel="Edit lot"
+                  >
+                    <Ionicons name="pencil" size={16} color={theme.textSecondary} />
+                  </TouchableRipple>
+                  <TouchableRipple
+                    borderless
+                    rippleColor={theme.ripple}
+                    onPress={() => onDeleteDetail(holding.symbol, detail.id)}
+                    style={styles.lotAction}
+                    accessibilityLabel="Delete lot"
+                  >
+                    <Ionicons name="trash-outline" size={16} color={theme.danger} />
+                  </TouchableRipple>
+                </View>
+              );
+            })}
+          </View>
+
+          <Button
+            label="Delete holding"
+            variant="outlined"
+            icon="trash-outline"
+            compact
+            onPress={() => onDeleteHolding(holding.symbol)}
+          />
+        </View>
+      )}
+    </View>
   );
 }
+
+function CostLine({
+  theme,
+  label,
+  value,
+  warn = false,
+}: {
+  readonly theme: any;
+  readonly label: string;
+  readonly value: number;
+  readonly warn?: boolean;
+}) {
+  return (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+      <Text style={{ fontSize: 12.5, color: warn ? theme.warningText : theme.textSecondary }}>{label}</Text>
+      <Text style={[numeric, { fontSize: 12.5, fontWeight: '700', color: warn ? theme.warningText : theme.down }]}>
+        −₹{formatINR(value)}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  summary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+  },
+  summaryLeft: {
+    flex: 1,
+    minWidth: 0,
+    marginRight: space.md,
+  },
+  summaryRight: {
+    alignItems: 'flex-end',
+  },
+  symbolRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+  },
+  detail: {
+    paddingHorizontal: space.lg,
+    paddingTop: space.md,
+    paddingBottom: space.lg,
+    gap: space.lg,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  metrics: {
+    flexDirection: 'row',
+    padding: space.md,
+    borderRadius: radius.sm,
+  },
+  lot: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: space.sm,
+    marginTop: space.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  lotAction: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 const HoldingCard = React.memo(HoldingCardBase);
 export default HoldingCard;

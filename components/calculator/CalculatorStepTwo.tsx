@@ -1,7 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
-import { Card, Text as PaperText, TextInput as PaperTextInput, Button as PaperButton, SegmentedButtons, Chip, Surface, HelperText } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+import Button from '../ui/Button';
+import { Field, SelectField, ToggleGroup } from '../ui/Field';
+import { Tag } from '../ui/Feedback';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { radius, space } from '../../theme/tokens';
 
 interface CalculatorStepTwoProps {
   readonly styles?: any;
@@ -22,6 +26,7 @@ interface CalculatorStepTwoProps {
   readonly calculateReturns: () => void;
 }
 
+/** Step 2: how long the position is held and how large it is. */
 export default function CalculatorStepTwo({
   theme,
   errors,
@@ -40,140 +45,82 @@ export default function CalculatorStepTwo({
   calculateReturns,
 }: CalculatorStepTwoProps) {
   return (
-    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 0, borderWidth: 1, borderColor: theme.borderLight }}>
-      <Card.Content>
-        {/* Date Selectors */}
-        <View style={{ marginBottom: 16 }}>
-          <TouchableOpacity
-            onPress={() => {
-              setDatePickerTarget('entry');
-              if (entryDate) setPickerDate(new Date(entryDate));
-              setShowDatePicker(true);
-            }}
-            activeOpacity={0.8}
-          >
-            <View pointerEvents="none">
-              <PaperTextInput
-                mode="outlined"
-                label="Entry Date"
-                value={entryDate || 'YYYY-MM-DD'}
-                editable={false}
-                textColor={theme.textPrimary}
-                outlineColor={theme.border}
-                left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="calendar-outline" size={size || 18} color={color || theme.iconMuted} />} />}
-                style={{ backgroundColor: theme.card }}
-              />
-            </View>
-          </TouchableOpacity>
+    <View>
+      <SectionHeader title="Holding period" />
+      <Panel style={{ gap: space.lg }}>
+        <SelectField
+          label="Entry date"
+          value={entryDate}
+          placeholder="YYYY-MM-DD"
+          icon="calendar-outline"
+          onPress={() => {
+            setDatePickerTarget('entry');
+            if (entryDate) setPickerDate(new Date(entryDate));
+            setShowDatePicker(true);
+          }}
+        />
+
+        <SelectField
+          label="Exit date (optional)"
+          value={exitDate}
+          placeholder="Select exit date"
+          icon="calendar-outline"
+          onPress={() => {
+            setDatePickerTarget('exit');
+            if (exitDate) setPickerDate(new Date(exitDate));
+            else if (entryDate) setPickerDate(new Date(entryDate));
+            setShowDatePicker(true);
+          }}
+        />
+
+        {/* Days held drives the MTF interest accrual, so it's surfaced live. */}
+        <View style={[styles.days, { backgroundColor: theme.surfaceAlt }]}>
+          <Text style={{ fontSize: 13, color: theme.textSecondary }}>Days held</Text>
+          <Tag label={`${daysHeld} ${daysHeld === 1 ? 'DAY' : 'DAYS'}`} tone="accent" />
         </View>
+      </Panel>
 
-        <View style={{ marginBottom: 16 }}>
-          <TouchableOpacity
-            onPress={() => {
-              setDatePickerTarget('exit');
-              if (exitDate) setPickerDate(new Date(exitDate));
-              else if (entryDate) setPickerDate(new Date(entryDate));
-              setShowDatePicker(true);
-            }}
-            activeOpacity={0.8}
-          >
-            <View pointerEvents="none">
-              <PaperTextInput
-                mode="outlined"
-                label="Exit Date (Optional)"
-                value={exitDate || 'Select Exit Date'}
-                editable={false}
-                textColor={exitDate ? theme.textPrimary : theme.textSecondary}
-                outlineColor={theme.border}
-                left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="calendar-outline" size={size || 18} color={color || theme.iconMuted} />} />}
-                style={{ backgroundColor: theme.card }}
-              />
-            </View>
-          </TouchableOpacity>
-        </View>
+      <SectionHeader title="Position size" />
+      <Panel style={{ gap: space.lg }}>
+        <ToggleGroup
+          value={quantityType}
+          options={[
+            { value: 'quantity', label: 'BY SHARES' },
+            { value: 'investment', label: 'BY CAPITAL' },
+          ]}
+          onChange={(val) => setQuantityType(val as 'quantity' | 'investment')}
+        />
 
-        {/* Days held preview */}
-        <Surface style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderRadius: 14, backgroundColor: theme.primaryBackground, marginBottom: 20 }} elevation={0}>
-          <PaperText variant="bodyMedium" style={{ color: theme.textSecondary, fontWeight: '700' }}>
-            Calculated Holding Days
-          </PaperText>
-          <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ fontSize: 13, fontWeight: '800', color: theme.primary }}>
-            {daysHeld} Days
-          </Chip>
-        </Surface>
+        <Field
+          label={quantityType === 'quantity' ? 'Number of shares' : 'Capital to deploy'}
+          value={quantity}
+          onChangeText={(t) => {
+            setQuantity(t.replace(/[^0-9.]/g, ''));
+            setErrors((prev) => ({ ...prev, quantity: '' }));
+          }}
+          keyboardType={quantityType === 'quantity' ? 'number-pad' : 'numeric'}
+          placeholder={quantityType === 'quantity' ? '10' : '50000'}
+          prefix={quantityType === 'investment' ? '₹' : undefined}
+          suffix={quantityType === 'quantity' ? 'qty' : undefined}
+          error={errors.quantity}
+          numericFace
+        />
+      </Panel>
 
-        {/* Quantity / Investment Switcher */}
-        <View style={{ marginBottom: 20 }}>
-          <PaperText variant="labelMedium" style={{ color: theme.textSecondary, marginBottom: 8, fontWeight: '700' }}>
-            ENTRY METHOD
-          </PaperText>
-          <SegmentedButtons
-            value={quantityType}
-            onValueChange={(val) => setQuantityType(val as 'quantity' | 'investment')}
-            buttons={[
-              {
-                value: 'quantity',
-                label: 'By Shares',
-                style: { backgroundColor: quantityType === 'quantity' ? theme.primaryBackground : 'transparent' },
-                labelStyle: { color: quantityType === 'quantity' ? theme.primary : theme.textSecondary, fontWeight: '700' },
-              },
-              {
-                value: 'investment',
-                label: 'By Capital',
-                style: { backgroundColor: quantityType === 'investment' ? theme.primaryBackground : 'transparent' },
-                labelStyle: { color: quantityType === 'investment' ? theme.primary : theme.textSecondary, fontWeight: '700' },
-              },
-            ]}
-            style={{ marginBottom: 12 }}
-          />
-
-          <PaperTextInput
-            mode="outlined"
-            label={quantityType === 'quantity' ? "Number of Shares" : "Total Capital Amount (₹)"}
-            keyboardType={quantityType === 'quantity' ? "number-pad" : "numeric"}
-            placeholder={quantityType === 'quantity' ? "10" : "50000"}
-            placeholderTextColor={theme.placeholder}
-            value={quantity}
-            onChangeText={(t) => {
-              const clean = t.replace(/[^0-9.]/g, '');
-              setQuantity(clean);
-              setErrors((prev) => ({ ...prev, quantity: '' }));
-            }}
-            textColor={theme.textPrimary}
-            outlineColor={errors.quantity ? theme.danger : theme.border}
-            activeOutlineColor={theme.primary}
-            left={quantityType === 'investment' ? <PaperTextInput.Affix text="₹" textStyle={{ color: theme.textSecondary }} /> : undefined}
-            style={{ backgroundColor: theme.card }}
-          />
-          {errors.quantity ? <HelperText type="error" visible={true}>{errors.quantity}</HelperText> : null}
-        </View>
-
-        {/* Buttons */}
-        <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
-          <PaperButton
-            mode="outlined"
-            onPress={() => setActiveStep(1)}
-            textColor={theme.textPrimary}
-            style={{ flex: 1, borderRadius: 14, borderColor: theme.border }}
-            contentStyle={{ height: 50 }}
-            labelStyle={{ fontSize: 15, fontWeight: '700' }}
-          >
-            Back
-          </PaperButton>
-
-          <PaperButton
-            mode="contained"
-            onPress={calculateReturns}
-            buttonColor={theme.primary}
-            textColor="#ffffff"
-            style={{ flex: 1, borderRadius: 14 }}
-            contentStyle={{ height: 50 }}
-            labelStyle={{ fontSize: 15, fontWeight: '700' }}
-          >
-            Calculate
-          </PaperButton>
-        </View>
-      </Card.Content>
-    </Card>
+      <View style={{ flexDirection: 'row', gap: space.md, marginTop: space.xl }}>
+        <Button label="Back" variant="outlined" onPress={() => setActiveStep(1)} style={{ flex: 1 }} />
+        <Button label="Calculate" icon="calculator-outline" onPress={calculateReturns} style={{ flex: 1.4 }} />
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  days: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: space.md,
+    borderRadius: radius.sm,
+  },
+});

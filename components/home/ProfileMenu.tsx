@@ -1,10 +1,14 @@
-import React from 'react';
-import { View } from 'react-native';
-import { Portal, Modal as PaperModal, Switch as PaperSwitch, Text as PaperText, Button as PaperButton, Divider, Avatar, Card, IconButton } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Portal, Switch, Text } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ListRow from '../ui/Row';
+import { Hairline } from '../ui/Panel';
+import { radius, space } from '../../theme/tokens';
 
 interface ProfileMenuProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly showProfileMenu: boolean;
   readonly setShowProfileMenu: (val: boolean) => void;
@@ -15,8 +19,12 @@ interface ProfileMenuProps {
   readonly router: any;
 }
 
+/**
+ * Material 3 bottom sheet. Anchoring account actions to the bottom edge puts
+ * them in thumb reach and matches the sheet pattern Android uses for
+ * contextual menus — the previous side drawer was a desktop-nav idiom.
+ */
 export default function ProfileMenu({
-  styles,
   theme,
   showProfileMenu,
   setShowProfileMenu,
@@ -24,123 +32,140 @@ export default function ProfileMenu({
   logout,
   isDarkMode,
   toggleTheme,
-  router
+  router,
 }: ProfileMenuProps) {
+  const insets = useSafeAreaInsets();
+  const close = () => setShowProfileMenu(false);
+
+  const identity = user?.name || user?.email || user?.mobile || user?.username || 'Guest';
+
   return (
     <Portal>
-      <PaperModal
+      <Modal
         visible={showProfileMenu}
-        onDismiss={() => setShowProfileMenu(false)}
-        contentContainerStyle={{
-          flex: 1,
-          justifyContent: 'flex-start',
-          alignItems: 'flex-end',
-        }}
+        onDismiss={close}
+        contentContainerStyle={styles.host}
+        style={styles.modal}
       >
-        <View style={[styles.drawerPanel, { backgroundColor: theme.background, height: '100%', width: '80%', maxWidth: 320 }]}>
-          {/* Header */}
-          <View style={[styles.drawerHeader, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 16 }]}>
-            <IconButton
-              icon={({ size, color }) => <Ionicons name="arrow-back" size={size || 22} color={color || theme.textPrimary} />}
-              onPress={() => setShowProfileMenu(false)}
+        {/* Tapping the area above the sheet dismisses it, as on a native sheet. */}
+        <Pressable style={{ flex: 1 }} onPress={close} accessibilityLabel="Close menu" />
+
+        <View
+          style={[
+            styles.sheet,
+            { backgroundColor: theme.surface, paddingBottom: Math.max(insets.bottom, space.md) },
+          ]}
+        >
+          <View style={[styles.handle, { backgroundColor: theme.border }]} />
+
+          <View style={styles.identity}>
+            <View style={[styles.avatar, { backgroundColor: theme.primaryBackground }]}>
+              <Ionicons name="person" size={20} color={theme.primary} />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', color: theme.textPrimary }}>
+                {identity}
+              </Text>
+              <Text style={{ fontSize: 12, color: theme.textSecondary, marginTop: 1 }}>
+                {user ? 'Signed in' : 'Sign in to trade and connect brokers'}
+              </Text>
+            </View>
+          </View>
+
+          <Hairline />
+
+          <ListRow
+            title="Dark mode"
+            icon={isDarkMode ? 'moon' : 'sunny'}
+            iconTint={theme.textSecondary}
+            trailing={<Switch value={isDarkMode} onValueChange={toggleTheme} color={theme.primary} />}
+          />
+
+          {user ? (
+            <>
+              <ListRow
+                title="Account settings"
+                icon="settings-outline"
+                showChevron
+                onPress={() => {
+                  close();
+                  router.push('/settings');
+                }}
+              />
+              <ListRow
+                title="Broker connections"
+                icon="git-network-outline"
+                showChevron
+                onPress={() => {
+                  close();
+                  router.push('/brokers');
+                }}
+              />
+              <Hairline />
+              <ListRow
+                title="Sign out"
+                icon="log-out-outline"
+                iconTint={theme.danger}
+                iconBackground={theme.dangerBackground}
+                onPress={async () => {
+                  await logout();
+                  close();
+                }}
+              />
+            </>
+          ) : (
+            <ListRow
+              title="Sign in"
+              subtitle="Unlock strategies, orders and portfolio sync"
+              icon="log-in-outline"
+              iconTint={theme.primary}
+              iconBackground={theme.primaryBackground}
+              showChevron
+              onPress={() => {
+                close();
+                router.push('/login');
+              }}
             />
-            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
-              Profile
-            </PaperText>
-            <View style={{ width: 40 }} />
-          </View>
-
-          <Divider style={{ backgroundColor: theme.border, marginVertical: 8 }} />
-
-          {/* Drawer Body */}
-          <View style={{ padding: 16, flex: 1 }}>
-            {user ? (
-              <Card style={{ backgroundColor: theme.card, borderRadius: 20, padding: 8 }}>
-                <Card.Content style={{ alignItems: 'center' }}>
-                  <View style={{ marginBottom: 12, marginTop: 8 }}>
-                    {user.profile ? (
-                      <Avatar.Image size={64} source={{ uri: user.profile }} />
-                    ) : (
-                      <Avatar.Icon size={64} icon="account" style={{ backgroundColor: theme.primaryBackground }} color={theme.primary} />
-                    )}
-                  </View>
-                  <PaperText variant="labelMedium" style={{ color: theme.textSecondary, fontWeight: '600' }}>Logged In As</PaperText>
-                  <PaperText variant="titleSmall" style={{ color: theme.textPrimary, fontWeight: '700', marginTop: 2, textAlign: 'center' }} numberOfLines={1}>
-                    {user.name || user.email || user.mobile || user.username || 'User'}
-                  </PaperText>
-
-                  <Divider style={{ backgroundColor: theme.border, width: '100%', marginVertical: 16 }} />
-
-                  {/* Dark mode switch */}
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 16 }}>
-                    <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '600' }}>Dark Mode</PaperText>
-                    <PaperSwitch value={isDarkMode} onValueChange={toggleTheme} color={theme.primary} />
-                  </View>
-
-                  <PaperButton
-                    mode="outlined"
-                    onPress={() => {
-                      setShowProfileMenu(false);
-                      router.push('/settings');
-                    }}
-                    icon={({ size }) => <Ionicons name="settings-outline" size={size || 18} color={theme.textPrimary} />}
-                    textColor={theme.textPrimary}
-                    style={{ width: '100%', borderRadius: 12, marginBottom: 10 }}
-                  >
-                    Settings
-                  </PaperButton>
-
-                  <PaperButton
-                    mode="contained"
-                    onPress={async () => {
-                      await logout();
-                      setShowProfileMenu(false);
-                    }}
-                    icon={({ size }) => <Ionicons name="log-out-outline" size={size || 18} color="#ffffff" />}
-                    buttonColor={theme.danger}
-                    textColor="#ffffff"
-                    style={{ width: '100%', borderRadius: 12 }}
-                  >
-                    Logout
-                  </PaperButton>
-                </Card.Content>
-              </Card>
-            ) : (
-              <Card style={{ backgroundColor: theme.card, borderRadius: 20, padding: 8 }}>
-                <Card.Content style={{ alignItems: 'center' }}>
-                  <Avatar.Icon size={64} icon="account-outline" color={theme.iconMuted} style={{ marginBottom: 12, backgroundColor: theme.borderLight }} />
-                  <PaperText variant="labelMedium" style={{ color: theme.textSecondary, fontWeight: '600' }}>Account Status</PaperText>
-                  <PaperText variant="titleMedium" style={{ color: theme.textPrimary, fontWeight: '700', marginTop: 2 }}>Not logged in</PaperText>
-                  <PaperText variant="bodySmall" style={{ color: theme.textSecondary, textAlign: 'center', marginTop: 8, lineHeight: 18 }}>
-                    Log in to unlock custom algorithmic strategies, live market status metrics, and portfolio integrations.
-                  </PaperText>
-
-                  <Divider style={{ backgroundColor: theme.border, width: '100%', marginVertical: 16 }} />
-
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 16 }}>
-                    <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '600' }}>Dark Mode</PaperText>
-                    <PaperSwitch value={isDarkMode} onValueChange={toggleTheme} color={theme.primary} />
-                  </View>
-
-                  <PaperButton
-                    mode="contained"
-                    onPress={() => {
-                      setShowProfileMenu(false);
-                      router.push('/login');
-                    }}
-                    icon={({ size }) => <Ionicons name="log-in-outline" size={size || 18} color="#ffffff" />}
-                    buttonColor={theme.primary}
-                    textColor="#ffffff"
-                    style={{ width: '100%', borderRadius: 12 }}
-                  >
-                    Login
-                  </PaperButton>
-                </Card.Content>
-              </Card>
-            )}
-          </View>
+          )}
         </View>
-      </PaperModal>
+      </Modal>
     </Portal>
   );
 }
+
+const styles = StyleSheet.create({
+  modal: {
+    margin: 0,
+  },
+  host: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    // Only the top corners round — the sheet is anchored to the screen edge.
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: space.sm,
+  },
+  handle: {
+    width: 32,
+    height: 4,
+    borderRadius: radius.pill,
+    alignSelf: 'center',
+    marginBottom: space.md,
+  },
+  identity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    paddingHorizontal: space.lg,
+    paddingBottom: space.lg,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

@@ -1,127 +1,117 @@
 import React from 'react';
-import { View } from 'react-native';
-import { Card, Text as PaperText, ActivityIndicator, Chip, Divider } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
+import { Panel, SectionHeader } from '../ui/Panel';
+import { EmptyState, Tag } from '../ui/Feedback';
+import { Stat } from '../ui/Price';
+import { space } from '../../theme/tokens';
 
 interface AIAnalysisSectionProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly aiLoading: boolean;
   readonly aiAnalysis: any;
 }
 
-export default function AIAnalysisSection({
-  styles,
-  theme,
-  aiLoading,
-  aiAnalysis
-}: AIAnalysisSectionProps) {
-  return (
-    <View style={styles.section}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-        <Ionicons name="sparkles" size={20} color={theme.primary} />
-        <PaperText variant="titleMedium" style={{ marginLeft: 8, fontWeight: '900', color: theme.textPrimary, letterSpacing: -0.5 }}>
-          AI ANALYSIS
-        </PaperText>
+/** Model verdict on the symbol: call, conviction, expected range, rationale. */
+export default function AIAnalysisSection({ theme, aiLoading, aiAnalysis }: AIAnalysisSectionProps) {
+  let body: React.ReactNode;
+
+  if (aiLoading) {
+    body = (
+      <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+        <ActivityIndicator size="small" color={theme.primary} />
       </View>
+    );
+  } else if (aiAnalysis) {
+    const action = aiAnalysis.action?.toUpperCase();
+    let actionTint = theme.warningText;
+    if (action === 'BUY') actionTint = theme.up;
+    else if (action === 'SELL') actionTint = theme.down;
 
-      {(() => {
-        if (aiLoading) {
-          return (
-            <Card style={{ backgroundColor: theme.card, borderRadius: 24 }}>
-              <Card.Content style={{ alignItems: 'center', paddingVertical: 32 }}>
-                <ActivityIndicator size="large" color={theme.primary} />
-              </Card.Content>
-            </Card>
-          );
-        }
-        if (aiAnalysis) {
-          let actionColor = '#eab308';
-          if (aiAnalysis.action?.toUpperCase() === 'BUY') actionColor = '#22c55e';
-          else if (aiAnalysis.action?.toUpperCase() === 'SELL') actionColor = '#ef4444';
+    const trend = aiAnalysis.trend?.toUpperCase();
+    let trendIcon: 'trending-up' | 'trending-down' | 'remove' = 'remove';
+    if (trend === 'BULLISH') trendIcon = 'trending-up';
+    else if (trend === 'BEARISH') trendIcon = 'trending-down';
 
-          return (
-            <Card style={{ backgroundColor: theme.card, borderRadius: 24, elevation: 3 }}>
-              <Card.Content style={{ gap: 16 }}>
-                {/* Recommendation Header */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View>
-                    <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '800' }}>
-                      RECOMMENDATION
-                    </PaperText>
-                    <PaperText variant="headlineMedium" style={{ color: actionColor, fontWeight: '900' }}>
-                      {aiAnalysis.action}
-                    </PaperText>
-                  </View>
+    body = (
+      <View>
+        <View style={styles.verdict}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 0.8, color: theme.textTertiary }}>
+              RECOMMENDATION
+            </Text>
+            <Text style={{ fontSize: 30, fontWeight: '700', color: actionTint, marginTop: 2 }}>
+              {aiAnalysis.action}
+            </Text>
+          </View>
+          {aiAnalysis.confidence ? (
+            <Tag label={`${aiAnalysis.confidence}% CONFIDENCE`} tone="accent" />
+          ) : null}
+        </View>
 
-                  <Chip
-                    compact
-                    style={{ backgroundColor: theme.primaryBackground }}
-                    textStyle={{ color: theme.primary, fontWeight: '800' }}
-                  >
-                    {aiAnalysis.confidence}% CONFIDENCE
-                  </Chip>
-                </View>
+        <View style={[styles.strip, { borderTopColor: theme.divider, borderBottomColor: theme.divider }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 0.7, color: theme.textTertiary }}>
+              TREND
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+              <Ionicons name={trendIcon} size={15} color={actionTint} />
+              <Text style={{ fontSize: 13.5, fontWeight: '600', color: theme.textPrimary, textTransform: 'capitalize' }}>
+                {aiAnalysis.trend}
+              </Text>
+            </View>
+          </View>
 
-                <Divider style={{ backgroundColor: theme.border }} />
+          {aiAnalysis.tomorrow_high ? (
+            <Stat label="EXP. HIGH" value={`₹${aiAnalysis.tomorrow_high}`} align="center" tint={theme.up} />
+          ) : null}
+          {aiAnalysis.tomorrow_low ? (
+            <Stat label="EXP. LOW" value={`₹${aiAnalysis.tomorrow_low}`} align="flex-end" tint={theme.down} />
+          ) : null}
+        </View>
 
-                {/* Trend & Expected targets */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View>
-                    <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '700' }}>TREND</PaperText>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                      {aiAnalysis.trend?.toUpperCase() === 'BULLISH' && <Ionicons name="trending-up" size={18} color="#22c55e" />}
-                      {aiAnalysis.trend?.toUpperCase() === 'BEARISH' && <Ionicons name="trending-down" size={18} color="#ef4444" />}
-                      <PaperText variant="titleMedium" style={{ color: theme.textPrimary, fontWeight: '700', marginLeft: 4, textTransform: 'capitalize' }}>
-                        {aiAnalysis.trend}
-                      </PaperText>
-                    </View>
-                  </View>
+        <View style={{ padding: space.lg }}>
+          <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 0.8, color: theme.textTertiary }}>
+            REASONING
+          </Text>
+          <Text style={{ fontSize: 13.5, color: theme.textSecondary, lineHeight: 21, marginTop: space.sm }}>
+            {aiAnalysis.reasoning}
+          </Text>
+        </View>
+      </View>
+    );
+  } else {
+    body = (
+      <EmptyState
+        icon="sparkles-outline"
+        title="No analysis"
+        message="This symbol doesn't have a model verdict yet."
+      />
+    );
+  }
 
-                  {aiAnalysis.tomorrow_high && (
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '700' }}>EXP. HIGH</PaperText>
-                      <PaperText variant="titleMedium" style={{ color: '#22c55e', fontWeight: '800', marginTop: 4 }}>
-                        ₹{aiAnalysis.tomorrow_high}
-                      </PaperText>
-                    </View>
-                  )}
-
-                  {aiAnalysis.tomorrow_low && (
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '700' }}>EXP. LOW</PaperText>
-                      <PaperText variant="titleMedium" style={{ color: '#ef4444', fontWeight: '800', marginTop: 4 }}>
-                        ₹{aiAnalysis.tomorrow_low}
-                      </PaperText>
-                    </View>
-                  )}
-                </View>
-
-                <Divider style={{ backgroundColor: theme.border }} />
-
-                {/* Reasoning */}
-                <View>
-                  <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '800', marginBottom: 6 }}>
-                    ANALYSIS & REASONING
-                  </PaperText>
-                  <PaperText variant="bodyMedium" style={{ color: theme.textSecondary, lineHeight: 22 }}>
-                    {aiAnalysis.reasoning}
-                  </PaperText>
-                </View>
-              </Card.Content>
-            </Card>
-          );
-        }
-        return (
-          <Card style={{ backgroundColor: theme.card, borderRadius: 24, borderStyle: 'dashed' }}>
-            <Card.Content style={{ alignItems: 'center', paddingVertical: 24 }}>
-              <PaperText variant="labelMedium" style={{ color: theme.textSecondary, fontWeight: '800' }}>
-                NO AI ANALYSIS AVAILABLE FOR THIS SYMBOL
-              </PaperText>
-            </Card.Content>
-          </Card>
-        );
-      })()}
+  return (
+    <View>
+      <SectionHeader title="AI analysis" />
+      <Panel padded={false}>{body}</Panel>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  verdict: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: space.lg,
+  },
+  strip: {
+    flexDirection: 'row',
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+});

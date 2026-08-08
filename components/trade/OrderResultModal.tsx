@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Portal, Modal as PaperModal, Surface, Text as PaperText, Button as PaperButton } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Dialog, Portal, Text, TouchableRipple } from 'react-native-paper';
+import { useTheme } from '../../context/ThemeContext';
+import { radius, space } from '../../theme/tokens';
 
 interface OrderResultModalProps {
-  readonly styles: any;
-  readonly theme: any;
+  readonly styles?: any;
+  readonly theme?: any;
   readonly visible: boolean;
   readonly variant: 'success' | 'error';
   readonly title: string;
@@ -12,78 +15,105 @@ interface OrderResultModalProps {
   readonly onClose: () => void;
 }
 
+/**
+ * Material 3 alert dialog: hero icon and headline centred, body text
+ * left-aligned, and a single text action in the bottom-right corner — where
+ * Android puts confirmations, rather than a full-width web-style button.
+ */
 export default function OrderResultModal({
-  theme,
+  theme: themeProp,
   visible,
   variant,
   title,
   message,
   onClose,
 }: OrderResultModalProps) {
+  const { theme: contextTheme } = useTheme();
+  const theme = themeProp || contextTheme;
+
   const isSuccess = variant === 'success';
-  const accent = isSuccess ? theme.success : theme.danger;
-  const accentBackground = isSuccess ? theme.successBackground : theme.dangerBackground;
-  const icon = isSuccess ? 'checkmark-circle' : 'close-circle';
+  const accent = isSuccess ? theme.up : theme.down;
 
   return (
     <Portal>
-      <PaperModal
+      <Dialog
         visible={visible}
         onDismiss={onClose}
-        contentContainerStyle={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 20,
-        }}
+        style={[styles.dialog, { backgroundColor: theme.surface }]}
       >
-        <Surface
-          style={{
-            backgroundColor: theme.card,
-            borderRadius: 24,
-            width: '100%',
-            maxWidth: 340,
-            padding: 24,
-            alignItems: 'center',
-            elevation: 5,
-          }}
-          elevation={4}
-        >
-          <Surface
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 32,
-              backgroundColor: accentBackground,
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 16,
-            }}
-            elevation={0}
+        <View style={styles.hero}>
+          <View
+            style={[
+              styles.heroIcon,
+              { backgroundColor: isSuccess ? theme.upBackground : theme.downBackground },
+            ]}
           >
-            <Ionicons name={icon} size={36} color={accent} />
-          </Surface>
+            <Ionicons name={isSuccess ? 'checkmark-circle' : 'alert-circle'} size={28} color={accent} />
+          </View>
+        </View>
 
-          <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary, textAlign: 'center', marginBottom: 8 }}>
-            {title}
-          </PaperText>
+        <Text style={[styles.title, { color: theme.textPrimary }]}>{title}</Text>
 
-          <PaperText variant="bodyMedium" style={{ color: theme.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: 20 }}>
-            {message}
-          </PaperText>
+        <Text style={[styles.body, { color: theme.textSecondary }]}>{message}</Text>
 
-          <PaperButton
-            mode="contained"
+        <View style={styles.actions}>
+          <TouchableRipple
             onPress={onClose}
-            buttonColor={isSuccess ? theme.success : theme.primary}
-            textColor="#ffffff"
-            style={{ width: '100%', borderRadius: 12 }}
-            contentStyle={{ height: 48 }}
-            labelStyle={{ fontSize: 15, fontWeight: '700' }}
+            rippleColor={theme.ripple}
+            style={styles.action}
+            accessibilityRole="button"
           >
-            {isSuccess ? 'Done' : 'Got it'}
-          </PaperButton>
-        </Surface>
-      </PaperModal>
+            <Text style={{ fontSize: 14, fontWeight: '700', letterSpacing: 0.5, color: theme.primary }}>
+              {isSuccess ? 'DONE' : 'GOT IT'}
+            </Text>
+          </TouchableRipple>
+        </View>
+      </Dialog>
     </Portal>
   );
 }
+
+const styles = StyleSheet.create({
+  dialog: {
+    borderRadius: 28,
+    marginHorizontal: space.xxl,
+  },
+  hero: {
+    alignItems: 'center',
+    paddingTop: space.xxl,
+  },
+  heroIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingHorizontal: space.xxl,
+    paddingTop: space.lg,
+  },
+  body: {
+    fontSize: 14,
+    lineHeight: 20,
+    paddingHorizontal: space.xxl,
+    paddingTop: space.md,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: space.md,
+    paddingTop: space.xl,
+  },
+  action: {
+    minWidth: 72,
+    height: 40,
+    paddingHorizontal: space.md,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

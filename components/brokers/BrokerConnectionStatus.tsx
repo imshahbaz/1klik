@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View } from 'react-native';
-import { Card, Text as PaperText, Chip, IconButton, Surface } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Text, TouchableRipple } from 'react-native-paper';
+import { Panel } from '../ui/Panel';
+import { Tag } from '../ui/Feedback';
+import { radius, space } from '../../theme/tokens';
 
 interface BrokerConnectionStatusProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly statusColor: string;
   readonly statusContent: React.ReactNode;
@@ -14,6 +17,10 @@ interface BrokerConnectionStatusProps {
   readonly onToggleConfig: () => void;
 }
 
+/**
+ * Session header for a broker. A status dot plus a leading keyline carries the
+ * connection state at a glance; the gear toggles the credential form.
+ */
 export default function BrokerConnectionStatus({
   theme,
   statusColor,
@@ -23,37 +30,71 @@ export default function BrokerConnectionStatus({
   idleSubtitle,
   onToggleConfig,
 }: BrokerConnectionStatusProps) {
+  let tone: 'up' | 'down' | 'warn' = 'up';
+  if (error) tone = 'down';
+  else if (connectionText === 'LOADING') tone = 'warn';
+
   return (
-    <Card style={{ backgroundColor: theme.card, borderRadius: 24, borderLeftWidth: 6, borderLeftColor: statusColor, elevation: 3 }}>
-      <Card.Content style={{ gap: 12 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-            <Surface style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: theme.primaryBackground, alignItems: 'center', justifyContent: 'center' }} elevation={0}>
-              <Ionicons name="link-outline" size={20} color={theme.primary} />
-            </Surface>
-            <View style={{ flex: 1 }}>
-              {statusContent}
-            </View>
+    <Panel padded={false}>
+      <View style={styles.head}>
+        <View style={[styles.keyline, { backgroundColor: statusColor }]} />
+
+        <View style={styles.headBody}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+            <View style={[styles.dot, { backgroundColor: statusColor }]} />
+            <View style={{ flex: 1, minWidth: 0 }}>{statusContent}</View>
+            <Tag label={connectionText} tone={tone} />
           </View>
-          <IconButton
-            icon={({ size, color }) => <Ionicons name="settings-outline" size={size || 18} color={color || theme.textSecondary} />}
-            onPress={onToggleConfig}
-          />
+
+          <Text
+            numberOfLines={2}
+            style={{ fontSize: 12.5, color: theme.textSecondary, marginTop: 6 }}
+          >
+            {error || idleSubtitle}
+          </Text>
         </View>
 
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.borderLight, paddingTop: 10 }}>
-          <PaperText variant="bodySmall" style={{ color: theme.textSecondary, flex: 1, marginRight: 12 }} numberOfLines={2}>
-            {error || idleSubtitle}
-          </PaperText>
-          <Chip
-            compact
-            style={{ backgroundColor: error ? theme.dangerBackground : theme.successBackground }}
-            textStyle={{ color: error ? theme.danger : theme.success, fontWeight: '800', fontSize: 11 }}
-          >
-            {connectionText}
-          </Chip>
-        </View>
-      </Card.Content>
-    </Card>
+        <TouchableRipple
+          onPress={onToggleConfig}
+          borderless
+          rippleColor={theme.ripple}
+          style={styles.gear}
+          accessibilityRole="button"
+          accessibilityLabel="Toggle broker credentials"
+        >
+          <Ionicons name="settings-outline" size={20} color={theme.textSecondary} />
+        </TouchableRipple>
+      </View>
+    </Panel>
   );
 }
+
+const styles = StyleSheet.create({
+  head: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  keyline: {
+    width: 3,
+    alignSelf: 'stretch',
+  },
+  headBody: {
+    flex: 1,
+    minWidth: 0,
+    paddingLeft: space.lg,
+    paddingVertical: space.lg,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: radius.pill,
+  },
+  gear: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: space.xs,
+  },
+});
