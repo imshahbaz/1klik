@@ -11,6 +11,7 @@ import { useMargins } from '../context/MarginContext';
 import { useTheme } from '../context/ThemeContext';
 import { useCalculatorStyles } from '../theme/calculatorStyles';
 import { useAdaptiveLayout } from '../theme/layout';
+import { getSafeBottomPadding } from '../theme/safeArea';
 import {
   BROKERAGE_PER_LEG,
   STT_DELIVERY_RATE,
@@ -214,8 +215,11 @@ export default function CalculatorScreen() {
     ? (entryDate ? new Date(entryDate) : new Date())
     : (exitDate ? new Date(exitDate) : new Date());
 
+  const safeBottomInset = getSafeBottomPadding(insets.bottom);
+  const scrollBottomPadding = safeBottomInset + 60;
+
   return (
-    <View style={[styles.safeArea, layout.screenPadding]}>
+    <View style={[styles.safeArea, layout.screenPadding, { paddingBottom: safeBottomInset }]}>
       {/* Steps Indicator / Result Header */}
       {view === 'form' && (
         <View style={{ paddingHorizontal: layout.horizontalPadding, paddingTop: insets.top + 12, paddingBottom: 16 }}>
@@ -240,7 +244,7 @@ export default function CalculatorScreen() {
         <KeyboardAwareScrollView
           contentContainerStyle={[
             styles.scrollContainer,
-            { paddingHorizontal: layout.horizontalPadding },
+            { paddingHorizontal: layout.horizontalPadding, paddingBottom: scrollBottomPadding },
             view === 'results' ? styles.resultsScrollContainer : null,
           ]}
           contentInsetAdjustmentBehavior="automatic"

@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FinancialChart from '../components/FinancialChart';
 import { useTheme } from '../context/ThemeContext';
 import { newsApi, strategyAPI } from '../services/api';
+import { getSafeBottomPadding } from '../theme/safeArea';
 import AIAnalysisSection from '../components/chart/AIAnalysisSection';
 import NewsSection from '../components/chart/NewsSection';
 
@@ -76,9 +77,16 @@ export default function ChartScreen() {
     };
   }, [symbol]);
 
+  const safeBottomInset = getSafeBottomPadding(insets.bottom);
+  const scrollBottomPadding = safeBottomInset + 60;
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top }]}>
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
+    <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top, paddingBottom: safeBottomInset }]}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: scrollBottomPadding }]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Technical Chart Section */}
         <View style={styles.section}>
           <Card
@@ -158,7 +166,6 @@ const styles = ScaledSheet.create({
   },
   contentContainer: {
     padding: '16@ms',
-    paddingBottom: '40@ms',
     gap: '24@ms',
   },
   section: {
