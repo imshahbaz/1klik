@@ -1,10 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { Card, Text as PaperText, TextInput as PaperTextInput, Button as PaperButton, SegmentedButtons, HelperText, Surface, Chip } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import { Card, Text as PaperText, TextInput as PaperTextInput, Button as PaperButton, SegmentedButtons, Chip, Surface, HelperText } from 'react-native-paper';
 
 interface CalculatorStepTwoProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly errors: Record<string, string>;
   readonly setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
@@ -37,12 +37,12 @@ export default function CalculatorStepTwo({
   quantity,
   setQuantity,
   setActiveStep,
-  calculateReturns
+  calculateReturns,
 }: CalculatorStepTwoProps) {
   return (
-    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
+    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 0, borderWidth: 1, borderColor: theme.borderLight }}>
       <Card.Content>
-        {/* Date Selection */}
+        {/* Date Selectors */}
         <View style={{ marginBottom: 16 }}>
           <TouchableOpacity
             onPress={() => {
@@ -52,17 +52,18 @@ export default function CalculatorStepTwo({
             }}
             activeOpacity={0.8}
           >
-            <PaperTextInput
-              mode="outlined"
-              label="Entry Date"
-              value={entryDate || 'YYYY-MM-DD'}
-              editable={false}
-              textColor={theme.textPrimary}
-              outlineColor={theme.border}
-              left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="calendar-outline" size={size || 18} color={color || theme.iconMuted} />} />}
-              style={{ backgroundColor: theme.card }}
-              pointerEvents="none"
-            />
+            <View pointerEvents="none">
+              <PaperTextInput
+                mode="outlined"
+                label="Entry Date"
+                value={entryDate || 'YYYY-MM-DD'}
+                editable={false}
+                textColor={theme.textPrimary}
+                outlineColor={theme.border}
+                left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="calendar-outline" size={size || 18} color={color || theme.iconMuted} />} />}
+                style={{ backgroundColor: theme.card }}
+              />
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -76,17 +77,18 @@ export default function CalculatorStepTwo({
             }}
             activeOpacity={0.8}
           >
-            <PaperTextInput
-              mode="outlined"
-              label="Exit Date (Optional)"
-              value={exitDate || 'Select Exit Date'}
-              editable={false}
-              textColor={exitDate ? theme.textPrimary : theme.textSecondary}
-              outlineColor={theme.border}
-              left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="calendar-outline" size={size || 18} color={color || theme.iconMuted} />} />}
-              style={{ backgroundColor: theme.card }}
-              pointerEvents="none"
-            />
+            <View pointerEvents="none">
+              <PaperTextInput
+                mode="outlined"
+                label="Exit Date (Optional)"
+                value={exitDate || 'Select Exit Date'}
+                editable={false}
+                textColor={exitDate ? theme.textPrimary : theme.textSecondary}
+                outlineColor={theme.border}
+                left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="calendar-outline" size={size || 18} color={color || theme.iconMuted} />} />}
+                style={{ backgroundColor: theme.card }}
+              />
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -95,7 +97,7 @@ export default function CalculatorStepTwo({
           <PaperText variant="bodyMedium" style={{ color: theme.textSecondary, fontWeight: '700' }}>
             Calculated Holding Days
           </PaperText>
-          <Chip compact textStyle={{ fontSize: 13, fontWeight: '800', color: theme.primary }}>
+          <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ fontSize: 13, fontWeight: '800', color: theme.primary }}>
             {daysHeld} Days
           </Chip>
         </Surface>
@@ -109,8 +111,18 @@ export default function CalculatorStepTwo({
             value={quantityType}
             onValueChange={(val) => setQuantityType(val as 'quantity' | 'investment')}
             buttons={[
-              { value: 'quantity', label: 'By Shares' },
-              { value: 'investment', label: 'By Capital' },
+              {
+                value: 'quantity',
+                label: 'By Shares',
+                style: { backgroundColor: quantityType === 'quantity' ? theme.primaryBackground : 'transparent' },
+                labelStyle: { color: quantityType === 'quantity' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+              },
+              {
+                value: 'investment',
+                label: 'By Capital',
+                style: { backgroundColor: quantityType === 'investment' ? theme.primaryBackground : 'transparent' },
+                labelStyle: { color: quantityType === 'investment' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+              },
             ]}
             style={{ marginBottom: 12 }}
           />
@@ -118,8 +130,8 @@ export default function CalculatorStepTwo({
           <PaperTextInput
             mode="outlined"
             label={quantityType === 'quantity' ? "Number of Shares" : "Total Capital Amount (₹)"}
-            keyboardType="numeric"
-            placeholder={quantityType === 'quantity' ? "Number of shares" : "Total capital amount"}
+            keyboardType={quantityType === 'quantity' ? "number-pad" : "numeric"}
+            placeholder={quantityType === 'quantity' ? "10" : "50000"}
             placeholderTextColor={theme.placeholder}
             value={quantity}
             onChangeText={(t) => {
@@ -130,21 +142,21 @@ export default function CalculatorStepTwo({
             textColor={theme.textPrimary}
             outlineColor={errors.quantity ? theme.danger : theme.border}
             activeOutlineColor={theme.primary}
-            left={quantityType === 'investment' ? <PaperTextInput.Affix text="₹" /> : undefined}
+            left={quantityType === 'investment' ? <PaperTextInput.Affix text="₹" textStyle={{ color: theme.textSecondary }} /> : undefined}
             style={{ backgroundColor: theme.card }}
           />
           {errors.quantity ? <HelperText type="error" visible={true}>{errors.quantity}</HelperText> : null}
         </View>
 
-        {/* Action Buttons Row */}
-        <View style={{ flexDirection: 'row', gap: 12 }}>
+        {/* Buttons */}
+        <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
           <PaperButton
             mode="outlined"
             onPress={() => setActiveStep(1)}
-            icon={({ size }) => <Ionicons name="arrow-back" size={size || 18} color={theme.textPrimary} />}
             textColor={theme.textPrimary}
             style={{ flex: 1, borderRadius: 14, borderColor: theme.border }}
             contentStyle={{ height: 50 }}
+            labelStyle={{ fontSize: 15, fontWeight: '700' }}
           >
             Back
           </PaperButton>
@@ -153,10 +165,10 @@ export default function CalculatorStepTwo({
             mode="contained"
             onPress={calculateReturns}
             buttonColor={theme.primary}
-            icon={({ size }) => <Ionicons name="calculator" size={size || 18} color="#ffffff" />}
+            textColor="#ffffff"
             style={{ flex: 1, borderRadius: 14 }}
             contentStyle={{ height: 50 }}
-            labelStyle={{ fontSize: 16, fontWeight: '700' }}
+            labelStyle={{ fontSize: 15, fontWeight: '700' }}
           >
             Calculate
           </PaperButton>

@@ -64,7 +64,7 @@ export default function ExecuteTab({
   const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
 
   return (
-    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
+    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 0, borderWidth: 1, borderColor: theme.borderLight }}>
       <Card.Content style={{ gap: 16 }}>
         {/* Broker SegmentedButtons */}
         <View>
@@ -75,8 +75,18 @@ export default function ExecuteTab({
             value={tradeBroker}
             onValueChange={(val) => setTradeBroker(val as 'ZERODHA' | 'RUPEEZY')}
             buttons={[
-              { value: 'ZERODHA', label: 'ZERODHA' },
-              { value: 'RUPEEZY', label: 'RUPEEZY' },
+              {
+                value: 'ZERODHA',
+                label: 'ZERODHA',
+                style: { backgroundColor: tradeBroker === 'ZERODHA' ? theme.primaryBackground : 'transparent' },
+                labelStyle: { color: tradeBroker === 'ZERODHA' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+              },
+              {
+                value: 'RUPEEZY',
+                label: 'RUPEEZY',
+                style: { backgroundColor: tradeBroker === 'RUPEEZY' ? theme.primaryBackground : 'transparent' },
+                labelStyle: { color: tradeBroker === 'RUPEEZY' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+              },
             ]}
           />
         </View>
@@ -117,7 +127,7 @@ export default function ExecuteTab({
             textColor={theme.textPrimary}
             outlineColor={theme.border}
             activeOutlineColor={theme.primary}
-            right={<PaperTextInput.Affix text="%" />}
+            right={<PaperTextInput.Affix text="%" textStyle={{ color: theme.textSecondary }} />}
             style={{ backgroundColor: theme.card }}
           />
         ) : null}
@@ -172,7 +182,7 @@ export default function ExecuteTab({
                             {marginItem.symbol}
                           </PaperText>
                         </View>
-                        <Chip compact textStyle={{ fontSize: 11, fontWeight: '700' }}>
+                        <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ fontSize: 11, fontWeight: '700', color: theme.primary }}>
                           {marginStr}
                         </Chip>
                       </View>

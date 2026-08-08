@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ScrollView, View, TouchableOpacity } from 'react-native';
-import { Card, Text as PaperText, TextInput as PaperTextInput, Button as PaperButton, SegmentedButtons, HelperText, ActivityIndicator, Surface, Chip } from 'react-native-paper';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
+import { Card, Text as PaperText, TextInput as PaperTextInput, Button as PaperButton, SegmentedButtons, Chip, Surface, HelperText, ActivityIndicator } from 'react-native-paper';
 
 interface CalculatorStepOneProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly errors: Record<string, string>;
   readonly setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
@@ -16,8 +16,8 @@ interface CalculatorStepOneProps {
   readonly setShowDropdown: (val: boolean) => void;
   readonly loadingMargins: boolean;
   readonly filteredMargins: any[];
-  readonly setSelectedLeverage: (val: string) => void;
   readonly selectedLeverage: string;
+  readonly setSelectedLeverage: (val: string) => void;
   readonly buyPrice: string;
   readonly setBuyPrice: (val: string) => void;
   readonly sellType: 'exact' | 'percent';
@@ -44,7 +44,7 @@ const SymbolSearch = ({
   <View style={{ marginBottom: 16 }}>
     <PaperTextInput
       mode="outlined"
-      label="SYMBOL"
+      label="Symbol / Stock"
       value={selectedSymbol || searchQuery}
       onChangeText={(val) => {
         setSearchQuery(val);
@@ -103,7 +103,7 @@ const SymbolSearch = ({
                     {marginItem.symbol}
                   </PaperText>
                 </View>
-                <Chip compact textStyle={{ fontSize: 11, fontWeight: '700' }}>
+                <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ fontSize: 11, fontWeight: '700', color: theme.primary }}>
                   {uiMarginStr}
                 </Chip>
               </TouchableOpacity>
@@ -147,7 +147,7 @@ const EntryPriceInput = ({ theme, errors, setErrors, buyPrice, setBuyPrice }: an
       textColor={theme.textPrimary}
       outlineColor={errors.buyPrice ? theme.danger : theme.border}
       activeOutlineColor={theme.primary}
-      left={<PaperTextInput.Affix text="₹" />}
+      left={<PaperTextInput.Affix text="₹" textStyle={{ color: theme.textSecondary }} />}
       style={{ backgroundColor: theme.card }}
     />
     {errors.buyPrice ? <HelperText type="error" visible={true}>{errors.buyPrice}</HelperText> : null}
@@ -163,8 +163,18 @@ const ExitTargetSelector = ({ theme, errors, setErrors, sellType, setSellType, s
       value={sellType}
       onValueChange={(val) => setSellType(val as 'exact' | 'percent')}
       buttons={[
-        { value: 'exact', label: 'Target Price' },
-        { value: 'percent', label: 'Percentage' },
+        {
+          value: 'exact',
+          label: 'Target Price',
+          style: { backgroundColor: sellType === 'exact' ? theme.primaryBackground : 'transparent' },
+          labelStyle: { color: sellType === 'exact' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+        },
+        {
+          value: 'percent',
+          label: 'Percentage',
+          style: { backgroundColor: sellType === 'percent' ? theme.primaryBackground : 'transparent' },
+          labelStyle: { color: sellType === 'percent' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+        },
       ]}
       style={{ marginBottom: 12 }}
     />
@@ -184,8 +194,8 @@ const ExitTargetSelector = ({ theme, errors, setErrors, sellType, setSellType, s
       textColor={theme.textPrimary}
       outlineColor={errors.sellPrice ? theme.danger : theme.border}
       activeOutlineColor={theme.primary}
-      left={sellType === 'exact' ? <PaperTextInput.Affix text="₹" /> : undefined}
-      right={sellType === 'percent' ? <PaperTextInput.Affix text="%" /> : undefined}
+      left={sellType === 'exact' ? <PaperTextInput.Affix text="₹" textStyle={{ color: theme.textSecondary }} /> : undefined}
+      right={sellType === 'percent' ? <PaperTextInput.Affix text="%" textStyle={{ color: theme.textSecondary }} /> : undefined}
       style={{ backgroundColor: theme.card }}
     />
     {errors.sellPrice ? <HelperText type="error" visible={true}>{errors.sellPrice}</HelperText> : null}
@@ -194,7 +204,7 @@ const ExitTargetSelector = ({ theme, errors, setErrors, sellType, setSellType, s
 
 export default function CalculatorStepOne(props: CalculatorStepOneProps) {
   return (
-    <Card style={{ backgroundColor: props.theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
+    <Card style={{ backgroundColor: props.theme.card, borderRadius: 24, padding: 8, elevation: 0, borderWidth: 1, borderColor: props.theme.borderLight }}>
       <Card.Content>
         <SymbolSearch {...props} />
         <EntryPriceInput {...props} />

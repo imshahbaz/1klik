@@ -446,9 +446,27 @@ export default function TradeScreen() {
             value={activeTab}
             onValueChange={(val) => handleTabChange(val as 'execute' | 'strategy' | 'history')}
             buttons={[
-              { value: 'execute', label: 'EXECUTE', icon: 'flash' },
-              { value: 'strategy', label: 'STRATEGY', icon: 'chart-line' },
-              { value: 'history', label: 'HISTORY', icon: 'history' },
+              {
+                value: 'execute',
+                label: 'EXECUTE',
+                icon: 'flash',
+                style: { backgroundColor: activeTab === 'execute' ? theme.primaryBackground : 'transparent' },
+                labelStyle: { color: activeTab === 'execute' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+              },
+              {
+                value: 'strategy',
+                label: 'STRATEGY',
+                icon: 'chart-line',
+                style: { backgroundColor: activeTab === 'strategy' ? theme.primaryBackground : 'transparent' },
+                labelStyle: { color: activeTab === 'strategy' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+              },
+              {
+                value: 'history',
+                label: 'HISTORY',
+                icon: 'history',
+                style: { backgroundColor: activeTab === 'history' ? theme.primaryBackground : 'transparent' },
+                labelStyle: { color: activeTab === 'history' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+              },
             ]}
           />
         </View>

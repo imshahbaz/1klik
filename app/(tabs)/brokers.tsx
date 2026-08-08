@@ -481,8 +481,18 @@ export default function BrokersConfigScreen() {
               value={activeBrokerTab}
               onValueChange={(val) => setActiveBrokerTab(val as 'zerodha' | 'rupeezy')}
               buttons={[
-                { value: 'zerodha', label: 'ZERODHA' },
-                { value: 'rupeezy', label: 'RUPEEZY' },
+                {
+                  value: 'zerodha',
+                  label: 'ZERODHA',
+                  style: { backgroundColor: activeBrokerTab === 'zerodha' ? theme.primaryBackground : 'transparent' },
+                  labelStyle: { color: activeBrokerTab === 'zerodha' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+                },
+                {
+                  value: 'rupeezy',
+                  label: 'RUPEEZY',
+                  style: { backgroundColor: activeBrokerTab === 'rupeezy' ? theme.primaryBackground : 'transparent' },
+                  labelStyle: { color: activeBrokerTab === 'rupeezy' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+                },
               ]}
             />
           </View>

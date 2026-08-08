@@ -43,7 +43,7 @@ export default function StrategyTab({
   const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
 
   return (
-    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
+    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 0, borderWidth: 1, borderColor: theme.borderLight }}>
       <Card.Content style={{ gap: 16 }}>
         {/* Broker SegmentedButtons */}
         <View>
@@ -54,8 +54,18 @@ export default function StrategyTab({
             value={strategyFormData.broker}
             onValueChange={(val) => setStrategyFormData({ ...strategyFormData, broker: val as 'ZERODHA' | 'RUPEEZY' })}
             buttons={[
-              { value: 'ZERODHA', label: 'ZERODHA' },
-              { value: 'RUPEEZY', label: 'RUPEEZY' },
+              {
+                value: 'ZERODHA',
+                label: 'ZERODHA',
+                style: { backgroundColor: strategyFormData.broker === 'ZERODHA' ? theme.primaryBackground : 'transparent' },
+                labelStyle: { color: strategyFormData.broker === 'ZERODHA' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+              },
+              {
+                value: 'RUPEEZY',
+                label: 'RUPEEZY',
+                style: { backgroundColor: strategyFormData.broker === 'RUPEEZY' ? theme.primaryBackground : 'transparent' },
+                labelStyle: { color: strategyFormData.broker === 'RUPEEZY' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+              },
             ]}
           />
         </View>
@@ -97,7 +107,7 @@ export default function StrategyTab({
               textColor={theme.textPrimary}
               outlineColor={theme.border}
               activeOutlineColor={theme.primary}
-              left={<PaperTextInput.Affix text="₹" />}
+              left={<PaperTextInput.Affix text="₹" textStyle={{ color: theme.textSecondary }} />}
               style={{ backgroundColor: theme.card }}
             />
           </View>

@@ -54,7 +54,7 @@ export default function HistoryTab({
   const [activeSubTab, setActiveSubTab] = useState<'mtf' | 'strategy'>('mtf');
 
   return (
-    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
+    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 0, borderWidth: 1, borderColor: theme.borderLight }}>
       <Card.Content style={{ gap: 16 }}>
         {/* Title */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -69,8 +69,18 @@ export default function HistoryTab({
           value={activeSubTab}
           onValueChange={(val) => setActiveSubTab(val as 'mtf' | 'strategy')}
           buttons={[
-            { value: 'mtf', label: `MTF ORDERS (${mtfOrders.length})` },
-            { value: 'strategy', label: `STRATEGY (${strategyOrders.length})` },
+            {
+              value: 'mtf',
+              label: `MTF ORDERS (${mtfOrders.length})`,
+              style: { backgroundColor: activeSubTab === 'mtf' ? theme.primaryBackground : 'transparent' },
+              labelStyle: { color: activeSubTab === 'mtf' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+            },
+            {
+              value: 'strategy',
+              label: `STRATEGY (${strategyOrders.length})`,
+              style: { backgroundColor: activeSubTab === 'strategy' ? theme.primaryBackground : 'transparent' },
+              labelStyle: { color: activeSubTab === 'strategy' ? theme.primary : theme.textSecondary, fontWeight: '700' },
+            },
           ]}
         />
 
