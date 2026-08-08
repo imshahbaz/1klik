@@ -191,9 +191,11 @@ function AppContent() {
           style={[
             StyleSheet.absoluteFill,
             {
-              // Matches the native splash colour in app.json so the handoff
-              // between the two is invisible.
-              backgroundColor: '#0A0D12',
+              // splash-icon.png is opaque with its own #010102 backdrop baked
+              // in, so the screen behind it must be that exact colour or the
+              // logo reads as a square tile. Keep this in sync with the
+              // expo-splash-screen backgroundColor in app.json.
+              backgroundColor: '#010102',
               opacity: splashOpacity,
               justifyContent: 'center',
               alignItems: 'center',
