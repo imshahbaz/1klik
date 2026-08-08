@@ -1,7 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { Card, Text as PaperText, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import { ActivityIndicator, Card, Text as PaperText, SegmentedButtons } from 'react-native-paper';
 import { CustomAlert } from '../../context/AlertContext';
 import { FormattedMtfOrder, FormattedStrategyOrder } from '../../utils/tradeFormatters';
 import HistoryRow from './HistoryRow';

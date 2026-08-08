@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { View } from 'react-native';
-import { Card, Text as PaperText, Chip, Button as PaperButton } from 'react-native-paper';
+import { Card, Chip, Button as PaperButton, Text as PaperText } from 'react-native-paper';
 
 interface HistoryRowProps {
   readonly styles?: any;

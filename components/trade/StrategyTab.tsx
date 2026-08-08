@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { Card, Text as PaperText, TextInput as PaperTextInput, SegmentedButtons, TouchableRipple } from 'react-native-paper';
+import { Card, Text as PaperText, TextInput as PaperTextInput, SegmentedButtons, TouchableRipple, Chip } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import SwipeButton from '../common/SwipeButton';
 import StrategyDropdownModal from './StrategyDropdownModal';
@@ -44,7 +44,7 @@ export default function StrategyTab({
 
   return (
     <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 0, borderWidth: 1, borderColor: theme.borderLight }}>
-      <Card.Content style={{ gap: 16 }}>
+      <Card.Content style={{ gap: 18 }}>
         {/* Broker SegmentedButtons */}
         <View>
           <PaperText variant="labelMedium" style={{ color: theme.textSecondary, marginBottom: 8, fontWeight: '700' }}>
@@ -78,7 +78,7 @@ export default function StrategyTab({
           <TouchableRipple
             style={{
               padding: 14,
-              borderRadius: 12,
+              borderRadius: 14,
               borderWidth: 1,
               borderColor: theme.border,
             }}
@@ -93,47 +93,53 @@ export default function StrategyTab({
           </TouchableRipple>
         </View>
 
-        {/* Amount + Date */}
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <PaperTextInput
-              mode="outlined"
-              label="AMOUNT (₹)"
-              value={strategyFormData.amount}
-              onChangeText={(val) => setStrategyFormData({ ...strategyFormData, amount: val })}
-              keyboardType="numeric"
-              placeholder="e.g. 5000"
-              placeholderTextColor={theme.placeholder}
-              textColor={theme.textPrimary}
-              outlineColor={theme.border}
-              activeOutlineColor={theme.primary}
-              left={<PaperTextInput.Affix text="₹" textStyle={{ color: theme.textSecondary }} />}
-              style={{ backgroundColor: theme.card }}
-            />
-          </View>
+        {/* Amount Input */}
+        <PaperTextInput
+          mode="outlined"
+          label="AMOUNT (₹)"
+          value={strategyFormData.amount}
+          onChangeText={(val) => setStrategyFormData({ ...strategyFormData, amount: val })}
+          keyboardType="numeric"
+          placeholder="e.g. 5000"
+          placeholderTextColor={theme.placeholder}
+          textColor={theme.textPrimary}
+          outlineColor={theme.border}
+          activeOutlineColor={theme.primary}
+          left={<PaperTextInput.Affix text="₹" textStyle={{ color: theme.textSecondary }} />}
+          style={{ backgroundColor: theme.card }}
+        />
 
-          <View style={{ flex: 1 }}>
-            <TouchableRipple
-              onPress={() => {
-                setDatePickerTarget('strategy');
-                setPickerDate(strategyFormData.date ? new Date(strategyFormData.date) : new Date());
-                setShowDatePicker(true);
-              }}
-            >
-              <View pointerEvents="none">
-                <PaperTextInput
-                  mode="outlined"
-                  label="DATE"
-                  value={strategyFormData.date ? formatDateString(new Date(strategyFormData.date)) : 'Select date'}
-                  editable={false}
-                  textColor={strategyFormData.date ? theme.textPrimary : theme.textSecondary}
-                  outlineColor={theme.border}
-                  left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="calendar-outline" size={size || 18} color={color || theme.iconMuted} />} />}
-                  style={{ backgroundColor: theme.card }}
-                />
+        {/* Prominent Full-Width Date Selector */}
+        <View>
+          <PaperText variant="labelMedium" style={{ color: theme.textSecondary, marginBottom: 8, fontWeight: '700' }}>
+            TARGET DATE
+          </PaperText>
+          <TouchableRipple
+            style={{
+              padding: 14,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: theme.border,
+              backgroundColor: theme.card,
+            }}
+            onPress={() => {
+              setDatePickerTarget('strategy');
+              setPickerDate(strategyFormData.date ? new Date(strategyFormData.date) : new Date());
+              setShowDatePicker(true);
+            }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Ionicons name="calendar-outline" size={20} color={theme.primary} />
+                <PaperText variant="titleMedium" style={{ color: strategyFormData.date ? theme.textPrimary : theme.textSecondary, fontWeight: '700' }}>
+                  {strategyFormData.date ? formatDateString(new Date(strategyFormData.date)) : 'Select date'}
+                </PaperText>
               </View>
-            </TouchableRipple>
-          </View>
+              <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ color: theme.primary, fontWeight: '800', fontSize: 11 }}>
+                Change Date
+              </Chip>
+            </View>
+          </TouchableRipple>
         </View>
 
         {/* Swipe Button */}
@@ -151,7 +157,6 @@ export default function StrategyTab({
       </Card.Content>
 
       <StrategyDropdownModal
-        styles={styles}
         theme={theme}
         visible={showStrategyDropdown}
         options={strategyOptions}

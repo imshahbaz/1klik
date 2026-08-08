@@ -65,7 +65,7 @@ export default function ExecuteTab({
 
   return (
     <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 0, borderWidth: 1, borderColor: theme.borderLight }}>
-      <Card.Content style={{ gap: 16 }}>
+      <Card.Content style={{ gap: 18 }}>
         {/* Broker SegmentedButtons */}
         <View>
           <PaperText variant="labelMedium" style={{ color: theme.textSecondary, marginBottom: 8, fontWeight: '700' }}>
@@ -99,7 +99,7 @@ export default function ExecuteTab({
           <TouchableRipple
             style={{
               padding: 14,
-              borderRadius: 12,
+              borderRadius: 14,
               borderWidth: 1,
               borderColor: theme.border,
             }}
@@ -194,46 +194,52 @@ export default function ExecuteTab({
           ) : null}
         </View>
 
-        {/* Quantity + Target Date */}
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <PaperTextInput
-              mode="outlined"
-              label="QUANTITY"
-              value={tradeQty}
-              onChangeText={setTradeQty}
-              keyboardType="number-pad"
-              placeholder="0"
-              placeholderTextColor={theme.placeholder}
-              textColor={theme.textPrimary}
-              outlineColor={theme.border}
-              activeOutlineColor={theme.primary}
-              style={{ backgroundColor: theme.card }}
-            />
-          </View>
+        {/* Quantity */}
+        <PaperTextInput
+          mode="outlined"
+          label="QUANTITY"
+          value={tradeQty}
+          onChangeText={setTradeQty}
+          keyboardType="number-pad"
+          placeholder="0"
+          placeholderTextColor={theme.placeholder}
+          textColor={theme.textPrimary}
+          outlineColor={theme.border}
+          activeOutlineColor={theme.primary}
+          style={{ backgroundColor: theme.card }}
+        />
 
-          <View style={{ flex: 1 }}>
-            <TouchableRipple
-              onPress={() => {
-                setDatePickerTarget('execute');
-                setPickerDate(new Date(targetDate));
-                setShowDatePicker(true);
-              }}
-            >
-              <View pointerEvents="none">
-                <PaperTextInput
-                  mode="outlined"
-                  label="TARGET DATE"
-                  value={formatDateString(targetDate)}
-                  editable={false}
-                  textColor={theme.textPrimary}
-                  outlineColor={theme.border}
-                  left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="calendar-outline" size={size || 18} color={color || theme.iconMuted} />} />}
-                  style={{ backgroundColor: theme.card }}
-                />
+        {/* Prominent Full-Width Target Date Selector */}
+        <View>
+          <PaperText variant="labelMedium" style={{ color: theme.textSecondary, marginBottom: 8, fontWeight: '700' }}>
+            TARGET DATE
+          </PaperText>
+          <TouchableRipple
+            style={{
+              padding: 14,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: theme.border,
+              backgroundColor: theme.card,
+            }}
+            onPress={() => {
+              setDatePickerTarget('execute');
+              setPickerDate(new Date(targetDate));
+              setShowDatePicker(true);
+            }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Ionicons name="calendar-outline" size={20} color={theme.primary} />
+                <PaperText variant="titleMedium" style={{ color: theme.textPrimary, fontWeight: '700' }}>
+                  {formatDateString(targetDate)}
+                </PaperText>
               </View>
-            </TouchableRipple>
-          </View>
+              <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ color: theme.primary, fontWeight: '800', fontSize: 11 }}>
+                Change Date
+              </Chip>
+            </View>
+          </TouchableRipple>
         </View>
 
         {/* Swipe Button */}
@@ -251,7 +257,6 @@ export default function ExecuteTab({
       </Card.Content>
 
       <StrategyDropdownModal
-        styles={styles}
         theme={theme}
         visible={showStrategyDropdown}
         options={EXECUTE_STRATEGIES}
