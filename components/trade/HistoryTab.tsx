@@ -89,14 +89,20 @@ export default function HistoryTab({
                   theme={theme}
                   badgeLabel="BUY"
                   title={log.symbol}
-                  broker={log.broker}
                   orderStatus={log.orderStatus}
                   statusLabel={log.statusLabel}
                   statusColor={log.statusColor}
-                  strategyName={log.strategyName}
-                  targetPercentage={log.targetPercentage}
-                  meta={`${log.qty} qty`}
-                  footerText={log.targetDate || ''}
+                  details={[
+                    { label: 'QUANTITY', value: `${log.qty}`, mono: true },
+                    { label: 'BROKER', value: log.broker || '—' },
+                    { label: 'STRATEGY', value: log.strategyName || '—' },
+                    {
+                      label: 'TARGET',
+                      value: log.targetPercentage ? `+${log.targetPercentage}%` : 'Trailing',
+                      mono: Boolean(log.targetPercentage),
+                    },
+                    { label: 'EXECUTES ON', value: log.targetDate || '—' },
+                  ]}
                   reason={log.reason}
                   onEdit={() => {
                     setTradeSymbol(log.symbol);
@@ -136,9 +142,12 @@ export default function HistoryTab({
                   theme={theme}
                   badgeLabel="AUTO"
                   title={log.strategyName}
-                  broker={log.broker}
-                  meta={`₹${log.amount.toLocaleString('en-IN')}`}
-                  footerText={log.date || ''}
+                  orderStatus={log.status}
+                  details={[
+                    { label: 'AMOUNT', value: `₹${log.amount.toLocaleString('en-IN')}`, mono: true },
+                    { label: 'BROKER', value: log.broker || '—' },
+                    { label: 'STARTS ON', value: log.date || '—' },
+                  ]}
                   reason={log.reason}
                   onEdit={() => {
                     setStrategyFormData({
