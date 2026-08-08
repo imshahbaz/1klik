@@ -45,13 +45,10 @@ export default function Button({
   const bg = inert && variant !== 'text' && variant !== 'outlined' ? theme.disabledButton : palette.bg;
   const fg = inert ? theme.disabledText : palette.fg;
 
+  // The fill lives on a plain View so the ripple's native background drawable
+  // can't shadow later colour changes — see the note in Panel.
   return (
-    <TouchableRipple
-      onPress={inert ? undefined : onPress}
-      rippleColor={theme.ripple}
-      disabled={inert}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: inert }}
+    <View
       style={[
         styles.button,
         {
@@ -63,17 +60,26 @@ export default function Button({
         style,
       ]}
     >
-      <View style={styles.content}>
-        {loading ? (
-          <ActivityIndicator size={16} color={fg} />
-        ) : (
-          icon && <Ionicons name={icon} size={18} color={fg} />
-        )}
-        <Text style={{ fontSize: 14.5, fontWeight: '700', letterSpacing: 0.3, color: fg }}>
-          {label}
-        </Text>
-      </View>
-    </TouchableRipple>
+      <TouchableRipple
+        onPress={inert ? undefined : onPress}
+        rippleColor={theme.ripple}
+        disabled={inert}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: inert }}
+        style={styles.fill}
+      >
+        <View style={styles.content}>
+          {loading ? (
+            <ActivityIndicator size={16} color={fg} />
+          ) : (
+            icon && <Ionicons name={icon} size={18} color={fg} />
+          )}
+          <Text style={{ fontSize: 14.5, fontWeight: '700', letterSpacing: 0.3, color: fg }}>
+            {label}
+          </Text>
+        </View>
+      </TouchableRipple>
+    </View>
   );
 }
 
@@ -82,6 +88,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     justifyContent: 'center',
     overflow: 'hidden',
+  },
+  fill: {
+    flex: 1,
+    justifyContent: 'center',
   },
   content: {
     flexDirection: 'row',

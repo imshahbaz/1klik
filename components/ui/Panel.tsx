@@ -30,10 +30,17 @@ export function Panel({ children, style, padded = true, raised = false, onPress 
   };
 
   if (onPress) {
+    // The themed background stays on a plain View and the ripple sits inside it,
+    // transparent. Android installs `android_ripple` as the pressable's native
+    // background drawable, which then shadows later backgroundColor changes —
+    // so a themed pressable keeps its old colour until the native view is
+    // recreated (e.g. by navigating away and back).
     return (
-      <TouchableRipple onPress={onPress} rippleColor={theme.ripple} style={[base, style]}>
-        <View style={padded ? { padding: space.lg } : undefined}>{children}</View>
-      </TouchableRipple>
+      <View style={[base, style]}>
+        <TouchableRipple onPress={onPress} rippleColor={theme.ripple} style={styles.fill}>
+          <View style={padded ? { padding: space.lg } : undefined}>{children}</View>
+        </TouchableRipple>
+      </View>
     );
   }
 
@@ -73,6 +80,9 @@ export function Hairline({ inset = 0 }: { readonly inset?: number }) {
 }
 
 const styles = StyleSheet.create({
+  fill: {
+    flexGrow: 1,
+  },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',

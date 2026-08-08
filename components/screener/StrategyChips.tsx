@@ -77,11 +77,10 @@ export default function StrategyChips({
         const metadata = getStrategyMetadata(item.name);
         const rate = formatSuccessRate(item.successRate);
 
+        // Selected fill on a plain View, ripple nested — see the note in Panel.
         return (
-          <TouchableRipple
+          <View
             key={`${item.name}-${index}`}
-            onPress={() => onSelect(item.name)}
-            rippleColor={theme.ripple}
             style={[
               styles.chip,
               {
@@ -89,9 +88,14 @@ export default function StrategyChips({
                 borderColor: active ? theme.primary : theme.border,
               },
             ]}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
           >
+            <TouchableRipple
+              onPress={() => onSelect(item.name)}
+              rippleColor={theme.ripple}
+              style={styles.chipFill}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+            >
             <View style={styles.chipInner}>
               <Ionicons
                 name={metadata.iconName}
@@ -119,9 +123,10 @@ export default function StrategyChips({
                 >
                   {rate}
                 </Text>
-              ) : null}
-            </View>
-          </TouchableRipple>
+                ) : null}
+              </View>
+            </TouchableRipple>
+          </View>
         );
       })}
     </ScrollView>
@@ -142,6 +147,10 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: radius.sm,
     borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+  },
+  chipFill: {
+    flex: 1,
     justifyContent: 'center',
   },
   chipInner: {

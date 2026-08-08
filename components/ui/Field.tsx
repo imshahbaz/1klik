@@ -186,30 +186,32 @@ export function ToggleGroup({ label, value, options, onChange }: ToggleGroupProp
       <View style={[styles.track, { backgroundColor: theme.surfaceSunken, borderColor: theme.border }]}>
         {options.map((option) => {
           const active = option.value === value;
+          // Selected fill on a plain View, ripple nested — see the note in Panel.
           return (
-            <TouchableRipple
+            <View
               key={option.value}
-              onPress={() => onChange(option.value)}
-              rippleColor={theme.ripple}
-              style={[
-                styles.segment,
-                active && { backgroundColor: theme.primary },
-              ]}
-              accessibilityRole="button"
-              accessibilityState={{ selected: active }}
+              style={[styles.segment, active && { backgroundColor: theme.primary }]}
             >
-              <Text
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: '700',
-                  letterSpacing: 0.6,
-                  textAlign: 'center',
-                  color: active ? theme.buttonPrimaryText : theme.textSecondary,
-                }}
+              <TouchableRipple
+                onPress={() => onChange(option.value)}
+                rippleColor={theme.ripple}
+                style={styles.segmentFill}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
               >
-                {option.label}
-              </Text>
-            </TouchableRipple>
+                <Text
+                  style={{
+                    fontSize: 12.5,
+                    fontWeight: '700',
+                    letterSpacing: 0.6,
+                    textAlign: 'center',
+                    color: active ? theme.buttonPrimaryText : theme.textSecondary,
+                  }}
+                >
+                  {option.label}
+                </Text>
+              </TouchableRipple>
+            </View>
           );
         })}
       </View>
@@ -259,6 +261,10 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 38,
     borderRadius: radius.xs,
+    overflow: 'hidden',
+  },
+  segmentFill: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
