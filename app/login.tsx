@@ -21,7 +21,6 @@ export default function LoginScreen() {
   const layout = useAdaptiveLayout(insets);
   const { refreshUserData, user } = useAuth();
 
-  // Force dark mode colors to match the pitch black splash screen background
   const theme = darkColors;
   const styles = useLoginStyles(true);
   const [loading, setLoading] = useState(false);
@@ -106,29 +105,29 @@ export default function LoginScreen() {
         <KeyboardAwareScrollView
           contentContainerStyle={[
             styles.scrollContainer,
-            { paddingHorizontal: layout.horizontalPadding },
+            { paddingHorizontal: layout.horizontalPadding, justifyContent: 'center', minHeight: '100%' },
           ]}
           contentInsetAdjustmentBehavior="automatic"
           showsVerticalScrollIndicator={false}
         >
-          <View style={[styles.container, layout.centeredContent]}>
-            {/* Title Brand Section */}
-            <View style={{ alignItems: 'center', marginBottom: 40 }}>
+          <View style={[styles.container, layout.centeredContent, { width: '100%', maxWidth: 400, alignSelf: 'center' }]}>
+            {/* Simple Clean Header */}
+            <View style={{ alignItems: 'center', marginBottom: 32 }}>
               <PaperText variant="headlineLarge" style={{ color: '#ffffff', fontWeight: '800', textAlign: 'center', fontSize: moderateScale(26) }}>
                 Welcome to 1Klik
               </PaperText>
-              <PaperText variant="bodyLarge" style={{ color: '#94a3b8', textAlign: 'center', marginTop: 8, fontSize: moderateScale(15) }}>
+              <PaperText variant="bodyMedium" style={{ color: '#94a3b8', textAlign: 'center', marginTop: 8, fontSize: moderateScale(14) }}>
                 Sign in to access your trading dashboard
               </PaperText>
             </View>
 
-            {/* Login Options Paper Card */}
-            <Card style={{ backgroundColor: '#111827', borderColor: '#374151', borderWidth: 1, borderRadius: 24, padding: 8 }}>
-              <Card.Content>
+            {/* Simple Card */}
+            <Card style={{ backgroundColor: '#1c1c1e', borderColor: '#2c2c2e', borderWidth: 1, borderRadius: 20, padding: 12, elevation: 0 }}>
+              <Card.Content style={{ gap: 16 }}>
                 {error ? (
-                  <Surface style={[styles.errorAlert, { backgroundColor: theme.dangerBackground, borderRadius: 12, padding: 12, marginBottom: 16 }]} elevation={0}>
+                  <Surface style={[styles.errorAlert, { backgroundColor: theme.dangerBackground, borderRadius: 12, padding: 12 }]} elevation={0}>
                     <Ionicons name="alert-circle-outline" size={20} color={theme.danger} />
-                    <PaperText style={{ color: theme.danger, marginLeft: 8, flex: 1, fontWeight: '600' }}>{error}</PaperText>
+                    <PaperText style={{ color: theme.danger, marginLeft: 8, flex: 1, fontWeight: '600', fontSize: 13 }}>{error}</PaperText>
                   </Surface>
                 ) : null}
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ScrollView } from 'react-native';
-import { Portal, Modal as PaperModal, Surface, Text as PaperText, IconButton, Chip, Divider, TouchableRipple } from 'react-native-paper';
+import { Surface, Text as PaperText, Chip, TouchableRipple } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 
 function formatSuccessRate(rate: unknown): string | null {
@@ -13,7 +13,6 @@ function formatSuccessRate(rate: unknown): string | null {
 }
 
 interface StrategyModalProps {
-  readonly styles?: any;
   readonly theme: any;
   readonly dropdownVisible: boolean;
   readonly setDropdownVisible: (val: boolean) => void;
@@ -32,89 +31,80 @@ export default function StrategyModal({
   handleStrategyPress,
   getStrategyMetadata
 }: StrategyModalProps) {
+  if (!dropdownVisible) return null;
+
   return (
-    <Portal>
-      <PaperModal
-        visible={dropdownVisible}
-        onDismiss={() => setDropdownVisible(false)}
-        contentContainerStyle={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 20,
-        }}
+    <Surface
+      style={{
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        backgroundColor: theme.card,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: theme.border,
+        marginTop: 6,
+        padding: 6,
+        maxHeight: 280,
+        elevation: 8,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+      }}
+      elevation={5}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={true}
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
+        style={{ width: '100%' }}
       >
-        <Surface
-          style={{
-            backgroundColor: theme.card,
-            borderRadius: 24,
-            width: '100%',
-            maxWidth: 360,
-            maxHeight: '80%',
-            padding: 16,
-            elevation: 5,
-          }}
-          elevation={4}
-        >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
-              Select Strategy
-            </PaperText>
-            <IconButton
-              icon={({ size, color }) => <Ionicons name="close" size={size || 20} color={color || theme.textSecondary} />}
-              onPress={() => setDropdownVisible(false)}
-            />
-          </View>
+        {strategies.map((item, index) => {
+          const isSelected = selectedStrategy === item.name;
+          const metadata = getStrategyMetadata(item.name);
+          const successRateText = formatSuccessRate(item.successRate);
 
-          <Divider style={{ backgroundColor: theme.border, marginBottom: 8 }} />
+          return (
+            <TouchableRipple
+              key={item.name + index}
+              style={{
+                padding: 10,
+                borderRadius: 12,
+                backgroundColor: isSelected ? theme.primaryBackground : 'transparent',
+                marginBottom: 4,
+              }}
+              onPress={() => {
+                handleStrategyPress(item.name);
+                setDropdownVisible(false);
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                  <Surface style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: isSelected ? theme.primaryBackground : theme.borderLight, alignItems: 'center', justifyContent: 'center' }} elevation={0}>
+                    <Ionicons name={metadata.iconName} size={15} color={isSelected ? theme.primary : theme.textSecondary} />
+                  </Surface>
+                  <PaperText variant="titleSmall" style={{ fontWeight: isSelected ? '800' : '600', color: isSelected ? theme.primary : theme.textPrimary }} numberOfLines={1}>
+                    {item.name}
+                  </PaperText>
+                </View>
 
-          <ScrollView style={{ width: '100%' }}>
-            {strategies.map((item, index) => {
-              const isSelected = selectedStrategy === item.name;
-              const metadata = getStrategyMetadata(item.name);
-              const successRateText = formatSuccessRate(item.successRate);
+                {successRateText ? (
+                  <Chip compact style={{ backgroundColor: theme.successBackground, marginRight: isSelected ? 6 : 0 }} textStyle={{ color: theme.success, fontSize: 10, fontWeight: '800' }}>
+                    {successRateText}
+                  </Chip>
+                ) : null}
 
-              return (
-                <TouchableRipple
-                  key={item.name + index}
-                  style={{
-                    padding: 12,
-                    borderRadius: 14,
-                    backgroundColor: isSelected ? theme.primaryBackground : 'transparent',
-                    marginBottom: 6,
-                  }}
-                  onPress={() => handleStrategyPress(item.name)}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-                      <Surface style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: isSelected ? theme.primaryBackground : theme.borderLight, alignItems: 'center', justifyContent: 'center' }} elevation={0}>
-                        <Ionicons name={metadata.iconName} size={16} color={isSelected ? theme.primary : theme.textSecondary} />
-                      </Surface>
-                      <View style={{ flex: 1 }}>
-                        <PaperText variant="titleSmall" style={{ fontWeight: isSelected ? '800' : '600', color: isSelected ? theme.primary : theme.textPrimary }} numberOfLines={1}>
-                          {item.name}
-                        </PaperText>
-                        <Chip compact textStyle={{ fontSize: 10, fontWeight: '700' }} style={{ marginTop: 2, alignSelf: 'flex-start' }}>
-                          {metadata.badgeText}
-                        </Chip>
-                      </View>
-                    </View>
-
-                    {successRateText && (
-                      <Chip compact style={{ backgroundColor: theme.successBackground }} textStyle={{ color: theme.success, fontSize: 11, fontWeight: '800' }}>
-                        {successRateText}
-                      </Chip>
-                    )}
-
-                    {isSelected && (
-                      <Ionicons name="checkmark-circle" size={20} color={theme.primary} style={{ marginLeft: 8 }} />
-                    )}
-                  </View>
-                </TouchableRipple>
-              );
-            })}
-          </ScrollView>
-        </Surface>
-      </PaperModal>
-    </Portal>
+                {isSelected ? (
+                  <Ionicons name="checkmark-circle" size={18} color={theme.primary} />
+                ) : null}
+              </View>
+            </TouchableRipple>
+          );
+        })}
+      </ScrollView>
+    </Surface>
   );
 }
