@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, FlatList } from 'react-native';
+import { View, FlatList } from 'react-native';
+import { Card, Text as PaperText, Button as PaperButton, Surface } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 
 interface ScreenerResultsProps {
@@ -29,10 +30,10 @@ export default function ScreenerResults({
 }: ScreenerResultsProps) {
   return (
     <View style={styles.resultsSection}>
-      <View style={styles.resultsHeaderRow}>
-        <Text style={styles.resultsTitle}>
+      <View style={{ marginBottom: 12 }}>
+        <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
           {selectedStrategy ? `Scan results: ${selectedStrategy}` : 'Scan Results'}
-        </Text>
+        </PaperText>
       </View>
 
       {(() => {
@@ -41,42 +42,48 @@ export default function ScreenerResults({
         }
         if (scanError) {
           return (
-            <View style={styles.emptyStateContainer}>
-              <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.danger + '15' }]}>
-                <Ionicons name="alert-circle-outline" size={32} color={theme.danger} />
-              </View>
-              <Text style={styles.emptyStateTitle}>Scan Failed</Text>
-              <Text style={[styles.emptyStateSubtext, { color: theme.danger }]}>{scanError}</Text>
-              <TouchableOpacity style={[styles.retryButton, { marginTop: 8 }]} onPress={() => handleStrategyPress(selectedStrategy || '')} activeOpacity={0.8}>
-                <Text style={styles.retryText}>Retry Scan</Text>
-              </TouchableOpacity>
-            </View>
+            <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 16 }}>
+              <Card.Content style={{ alignItems: 'center' }}>
+                <Surface style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: theme.dangerBackground, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }} elevation={0}>
+                  <Ionicons name="alert-circle-outline" size={32} color={theme.danger} />
+                </Surface>
+                <PaperText variant="titleMedium" style={{ color: theme.textPrimary, fontWeight: '800' }}>Scan Failed</PaperText>
+                <PaperText variant="bodyMedium" style={{ color: theme.danger, marginVertical: 8, textAlign: 'center' }}>{scanError}</PaperText>
+                <PaperButton mode="contained" buttonColor={theme.primary} onPress={() => handleStrategyPress(selectedStrategy || '')}>
+                  Retry Scan
+                </PaperButton>
+              </Card.Content>
+            </Card>
           );
         }
         if (!selectedStrategy) {
           return (
-            <View style={styles.emptyStateContainer}>
-              <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.primary + '15' }]}>
-                <Ionicons name="search-outline" size={32} color={theme.primary} />
-              </View>
-              <Text style={styles.emptyStateTitle}>Ready to Scan</Text>
-              <Text style={styles.emptyStateSubtext}>
-                Select a strategy above to query the market and find your next setup.
-              </Text>
-            </View>
+            <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 16 }}>
+              <Card.Content style={{ alignItems: 'center', paddingVertical: 24 }}>
+                <Surface style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: theme.primaryBackground, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }} elevation={0}>
+                  <Ionicons name="search-outline" size={32} color={theme.primary} />
+                </Surface>
+                <PaperText variant="titleMedium" style={{ color: theme.textPrimary, fontWeight: '800' }}>Ready to Scan</PaperText>
+                <PaperText variant="bodySmall" style={{ color: theme.textSecondary, textAlign: 'center', marginTop: 4 }}>
+                  Select a strategy above to query the market and find your next setup.
+                </PaperText>
+              </Card.Content>
+            </Card>
           );
         }
         if (scanResults.length === 0) {
           return (
-            <View style={styles.emptyStateContainer}>
-              <View style={[styles.emptyStateIconWrapper, { backgroundColor: theme.borderLight }]}>
-                <Ionicons name="filter-outline" size={32} color={theme.iconMuted} />
-              </View>
-              <Text style={styles.emptyStateTitle}>No Matches Found</Text>
-              <Text style={styles.emptyStateSubtext}>
-                No stocks currently match the {selectedStrategy} criteria.
-              </Text>
-            </View>
+            <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 16 }}>
+              <Card.Content style={{ alignItems: 'center', paddingVertical: 24 }}>
+                <Surface style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: theme.borderLight, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }} elevation={0}>
+                  <Ionicons name="filter-outline" size={32} color={theme.iconMuted} />
+                </Surface>
+                <PaperText variant="titleMedium" style={{ color: theme.textPrimary, fontWeight: '800' }}>No Matches Found</PaperText>
+                <PaperText variant="bodySmall" style={{ color: theme.textSecondary, textAlign: 'center', marginTop: 4 }}>
+                  No stocks currently match the {selectedStrategy} criteria.
+                </PaperText>
+              </Card.Content>
+            </Card>
           );
         }
         return (

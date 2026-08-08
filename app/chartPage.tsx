@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { Card, Text as PaperText, ActivityIndicator, Chip, IconButton } from 'react-native-paper';
 import { ScaledSheet } from 'react-native-size-matters';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FinancialChart from '../components/FinancialChart';
@@ -25,9 +26,6 @@ export default function ChartScreen() {
 
   useEffect(() => {
     if (!symbol) return;
-
-    // Guards against a stale-symbol response overwriting newer data and against
-    // setting state after the screen unmounts mid-request.
     let cancelled = false;
 
     const fetchNews = async () => {
@@ -80,39 +78,46 @@ export default function ChartScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top }]}>
-
-
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
-        {/* Chart Section */}
+        {/* Technical Chart Section */}
         <View style={styles.section}>
-          <TouchableOpacity
-            activeOpacity={0.8}
+          <Card
+            style={{ backgroundColor: theme.card, borderRadius: 24, elevation: 3 }}
             onPress={() => setIsChartExpanded(!isChartExpanded)}
-            style={[styles.expandBtn, { backgroundColor: theme.card, borderColor: isChartExpanded ? theme.primary : theme.border }]}
           >
-            <View style={styles.expandLeft}>
-              <View style={[styles.iconCircle, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
-                <Ionicons name="stats-chart" size={18} color={theme.primary} />
-              </View>
-              <View>
-                <View style={styles.expandTitleRow}>
-                  <Text style={[styles.expandTitle, { color: theme.textPrimary }]}>Technical Chart</Text>
-                  {!isChartExpanded && (
-                    <View style={[styles.expandBadge, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
-                      <Text style={[styles.expandBadgeText, { color: theme.primary }]}>EXPAND</Text>
-                    </View>
-                  )}
+            <Card.Content style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+                <IconButton
+                  icon={({ size }) => <Ionicons name="stats-chart" size={size || 18} color={theme.primary} />}
+                  containerColor={theme.primaryBackground}
+                  size={20}
+                />
+                <View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <PaperText variant="titleMedium" style={{ fontWeight: '900', color: theme.textPrimary }}>
+                      Technical Chart
+                    </PaperText>
+                    {!isChartExpanded && (
+                      <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ color: theme.primary, fontSize: 9, fontWeight: '900' }}>
+                        EXPAND
+                      </Chip>
+                    )}
+                  </View>
+                  <PaperText variant="labelSmall" style={{ color: theme.textSecondary, letterSpacing: 1, marginTop: 2 }}>
+                    REAL-TIME MARKET MOVEMENT
+                  </PaperText>
                 </View>
-                <Text style={[styles.expandSubtitle, { color: theme.textSecondary }]}>REAL-TIME MARKET MOVEMENT</Text>
               </View>
-            </View>
-            <View style={[styles.chevronCircle, { backgroundColor: isChartExpanded ? theme.primary : theme.card }]}>
-              <Ionicons name={isChartExpanded ? "chevron-up" : "chevron-down"} size={16} color={isChartExpanded ? '#ffffff' : theme.textPrimary} />
-            </View>
-          </TouchableOpacity>
+              <IconButton
+                icon={({ size }) => <Ionicons name={isChartExpanded ? "chevron-up" : "chevron-down"} size={size || 18} color={isChartExpanded ? "#ffffff" : theme.textPrimary} />}
+                containerColor={isChartExpanded ? theme.primary : theme.borderLight}
+                size={20}
+              />
+            </Card.Content>
+          </Card>
 
           {isChartExpanded && (
-            <View style={[styles.chartContainer, { borderColor: theme.border, backgroundColor: theme.card }]}>
+            <Card style={{ backgroundColor: theme.card, borderRadius: 24, overflow: 'hidden', height: 400, marginTop: 12 }}>
               {chartLoading ? (
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                   <ActivityIndicator size="large" color={theme.primary} />
@@ -120,7 +125,7 @@ export default function ChartScreen() {
               ) : (
                 <FinancialChart rawData={chartData} theme={theme} height={400} />
               )}
-            </View>
+            </Card>
           )}
         </View>
 
@@ -158,185 +163,5 @@ const styles = ScaledSheet.create({
   },
   section: {
     gap: '16@ms',
-  },
-  expandBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '16@ms',
-    borderRadius: '24@ms',
-    borderWidth: 1,
-  },
-  expandLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '12@ms',
-    flex: 1,
-  },
-  iconCircle: {
-    height: '40@ms',
-    width: '40@ms',
-    borderRadius: '12@ms',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  expandTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '8@ms',
-  },
-  expandTitle: {
-    fontSize: '16@ms',
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
-  expandBadge: {
-    paddingHorizontal: '6@ms',
-    paddingVertical: '2@ms',
-    borderRadius: '12@ms',
-  },
-  expandBadgeText: {
-    fontSize: '9@ms',
-    fontWeight: '900',
-  },
-  expandSubtitle: {
-    fontSize: '10@ms',
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginTop: '2@ms',
-  },
-  chevronCircle: {
-    height: '32@ms',
-    width: '32@ms',
-    borderRadius: '16@ms',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chartContainer: {
-    height: 400,
-    borderRadius: '24@ms',
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '8@ms',
-  },
-  sectionTitle: {
-    fontSize: '18@ms',
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
-  aiCard: {
-    borderRadius: '24@ms',
-    borderWidth: 1,
-    padding: '24@ms',
-  },
-  aiGrid: {
-    flexDirection: 'column',
-    gap: '24@ms',
-  },
-  aiLeft: {
-    gap: '16@ms',
-  },
-  aiItem: {
-    gap: '4@ms',
-  },
-  aiLabel: {
-    fontSize: '10@ms',
-    fontWeight: '900',
-    letterSpacing: 1,
-  },
-  aiAction: {
-    fontSize: '32@ms',
-    fontWeight: '900',
-    letterSpacing: -1,
-  },
-  aiRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '16@ms',
-  },
-  dividerVertical: {
-    width: 1,
-    height: '32@ms',
-  },
-  aiValue: {
-    fontSize: '18@ms',
-    fontWeight: '700',
-  },
-  trendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  neutralDot: {
-    height: '6@ms',
-    width: '16@ms',
-    backgroundColor: '#eab308',
-    borderRadius: '3@ms',
-  },
-  targetRow: {
-    flexDirection: 'row',
-    gap: '24@ms',
-    borderTopWidth: 1,
-    paddingTop: '16@ms',
-  },
-  aiRight: {
-    flex: 1,
-  },
-  aiReasoning: {
-    fontSize: '14@ms',
-    lineHeight: '22@ms',
-    fontWeight: '500',
-  },
-  emptyCard: {
-    padding: '32@ms',
-    borderRadius: '24@ms',
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontSize: '12@ms',
-    fontWeight: '900',
-    letterSpacing: 1,
-    textAlign: 'center',
-  },
-  newsList: {
-    gap: '12@ms',
-  },
-  newsItem: {
-    flexDirection: 'row',
-    padding: '16@ms',
-    borderRadius: '16@ms',
-    borderWidth: 1,
-    gap: '12@ms',
-  },
-  newsDot: {
-    height: '6@ms',
-    width: '6@ms',
-    borderRadius: '3@ms',
-    marginTop: '6@ms',
-  },
-  newsContent: {
-    flex: 1,
-    gap: '6@ms',
-  },
-  newsTitle: {
-    fontSize: '14@ms',
-    fontWeight: '700',
-    lineHeight: '20@ms',
-  },
-  newsMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '4@ms',
-  },
-  newsDate: {
-    fontSize: '10@ms',
-    fontWeight: '700',
-    letterSpacing: 0.5,
   },
 });

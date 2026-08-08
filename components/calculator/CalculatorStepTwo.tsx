@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
+import { Card, Text as PaperText, TextInput as PaperTextInput, Button as PaperButton, SegmentedButtons, HelperText, Surface, Chip } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 
 interface CalculatorStepTwoProps {
@@ -22,7 +23,6 @@ interface CalculatorStepTwoProps {
 }
 
 export default function CalculatorStepTwo({
-  styles,
   theme,
   errors,
   setErrors,
@@ -40,83 +40,84 @@ export default function CalculatorStepTwo({
   calculateReturns
 }: CalculatorStepTwoProps) {
   return (
-    <View style={styles.stepContent}>
-      {/* Date fields */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Entry Date</Text>
-        <TouchableOpacity
-          style={styles.inputWrapper}
-          onPress={() => {
-            setDatePickerTarget('entry');
-            if (entryDate) setPickerDate(new Date(entryDate));
-            setShowDatePicker(true);
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
-          <Text style={[styles.textInput, { color: entryDate ? theme.textPrimary : theme.textSecondary }]}>
-            {entryDate || 'YYYY-MM-DD'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Exit Date (Optional)</Text>
-        <TouchableOpacity
-          style={styles.inputWrapper}
-          onPress={() => {
-            setDatePickerTarget('exit');
-            if (exitDate) setPickerDate(new Date(exitDate));
-            else if (entryDate) setPickerDate(new Date(entryDate));
-            setShowDatePicker(true);
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="calendar-outline" size={18} color={theme.iconMuted} style={styles.inputIcon} />
-          <Text style={[styles.textInput, { color: exitDate ? theme.textPrimary : theme.textSecondary }]}>
-            {exitDate || 'Select Exit Date'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Days held projection */}
-      <View style={styles.daysHeldPreviewBox}>
-        <Text style={styles.daysHeldPreviewLabel}>Calculated Holding Days</Text>
-        <View style={styles.daysHeldBadge}>
-          <Text style={styles.daysHeldBadgeText}>{daysHeld} Days</Text>
-        </View>
-      </View>
-
-      {/* Quantity Type Switcher */}
-      <View style={styles.exitStrategyBox}>
-        <View style={styles.exitHeaderRow}>
-          <Text style={styles.inputLabel}>Entry Method</Text>
-          <View style={styles.tabToggleBg}>
-            <TouchableOpacity
-              style={[styles.toggleBtn, quantityType === 'quantity' ? styles.toggleBtnActive : null]}
-              onPress={() => setQuantityType('quantity')}
-            >
-              <Text style={[styles.toggleBtnText, quantityType === 'quantity' ? styles.toggleBtnTextActive : null]}>
-                By Shares
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.toggleBtn, quantityType === 'investment' ? styles.toggleBtnActive : null]}
-              onPress={() => setQuantityType('investment')}
-            >
-              <Text style={[styles.toggleBtnText, quantityType === 'investment' ? styles.toggleBtnTextActive : null]}>
-                By Capital
-              </Text>
-            </TouchableOpacity>
-          </View>
+    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
+      <Card.Content>
+        {/* Date Selection */}
+        <View style={{ marginBottom: 16 }}>
+          <TouchableOpacity
+            onPress={() => {
+              setDatePickerTarget('entry');
+              if (entryDate) setPickerDate(new Date(entryDate));
+              setShowDatePicker(true);
+            }}
+            activeOpacity={0.8}
+          >
+            <PaperTextInput
+              mode="outlined"
+              label="Entry Date"
+              value={entryDate || 'YYYY-MM-DD'}
+              editable={false}
+              textColor={theme.textPrimary}
+              outlineColor={theme.border}
+              left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="calendar-outline" size={size || 18} color={color || theme.iconMuted} />} />}
+              style={{ backgroundColor: theme.card }}
+              pointerEvents="none"
+            />
+          </TouchableOpacity>
         </View>
 
-        <View style={[styles.inputWrapper, errors.quantity ? styles.inputError : null]}>
-          {quantityType === 'investment' ? (
-            <Text style={styles.inputCurrencyPrefix}>₹</Text>
-          ) : null}
-          <TextInput
-            style={styles.textInput}
+        <View style={{ marginBottom: 16 }}>
+          <TouchableOpacity
+            onPress={() => {
+              setDatePickerTarget('exit');
+              if (exitDate) setPickerDate(new Date(exitDate));
+              else if (entryDate) setPickerDate(new Date(entryDate));
+              setShowDatePicker(true);
+            }}
+            activeOpacity={0.8}
+          >
+            <PaperTextInput
+              mode="outlined"
+              label="Exit Date (Optional)"
+              value={exitDate || 'Select Exit Date'}
+              editable={false}
+              textColor={exitDate ? theme.textPrimary : theme.textSecondary}
+              outlineColor={theme.border}
+              left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="calendar-outline" size={size || 18} color={color || theme.iconMuted} />} />}
+              style={{ backgroundColor: theme.card }}
+              pointerEvents="none"
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Days held preview */}
+        <Surface style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderRadius: 14, backgroundColor: theme.primaryBackground, marginBottom: 20 }} elevation={0}>
+          <PaperText variant="bodyMedium" style={{ color: theme.textSecondary, fontWeight: '700' }}>
+            Calculated Holding Days
+          </PaperText>
+          <Chip compact textStyle={{ fontSize: 13, fontWeight: '800', color: theme.primary }}>
+            {daysHeld} Days
+          </Chip>
+        </Surface>
+
+        {/* Quantity / Investment Switcher */}
+        <View style={{ marginBottom: 20 }}>
+          <PaperText variant="labelMedium" style={{ color: theme.textSecondary, marginBottom: 8, fontWeight: '700' }}>
+            ENTRY METHOD
+          </PaperText>
+          <SegmentedButtons
+            value={quantityType}
+            onValueChange={(val) => setQuantityType(val as 'quantity' | 'investment')}
+            buttons={[
+              { value: 'quantity', label: 'By Shares' },
+              { value: 'investment', label: 'By Capital' },
+            ]}
+            style={{ marginBottom: 12 }}
+          />
+
+          <PaperTextInput
+            mode="outlined"
+            label={quantityType === 'quantity' ? "Number of Shares" : "Total Capital Amount (₹)"}
             keyboardType="numeric"
             placeholder={quantityType === 'quantity' ? "Number of shares" : "Total capital amount"}
             placeholderTextColor={theme.placeholder}
@@ -126,31 +127,41 @@ export default function CalculatorStepTwo({
               setQuantity(clean);
               setErrors((prev) => ({ ...prev, quantity: '' }));
             }}
+            textColor={theme.textPrimary}
+            outlineColor={errors.quantity ? theme.danger : theme.border}
+            activeOutlineColor={theme.primary}
+            left={quantityType === 'investment' ? <PaperTextInput.Affix text="₹" /> : undefined}
+            style={{ backgroundColor: theme.card }}
           />
+          {errors.quantity ? <HelperText type="error" visible={true}>{errors.quantity}</HelperText> : null}
         </View>
-        {errors.quantity ? <Text style={styles.errorText}>{errors.quantity}</Text> : null}
-      </View>
 
-      {/* Action buttons */}
-      <View style={styles.actionButtonsRow}>
-        <TouchableOpacity
-          style={styles.secondaryActionButton}
-          onPress={() => setActiveStep(1)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="arrow-back" size={18} color={theme.iconMuted} />
-          <Text style={styles.secondaryActionText}>Back</Text>
-        </TouchableOpacity>
+        {/* Action Buttons Row */}
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <PaperButton
+            mode="outlined"
+            onPress={() => setActiveStep(1)}
+            icon={({ size }) => <Ionicons name="arrow-back" size={size || 18} color={theme.textPrimary} />}
+            textColor={theme.textPrimary}
+            style={{ flex: 1, borderRadius: 14, borderColor: theme.border }}
+            contentStyle={{ height: 50 }}
+          >
+            Back
+          </PaperButton>
 
-        <TouchableOpacity
-          style={styles.calculateActionButton}
-          onPress={calculateReturns}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="calculator" size={18} color="#ffffff" />
-          <Text style={styles.calculateActionText}>Calculate</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <PaperButton
+            mode="contained"
+            onPress={calculateReturns}
+            buttonColor={theme.primary}
+            icon={({ size }) => <Ionicons name="calculator" size={size || 18} color="#ffffff" />}
+            style={{ flex: 1, borderRadius: 14 }}
+            contentStyle={{ height: 50 }}
+            labelStyle={{ fontSize: 16, fontWeight: '700' }}
+          >
+            Calculate
+          </PaperButton>
+        </View>
+      </Card.Content>
+    </Card>
   );
 }

@@ -1,37 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
+import { Modal as PaperModal, Portal, Surface, Text as PaperText, Button as PaperButton, IconButton } from 'react-native-paper';
 import { buildCalendarDays } from '../../utils/calendar';
 
 interface DatePickerModalProps {
   readonly styles: any;
   readonly theme: any;
   readonly visible: boolean;
-  /** Month currently displayed in the grid. */
   readonly pickerDate: Date;
-  /** Date to highlight as selected. */
   readonly selectedDate: Date;
   readonly onPrevMonth: () => void;
   readonly onNextMonth: () => void;
   readonly onClose: () => void;
-  /** Invoked with the chosen day; the parent owns where it's stored. */
   readonly onSelectDate: (date: Date) => void;
-  /**
-   * Predicate marking a (midnight-normalized) day as non-selectable. Defaults to
-   * disabling past dates (e.g. Trade target date). Holdings passes a future-date
-   * check instead, since a buy date can't be in the future.
-   */
   readonly isDateDisabled?: (date: Date) => boolean;
 }
 
 const WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-/**
- * Month-grid date picker shared across the app (Trade target dates, Holdings
- * buy date). Selection/storage is delegated to the parent via `onSelectDate`,
- * and which days are selectable is controlled via `isDateDisabled`, keeping
- * this component purely presentational and reusable.
- */
 export default function DatePickerModal({
   styles,
   theme,
@@ -50,41 +37,60 @@ export default function DatePickerModal({
   today.setHours(0, 0, 0, 0);
 
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <TouchableOpacity style={styles.modalOverlay as any} activeOpacity={1} onPress={onClose}>
-        <View style={styles.modalCalendarContainer as any} onStartShouldSetResponder={() => true}>
+    <Portal>
+      <PaperModal
+        visible={visible}
+        onDismiss={onClose}
+        contentContainerStyle={{
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20,
+        }}
+      >
+        <Surface
+          style={[
+            styles.modalCalendarContainer,
+            {
+              backgroundColor: theme.card,
+              borderRadius: 24,
+              padding: 16,
+              width: '100%',
+              maxWidth: 340,
+              elevation: 5,
+            },
+          ]}
+          elevation={4}
+        >
           {/* Calendar Header */}
-          <View style={styles.calendarHeader as any}>
-            <TouchableOpacity onPress={onPrevMonth} style={styles.calendarNavBtn as any}>
-              <Ionicons name="chevron-back" size={18} color={theme.textPrimary} />
-            </TouchableOpacity>
-            <Text style={styles.calendarMonthText as any}>
+          <View style={[styles.calendarHeader, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }]}>
+            <IconButton
+              icon={({ size, color }) => <Ionicons name="chevron-back" size={size || 20} color={color || theme.textPrimary} />}
+              onPress={onPrevMonth}
+            />
+            <PaperText variant="titleMedium" style={{ fontWeight: '700', color: theme.textPrimary }}>
               {pickerDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-            </Text>
-            <TouchableOpacity onPress={onNextMonth} style={styles.calendarNavBtn as any}>
-              <Ionicons name="chevron-forward" size={18} color={theme.textPrimary} />
-            </TouchableOpacity>
+            </PaperText>
+            <IconButton
+              icon={({ size, color }) => <Ionicons name="chevron-forward" size={size || 20} color={color || theme.textPrimary} />}
+              onPress={onNextMonth}
+            />
           </View>
 
           {/* Calendar Grid */}
-          <View style={styles.calendarGrid as any}>
+          <View style={styles.calendarGrid}>
             {WEEKDAY_LABELS.map((label, idx) => (
-              <View key={`wk-${idx}`} style={styles.calendarHeaderDayCell as any}>
-                <Text style={styles.calendarHeaderDayText as any}>{label}</Text>
+              <View key={`wk-${idx}`} style={styles.calendarHeaderDayCell}>
+                <PaperText style={[styles.calendarHeaderDayText, { color: theme.textSecondary, fontWeight: '600' }]}>{label}</PaperText>
               </View>
             ))}
             {calendarDays.map((cell) => {
               const dayDate = cell.date;
               if (!dayDate) {
-                return <View key={cell.key} style={styles.calendarDayCell as any} />;
+                return <View key={cell.key} style={styles.calendarDayCell} />;
               }
 
-              const isSelected = selectedDate.getDate() === dayDate.getDate() &&
+              const isSelected =
+                selectedDate.getDate() === dayDate.getDate() &&
                 selectedDate.getMonth() === dayDate.getMonth() &&
                 selectedDate.getFullYear() === dayDate.getFullYear();
 
@@ -98,33 +104,43 @@ export default function DatePickerModal({
                   key={cell.key}
                   style={[
                     styles.calendarDayCell,
-                    isSelected && styles.selectedDayCell,
-                    disabled && styles.pastDayCell
-                  ] as any}
-                  onPress={disabled ? undefined : () => {
-                    onSelectDate(dayDate);
-                    onClose();
-                  }}
+                    isSelected && [styles.selectedDayCell, { backgroundColor: theme.primary }],
+                    disabled && styles.pastDayCell,
+                  ]}
+                  onPress={
+                    disabled
+                      ? undefined
+                      : () => {
+                          onSelectDate(dayDate);
+                          onClose();
+                        }
+                  }
                   disabled={disabled}
                   activeOpacity={disabled ? 1 : 0.7}
                 >
-                  <Text style={[
-                    styles.calendarDayText,
-                    isSelected && styles.selectedDayText,
-                    disabled && styles.pastDayText
-                  ] as any}>
+                  <PaperText
+                    style={[
+                      styles.calendarDayText,
+                      { color: isSelected ? '#ffffff' : disabled ? theme.disabledText : theme.textPrimary },
+                    ]}
+                  >
                     {dayDate.getDate()}
-                  </Text>
+                  </PaperText>
                 </TouchableOpacity>
               );
             })}
           </View>
 
-          <TouchableOpacity style={styles.calendarCloseBtn as any} onPress={onClose}>
-            <Text style={styles.calendarCloseBtnText as any}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    </Modal>
+          <PaperButton
+            mode="text"
+            onPress={onClose}
+            textColor={theme.primary}
+            style={{ marginTop: 12 }}
+          >
+            Cancel
+          </PaperButton>
+        </Surface>
+      </PaperModal>
+    </Portal>
   );
 }

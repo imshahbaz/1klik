@@ -1,10 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, View, TouchableOpacity } from 'react-native';
+import { Card, Text as PaperText, ActivityIndicator, Avatar, TouchableRipple } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { moderateScale } from 'react-native-size-matters';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { angelOneApi } from '../../services/api';
@@ -34,8 +32,6 @@ export default function HomeScreen() {
 
       const token = '99926033';
       const res = await angelOneApi.getLtp(token);
-
-      // Axios response returns wrapped in res.data, backend returns { data: ... }
       const data = res.data.data;
       if (data) {
         setMarketData(data);
@@ -61,11 +57,7 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (appLoading) return;
-
-      // Initial fetch with loader
       fetchMarketStatus(true);
-
-      // Auto-refresh data silently every 30 seconds to mimic live updates
       refreshIntervalRef.current = setInterval(() => {
         fetchMarketStatus(false);
       }, 30000);
@@ -83,22 +75,19 @@ export default function HomeScreen() {
     return (
       <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: getSafeBottomPadding(insets.bottom) }]}>
         <View style={[styles.container, styles.centered]}>
-          <ActivityIndicator size="large" color={theme.textPrimary} />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       </View>
     );
   }
 
   const displayName = user?.name || user?.username || '';
-
-  // Extract variables with fallback mock values to avoid crashes if API has an issue
   const ltp = marketData?.ltp || 0;
   const close = marketData?.close || marketData?.previousClose || ltp;
   const high = marketData?.high || 0;
   const low = marketData?.low || 0;
   const open = marketData?.open || 0;
   const symbol = marketData?.tradingSymbol || 'NIFTY';
-
   const change = ltp - close;
   const changePercent = close > 0 ? (change / close) * 100 : 0;
   const isBullish = change >= 0;
@@ -118,8 +107,14 @@ export default function HomeScreen() {
         {/* Header Section */}
         <View style={styles.header}>
           <View style={{ flex: 1, marginRight: 12 }}>
-            <Text style={styles.welcomeText}>Welcome{displayName ? ',' : ""}</Text>
-            {displayName ? <Text style={styles.nameText} numberOfLines={1} adjustsFontSizeToFit>{displayName}</Text> : null}
+            <PaperText variant="titleMedium" style={{ color: theme.textSecondary, fontWeight: '600' }}>
+              Welcome{displayName ? ',' : ""}
+            </PaperText>
+            {displayName ? (
+              <PaperText variant="headlineSmall" style={{ color: theme.textPrimary, fontWeight: '800' }} numberOfLines={1}>
+                {displayName}
+              </PaperText>
+            ) : null}
           </View>
           <TouchableOpacity
             style={[styles.profileButton, user?.profile ? styles.profileButtonWithImage : null]}
@@ -127,20 +122,9 @@ export default function HomeScreen() {
             activeOpacity={0.7}
           >
             {user?.profile ? (
-              <Image
-                source={{ uri: user.profile }}
-                contentFit="cover"
-                transition={120}
-                cachePolicy="memory-disk"
-                recyclingKey={user.profile}
-                style={styles.headerAvatar}
-              />
+              <Avatar.Image size={40} source={{ uri: user.profile }} />
             ) : (
-              <Ionicons
-                name={user ? "person-circle" : "person-circle-outline"}
-                size={32}
-                color={user ? theme.secondary : theme.textPrimary}
-              />
+              <Avatar.Icon size={40} icon="account" style={{ backgroundColor: theme.primaryBackground }} color={theme.primary} />
             )}
           </TouchableOpacity>
         </View>
@@ -163,46 +147,55 @@ export default function HomeScreen() {
           low={low}
         />
 
-        {/* Quick Actions Section */}
-        <View style={{ backgroundColor: theme.card, borderRadius: 24, padding: 20, marginTop: 20, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 4 }}>
-          {/* Quick Actions Header */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <Text style={{ color: theme.textPrimary, fontSize: moderateScale(18), fontWeight: '800' }}>Quick Actions</Text>
-          </View>
+        {/* Quick Actions Paper Card */}
+        <Card style={{ backgroundColor: theme.card, borderRadius: 24, marginTop: 20, marginBottom: 24, elevation: 3 }}>
+          <Card.Content style={{ padding: 20 }}>
+            <PaperText variant="titleMedium" style={{ color: theme.textPrimary, fontWeight: '800', marginBottom: 16 }}>
+              Quick Actions
+            </PaperText>
 
-          {/* Quick Actions Grid */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/screener')} activeOpacity={0.7}>
-              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: theme.primaryBackground, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="filter" size={moderateScale(30)} color={theme.primary} />
-              </View>
-              <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Screener</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <TouchableRipple style={{ alignItems: 'center', flex: 1, paddingVertical: 8, borderRadius: 16 }} onPress={() => router.push('/screener')}>
+                <View style={{ alignItems: 'center' }}>
+                  <Avatar.Icon size={56} icon="filter-variant" style={{ backgroundColor: theme.primaryBackground, marginBottom: 8 }} color={theme.primary} />
+                  <PaperText variant="labelMedium" style={{ color: theme.textPrimary, fontWeight: '700', textAlign: 'center' }}>
+                    Screener
+                  </PaperText>
+                </View>
+              </TouchableRipple>
 
-            <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => {
-              if (!user) {
-                router.push('/login');
-              } else {
-                router.push('/trade');
-              }
-            }} activeOpacity={0.7}>
-              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: theme.successBackground, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="pulse" size={moderateScale(30)} color={theme.success} />
-              </View>
-              <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Trade</Text>
-            </TouchableOpacity>
+              <TouchableRipple
+                style={{ alignItems: 'center', flex: 1, paddingVertical: 8, borderRadius: 16 }}
+                onPress={() => {
+                  if (!user) {
+                    router.push('/login');
+                  } else {
+                    router.push('/trade');
+                  }
+                }}
+              >
+                <View style={{ alignItems: 'center' }}>
+                  <Avatar.Icon size={56} icon="chart-line" style={{ backgroundColor: theme.successBackground, marginBottom: 8 }} color={theme.success} />
+                  <PaperText variant="labelMedium" style={{ color: theme.textPrimary, fontWeight: '700', textAlign: 'center' }}>
+                    Trade
+                  </PaperText>
+                </View>
+              </TouchableRipple>
 
-            <TouchableOpacity style={{ alignItems: 'center', flex: 1 }} onPress={() => router.push('/calculator')} activeOpacity={0.7}>
-              <View style={{ width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), backgroundColor: theme.warningBackground, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="calculator" size={moderateScale(30)} color={theme.warningText} />
-              </View>
-              <Text style={{ color: theme.textPrimary, fontSize: moderateScale(13), fontWeight: '600', textAlign: 'center' }}>Calculator</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+              <TouchableRipple style={{ alignItems: 'center', flex: 1, paddingVertical: 8, borderRadius: 16 }} onPress={() => router.push('/calculator')}>
+                <View style={{ alignItems: 'center' }}>
+                  <Avatar.Icon size={56} icon="calculator" style={{ backgroundColor: theme.warningBackground, marginBottom: 8 }} color={theme.warningText} />
+                  <PaperText variant="labelMedium" style={{ color: theme.textPrimary, fontWeight: '700', textAlign: 'center' }}>
+                    Calculator
+                  </PaperText>
+                </View>
+              </TouchableRipple>
+            </View>
+          </Card.Content>
+        </Card>
       </ScrollView>
 
-      {/* Side Menu Drawer overlay (Matching Screener Screen Layout!) */}
+      {/* Side Menu Drawer overlay */}
       <ProfileMenu
         styles={styles}
         theme={theme}

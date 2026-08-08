@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { View, ScrollView } from 'react-native';
+import { Portal, Modal as PaperModal, Surface, Text as PaperText, IconButton, TouchableRipple, Divider } from 'react-native-paper';
 
 interface StrategyDropdownModalProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly visible: boolean;
   readonly options: readonly string[];
@@ -12,13 +13,7 @@ interface StrategyDropdownModalProps {
   readonly onClose: () => void;
 }
 
-/**
- * "Select Strategy" picker modal shared by the Execute and Strategy order tabs.
- * Selection is delegated to the parent via `onSelect`; the component stays purely
- * presentational.
- */
 export default function StrategyDropdownModal({
-  styles,
   theme,
   visible,
   options,
@@ -27,60 +22,79 @@ export default function StrategyDropdownModal({
   onClose,
 }: StrategyDropdownModalProps) {
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={onClose}
+    <Portal>
+      <PaperModal
+        visible={visible}
+        onDismiss={onClose}
+        contentContainerStyle={{
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20,
+        }}
       >
-        <View
-          style={[styles.editModalContainer, { maxHeight: 420 }]}
-          onStartShouldSetResponder={() => true}
+        <Surface
+          style={{
+            backgroundColor: theme.card,
+            borderRadius: 24,
+            width: '100%',
+            maxWidth: 340,
+            maxHeight: 380,
+            padding: 16,
+            elevation: 5,
+          }}
+          elevation={4}
         >
-          <View style={styles.editModalHeader}>
-            <Text style={styles.editModalTitle}>Select Strategy</Text>
-            <TouchableOpacity
-              style={styles.editModalCloseBtn}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+              Select Strategy
+            </PaperText>
+            <IconButton
+              icon={({ size, color }) => <Ionicons name="close" size={size || 20} color={color || theme.textSecondary} />}
               onPress={onClose}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="close" size={18} color={theme.textSecondary} />
-            </TouchableOpacity>
+            />
           </View>
-          <ScrollView showsVerticalScrollIndicator={false}>
+
+          <Divider style={{ backgroundColor: theme.border, marginBottom: 8 }} />
+
+          <ScrollView style={{ width: '100%' }}>
             {options.length > 0 ? (
               options.map((name) => {
                 const isSelected = selected === name;
                 return (
-                  <TouchableOpacity
+                  <TouchableRipple
                     key={name}
-                    style={[styles.suggestionRow, isSelected && { backgroundColor: theme.primaryBackground }]}
+                    style={{
+                      borderRadius: 12,
+                      backgroundColor: isSelected ? theme.primaryBackground : 'transparent',
+                      marginBottom: 4,
+                    }}
                     onPress={() => {
                       onSelect(name);
                       onClose();
                     }}
-                    activeOpacity={0.7}
                   >
-                    <Text style={[styles.suggestionRowSymbol, isSelected && { color: theme.primary }]}>
-                      {name}
-                    </Text>
-                    {isSelected ? <Ionicons name="checkmark" size={16} color={theme.primary} /> : null}
-                  </TouchableOpacity>
+                    <View
+                      style={{
+                        padding: 14,
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <PaperText variant="bodyMedium" style={{ color: isSelected ? theme.primary : theme.textPrimary, fontWeight: isSelected ? '800' : '600' }}>
+                        {name}
+                      </PaperText>
+                      {isSelected ? <Ionicons name="checkmark" size={18} color={theme.primary} /> : null}
+                    </View>
+                  </TouchableRipple>
                 );
               })
             ) : (
-              <Text style={[styles.orderFieldLabel, { color: theme.placeholder, marginBottom: 0 }]}>
-                No strategies available
-              </Text>
+              <PaperText style={{ color: theme.placeholder, padding: 12 }}>No strategies available</PaperText>
             )}
           </ScrollView>
-        </View>
-      </TouchableOpacity>
-    </Modal>
+        </Surface>
+      </PaperModal>
+    </Portal>
   );
 }

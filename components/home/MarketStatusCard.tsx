@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
+import { Card, Text as PaperText, ActivityIndicator, Divider, Button as PaperButton, Chip } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 
 interface MarketStatusCardProps {
@@ -37,84 +38,103 @@ export default function MarketStatusCard({
 }: MarketStatusCardProps) {
   if (cardLoading && !marketData) {
     return (
-      <View style={[styles.card, styles.centeredCard]}>
-        <ActivityIndicator size="small" color={theme.iconMuted} />
-        <Text style={styles.loadingText}>Fetching Live Market Status...</Text>
-      </View>
+      <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 16 }}>
+        <Card.Content style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 24 }}>
+          <ActivityIndicator size="small" color={theme.iconMuted} />
+          <PaperText style={[styles.loadingText, { marginTop: 12, color: theme.textSecondary }]}>Fetching Live Market Status...</PaperText>
+        </Card.Content>
+      </Card>
     );
   }
+
   if (error && !marketData) {
     return (
-      <View style={[styles.card, styles.centeredCard]}>
-        <Ionicons name="alert-circle-outline" size={24} color={theme.danger} />
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => fetchMarketStatus(true)}>
-          <Text style={styles.retryText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+      <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 16 }}>
+        <Card.Content style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 16 }}>
+          <Ionicons name="alert-circle-outline" size={28} color={theme.danger} />
+          <PaperText style={{ color: theme.danger, marginVertical: 8, textAlign: 'center', fontWeight: '600' }}>{error}</PaperText>
+          <PaperButton mode="contained" onPress={() => fetchMarketStatus(true)} buttonColor={theme.primary}>
+            Retry
+          </PaperButton>
+        </Card.Content>
+      </Card>
     );
   }
-  return (
-    <TouchableOpacity
-      style={styles.card}
-      activeOpacity={0.9}
-      onPress={() => fetchMarketStatus(true)} // Tap card to manually refresh
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.cardTitleContainer}>
-          <Ionicons name="analytics-outline" size={18} color={theme.iconMuted} />
-          <Text style={styles.cardTitle}>Market Status</Text>
-        </View>
-        <View style={[styles.badge, isBullish ? styles.bullishBadge : styles.bearishBadge]}>
-          <View style={[styles.dot, isBullish ? styles.bullishDot : styles.bearishDot]} />
-          <Text style={[styles.badgeText, isBullish ? styles.bullishBadgeText : styles.bearishBadgeText]}>
-            {isBullish ? 'BULLISH' : 'BEARISH'}
-          </Text>
-        </View>
-      </View>
 
-      <View style={styles.cardBody}>
-        <Text style={styles.indexName}>{symbol}</Text>
-        <View style={styles.priceContainer}>
-          <Text style={styles.indexPrice} numberOfLines={1} adjustsFontSizeToFit>
-            {ltp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Text>
-          <View style={styles.changeContainer}>
-            <Ionicons
-              name={isBullish ? "caret-up" : "caret-down"}
-              size={16}
-              color={isBullish ? theme.success : theme.danger}
-            />
-            <Text style={[styles.indexChange, { color: isBullish ? theme.success : theme.danger }]}>
-              {isBullish ? '+' : ''}
-              {change.toFixed(2)} ({changePercent.toFixed(2)}%)
-            </Text>
+  return (
+    <Card style={{ backgroundColor: theme.card, borderRadius: 24, elevation: 3 }} onPress={() => fetchMarketStatus(true)}>
+      <Card.Content>
+        {/* Card Header */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="analytics-outline" size={18} color={theme.iconMuted} />
+            <PaperText variant="titleSmall" style={{ marginLeft: 6, fontWeight: '700', color: theme.textSecondary }}>
+              Market Status
+            </PaperText>
+          </View>
+          <Chip
+            compact
+            style={{
+              backgroundColor: isBullish ? theme.successBackground : theme.dangerBackground,
+              borderRadius: 12,
+            }}
+            textStyle={{
+              color: isBullish ? theme.success : theme.danger,
+              fontSize: 11,
+              fontWeight: '800',
+            }}
+          >
+            {isBullish ? 'BULLISH' : 'BEARISH'}
+          </Chip>
+        </View>
+
+        {/* Card Body */}
+        <View style={{ marginBottom: 16 }}>
+          <PaperText variant="titleMedium" style={{ fontWeight: '700', color: theme.textSecondary }}>
+            {symbol}
+          </PaperText>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
+            <PaperText variant="headlineMedium" style={{ fontWeight: '900', color: theme.textPrimary }}>
+              {ltp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </PaperText>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons
+                name={isBullish ? "caret-up" : "caret-down"}
+                size={16}
+                color={isBullish ? theme.success : theme.danger}
+              />
+              <PaperText style={{ color: isBullish ? theme.success : theme.danger, fontWeight: '700', marginLeft: 4 }}>
+                {isBullish ? '+' : ''}
+                {change.toFixed(2)} ({changePercent.toFixed(2)}%)
+              </PaperText>
+            </View>
           </View>
         </View>
-      </View>
 
-      <View style={styles.divider} />
+        <Divider style={{ backgroundColor: theme.border, marginVertical: 12 }} />
 
-      <View style={styles.cardFooter}>
-        <View style={styles.footerCol}>
-          <Text style={styles.footerLabel}>OPEN</Text>
-          <Text style={styles.footerVal}>
-            {open.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Text>
+        {/* Card Footer */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+          <View style={{ alignItems: 'center' }}>
+            <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '600' }}>OPEN</PaperText>
+            <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700', marginTop: 2 }}>
+              {open.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </PaperText>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '600' }}>HIGH</PaperText>
+            <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700', marginTop: 2 }}>
+              {high.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </PaperText>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '600' }}>LOW</PaperText>
+            <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700', marginTop: 2 }}>
+              {low.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </PaperText>
+          </View>
         </View>
-        <View style={styles.footerCol}>
-          <Text style={styles.footerLabel}>HIGH</Text>
-          <Text style={styles.footerVal}>
-            {high.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Text>
-        </View>
-        <View style={styles.footerCol}>
-          <Text style={styles.footerLabel}>LOW</Text>
-          <Text style={styles.footerVal}>
-            {low.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+      </Card.Content>
+    </Card>
   );
 }

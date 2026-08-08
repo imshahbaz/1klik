@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { View, ScrollView } from 'react-native';
+import { Card, Text as PaperText, TextInput as PaperTextInput, SegmentedButtons, TouchableRipple, Chip, Surface } from 'react-native-paper';
 import SwipeButton from '../common/SwipeButton';
 import StrategyDropdownModal from './StrategyDropdownModal';
 
-// Fixed strategy choices for the Execute order pad. Sent to the backend as `strategyName`.
 export const EXECUTE_STRATEGIES = ['TARGET PROFIT', 'TRAILING PROFIT'] as const;
 export type ExecuteStrategy = (typeof EXECUTE_STRATEGIES)[number];
 
@@ -29,14 +29,12 @@ interface ExecuteTabProps {
   readonly setPickerDate: (date: Date) => void;
   readonly setShowDatePicker: (show: boolean) => void;
   readonly editingMtfOrderId: string | null;
-  readonly setEditingMtfOrderId: (id: string | null) => void;
-  readonly setTargetDate: (date: Date) => void;
+  readonly setEditingMtfOrderId?: (id: string | null) => void;
+  readonly setTargetDate?: (date: Date) => void;
   readonly executingTrade: boolean;
   readonly handleExecuteOrder: () => void;
   readonly formatDateString: (date: Date) => string;
 }
-
-const BROKERS: ('ZERODHA' | 'RUPEEZY')[] = ['ZERODHA', 'RUPEEZY'];
 
 export default function ExecuteTab({
   styles,
@@ -59,84 +57,76 @@ export default function ExecuteTab({
   setPickerDate,
   setShowDatePicker,
   editingMtfOrderId,
-  setEditingMtfOrderId,
-  setTargetDate,
   executingTrade,
   handleExecuteOrder,
   formatDateString,
 }: ExecuteTabProps) {
   const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
 
-  const resetForm = () => {
-    setEditingMtfOrderId(null);
-    setTradeSymbol('');
-    setSearchQuery('');
-    setTradeQty('10');
-    setTargetDate(new Date());
-    setTradeBroker('ZERODHA');
-    setTradeStrategyName('TRAILING PROFIT');
-    setTradeTargetPercentage('');
-  };
-
   return (
-    <View style={styles.orderPadCard}>
-      {/* Order pad body */}
-      <View style={styles.orderPadBody}>
-        {/* Broker — segmented toggle */}
-        <Text style={styles.orderFieldLabel}>BROKER</Text>
-        <View style={styles.segmentGroup}>
-          {BROKERS.map((brokerOption) => {
-            const active = tradeBroker === brokerOption;
-            return (
-              <TouchableOpacity
-                key={brokerOption}
-                style={[styles.segmentBtn, active && styles.segmentBtnActive]}
-                onPress={() => setTradeBroker(brokerOption)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.segmentBtnText, active && styles.segmentBtnTextActive]}>
-                  {brokerOption}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+    <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
+      <Card.Content style={{ gap: 16 }}>
+        {/* Broker SegmentedButtons */}
+        <View>
+          <PaperText variant="labelMedium" style={{ color: theme.textSecondary, marginBottom: 8, fontWeight: '700' }}>
+            BROKER
+          </PaperText>
+          <SegmentedButtons
+            value={tradeBroker}
+            onValueChange={(val) => setTradeBroker(val as 'ZERODHA' | 'RUPEEZY')}
+            buttons={[
+              { value: 'ZERODHA', label: 'ZERODHA' },
+              { value: 'RUPEEZY', label: 'RUPEEZY' },
+            ]}
+          />
         </View>
 
-        {/* Strategy */}
-        <View style={styles.orderFieldGroup}>
-          <Text style={styles.orderFieldLabel}>STRATEGY</Text>
-          <TouchableOpacity
-            style={[styles.orderInput, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
+        {/* Strategy Dropdown */}
+        <View>
+          <PaperText variant="labelMedium" style={{ color: theme.textSecondary, marginBottom: 8, fontWeight: '700' }}>
+            STRATEGY
+          </PaperText>
+          <TouchableRipple
+            style={{
+              padding: 14,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
             onPress={() => setShowStrategyDropdown(true)}
-            activeOpacity={0.7}
           >
-            <Text style={styles.orderInputText} numberOfLines={1} adjustsFontSizeToFit>
-              {tradeStrategyName}
-            </Text>
-            <Ionicons name="chevron-down" size={16} color={theme.iconMuted} />
-          </TouchableOpacity>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700' }}>
+                {tradeStrategyName}
+              </PaperText>
+              <Ionicons name="chevron-down" size={18} color={theme.iconMuted} />
+            </View>
+          </TouchableRipple>
         </View>
 
-        {/* Target percentage — required only for TARGET PROFIT */}
+        {/* Target percentage input if TARGET PROFIT */}
         {tradeStrategyName === 'TARGET PROFIT' ? (
-          <View style={styles.orderFieldGroup}>
-            <Text style={styles.orderFieldLabel}>TARGET %</Text>
-            <TextInput
-              style={styles.orderInput}
-              value={tradeTargetPercentage}
-              onChangeText={setTradeTargetPercentage}
-              keyboardType="numeric"
-              placeholder="0.4 – 20"
-              placeholderTextColor={theme.placeholder}
-            />
-          </View>
+          <PaperTextInput
+            mode="outlined"
+            label="TARGET %"
+            value={tradeTargetPercentage}
+            onChangeText={setTradeTargetPercentage}
+            keyboardType="numeric"
+            placeholder="0.4 – 20"
+            placeholderTextColor={theme.placeholder}
+            textColor={theme.textPrimary}
+            outlineColor={theme.border}
+            activeOutlineColor={theme.primary}
+            right={<PaperTextInput.Affix text="%" />}
+            style={{ backgroundColor: theme.card }}
+          />
         ) : null}
 
         {/* Symbol */}
-        <View style={styles.orderFieldGroup}>
-          <Text style={styles.orderFieldLabel}>SYMBOL</Text>
-          <TextInput
-            style={styles.orderInput}
+        <View style={{ zIndex: 10 }}>
+          <PaperTextInput
+            mode="outlined"
+            label="SYMBOL"
             value={tradeSymbol}
             onChangeText={(val) => {
               setTradeSymbol(val);
@@ -146,108 +136,110 @@ export default function ExecuteTab({
             autoCorrect={false}
             placeholder="Search e.g. RELIANCE"
             placeholderTextColor={theme.placeholder}
+            textColor={theme.textPrimary}
+            outlineColor={theme.border}
+            activeOutlineColor={theme.primary}
+            left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="search-outline" size={size || 18} color={color || theme.iconMuted} />} />}
+            style={{ backgroundColor: theme.card }}
           />
 
-          {/* Autocomplete suggestions from margins */}
           {searchQuery && filteredMargins.length > 0 ? (
-            <View style={styles.verticalDropdownContainer}>
-              {filteredMargins.map((marginItem: any, idx: number) => {
-                const rawMargin = marginItem.requiredMargin || marginItem.leverage || '';
-                let marginStr = rawMargin.toString().trim();
+            <Surface style={{ backgroundColor: theme.card, borderRadius: 12, marginTop: 4, elevation: 4, maxHeight: 200 }} elevation={3}>
+              <ScrollView keyboardShouldPersistTaps="handled">
+                {filteredMargins.map((marginItem: any, idx: number) => {
+                  const rawMargin = marginItem.requiredMargin || marginItem.leverage || '';
+                  let marginStr = rawMargin.toString().trim();
+                  const parsedMargin = Number.parseFloat(marginStr);
+                  if (Number.isNaN(parsedMargin) || parsedMargin <= 0) {
+                    marginStr = '1x';
+                  } else {
+                    const suffix = marginStr.endsWith('%') ? '%' : 'x';
+                    marginStr = `${parsedMargin.toFixed(2)}${suffix}`;
+                  }
 
-                const parsedMargin = Number.parseFloat(marginStr);
-                if (Number.isNaN(parsedMargin) || parsedMargin <= 0) {
-                  marginStr = '1x';
-                } else {
-                  const suffix = marginStr.endsWith('%') ? '%' : 'x';
-                  marginStr = `${parsedMargin.toFixed(2)}${suffix}`;
-                }
-
-                return (
-                  <TouchableOpacity
-                    key={marginItem.symbol || idx}
-                    style={styles.suggestionRow}
-                    onPress={() => {
-                      setTradeSymbol(marginItem.symbol);
-                      setSearchQuery('');
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="trending-up" size={14} color={theme.primary} />
-                      <Text style={styles.suggestionRowSymbol}>{marginItem.symbol}</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={styles.suggestionRowBadge}>
-                        {marginStr}
-                      </Text>
-                      {marginItem.price || marginItem.ltp ? (
-                        <Text style={styles.suggestionRowPrice}>
-                          ₹{marginItem.price || marginItem.ltp}
-                        </Text>
-                      ) : null}
-                      <Ionicons name="chevron-forward" size={14} color={theme.iconMuted} />
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+                  return (
+                    <TouchableRipple
+                      key={marginItem.symbol || idx}
+                      onPress={() => {
+                        setTradeSymbol(marginItem.symbol);
+                        setSearchQuery('');
+                      }}
+                    >
+                      <View style={{ padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.borderLight }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Ionicons name="trending-up" size={16} color={theme.primary} />
+                          <PaperText variant="titleSmall" style={{ color: theme.textPrimary, fontWeight: '700' }}>
+                            {marginItem.symbol}
+                          </PaperText>
+                        </View>
+                        <Chip compact textStyle={{ fontSize: 11, fontWeight: '700' }}>
+                          {marginStr}
+                        </Chip>
+                      </View>
+                    </TouchableRipple>
+                  );
+                })}
+              </ScrollView>
+            </Surface>
           ) : null}
         </View>
 
-        {/* Quantity + Target date, side by side */}
-        <View style={styles.orderRow}>
-          <View style={styles.orderCol}>
-            <Text style={styles.orderFieldLabel}>QUANTITY</Text>
-            <TextInput
-              style={styles.orderInput}
+        {/* Quantity + Target Date */}
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <PaperTextInput
+              mode="outlined"
+              label="QUANTITY"
               value={tradeQty}
               onChangeText={setTradeQty}
               keyboardType="number-pad"
               placeholder="0"
               placeholderTextColor={theme.placeholder}
+              textColor={theme.textPrimary}
+              outlineColor={theme.border}
+              activeOutlineColor={theme.primary}
+              style={{ backgroundColor: theme.card }}
             />
           </View>
 
-          <View style={styles.orderCol}>
-            <Text style={styles.orderFieldLabel}>TARGET DATE</Text>
-            <TouchableOpacity
-              style={styles.orderInput}
+          <View style={{ flex: 1 }}>
+            <TouchableRipple
               onPress={() => {
                 setDatePickerTarget('execute');
                 setPickerDate(new Date(targetDate));
                 setShowDatePicker(true);
               }}
-              activeOpacity={0.7}
             >
-              <Text style={styles.orderInputText} numberOfLines={1} adjustsFontSizeToFit>
-                {formatDateString(targetDate)}
-              </Text>
-            </TouchableOpacity>
+              <View pointerEvents="none">
+                <PaperTextInput
+                  mode="outlined"
+                  label="TARGET DATE"
+                  value={formatDateString(targetDate)}
+                  editable={false}
+                  textColor={theme.textPrimary}
+                  outlineColor={theme.border}
+                  left={<PaperTextInput.Icon icon={({ size, color }) => <Ionicons name="calendar-outline" size={size || 18} color={color || theme.iconMuted} />} />}
+                  style={{ backgroundColor: theme.card }}
+                />
+              </View>
+            </TouchableRipple>
           </View>
         </View>
-      </View>
 
-      {/* Swipe-to-confirm action bar */}
-      <View style={styles.orderPadActionBar}>
-        <SwipeButton
-          styles={styles}
-          theme={theme}
-          label={editingMtfOrderId ? 'Swipe to update order' : 'Swipe to place order'}
-          loadingLabel={editingMtfOrderId ? 'Updating order…' : 'Placing order…'}
-          icon={editingMtfOrderId ? 'checkmark-done' : 'flash'}
-          loading={executingTrade}
-          onSwipeSuccess={handleExecuteOrder}
-        />
+        {/* Swipe Button */}
+        <View style={{ marginTop: 8 }}>
+          <SwipeButton
+            styles={styles}
+            theme={theme}
+            label={editingMtfOrderId ? 'Swipe to update order' : 'Swipe to place order'}
+            loadingLabel={editingMtfOrderId ? 'Updating order…' : 'Placing order…'}
+            icon={editingMtfOrderId ? 'checkmark-done' : 'flash'}
+            loading={executingTrade}
+            onSwipeSuccess={handleExecuteOrder}
+          />
+        </View>
+      </Card.Content>
 
-        {editingMtfOrderId ? (
-          <TouchableOpacity style={styles.orderCancelLink} onPress={resetForm} disabled={executingTrade} activeOpacity={0.7}>
-            <Text style={styles.orderCancelLinkText}>Cancel edit</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-
-      {/* Strategy dropdown picker */}
       <StrategyDropdownModal
         styles={styles}
         theme={theme}
@@ -257,6 +249,6 @@ export default function ExecuteTab({
         onSelect={(name) => setTradeStrategyName(name as ExecuteStrategy)}
         onClose={() => setShowStrategyDropdown(false)}
       />
-    </View>
+    </Card>
   );
 }

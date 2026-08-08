@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { AppState, KeyboardAvoidingView, Linking, Platform, View } from 'react-native';
+import { Card, Text as PaperText, TextInput as PaperTextInput, Button as PaperButton, Switch as PaperSwitch, Avatar, ActivityIndicator, Surface, HelperText } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
 import { CustomAlert } from '../../context/AlertContext';
@@ -101,9 +102,6 @@ export default function SettingsScreen() {
     }
   }, [user]);
 
-  // Auto-dismiss the success/error feedback (toast-style) so it can't linger on
-  // the screen across tab switches. The form itself is left intact — only the
-  // transient notification clears, and the data updates on its own.
   useEffect(() => {
     if (!successMessage && !errorMessage) return;
     const timer = setTimeout(() => {
@@ -113,7 +111,6 @@ export default function SettingsScreen() {
     return () => clearTimeout(timer);
   }, [successMessage, errorMessage]);
 
-  // Validates username: must start with letter, only letters and numbers
   const validateUsername = (val: string) => {
     if (!val) {
       return 'Username cannot be empty';
@@ -128,11 +125,9 @@ export default function SettingsScreen() {
   };
 
   const handleUsernameChange = (text: string) => {
-    // Strip spaces immediately
     const cleanText = text.replace(/\s/g, '');
     setUsername(cleanText);
 
-    // Perform validation
     if (cleanText.length > 0) {
       setValidationError(validateUsername(cleanText));
     } else {
@@ -159,12 +154,8 @@ export default function SettingsScreen() {
         throw new Error('User ID not found. Please log in again.');
       }
 
-      // Password can be empty/null for Google sign-in users
       await userPreferenceAPI.updateUsername(userId, username, '');
-
-      // Refresh AuthContext data
       await refreshUserData();
-
       setSuccessMessage('Username updated successfully!');
     } catch (err: any) {
       console.error('Failed to update username:', err);
@@ -176,8 +167,6 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>
-
-
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         enabled={Platform.OS === 'ios'}
@@ -193,49 +182,39 @@ export default function SettingsScreen() {
           keyboardShouldPersistTaps="handled"
           extraKeyboardSpace={64}
         >
-          <View style={[styles.container, layout.centeredContent]}>
-            {/* Header Description */}
-            <Text style={styles.sectionTitle}>Account Customization</Text>
-            <Text style={styles.sectionSubtitle}>
-              Update your account details and username. Changes will reflect on your home dashboard greeting.
-            </Text>
-
+          <View style={[styles.container, layout.centeredContent, { gap: 16 }]}>
             {/* Profile Info Summary Card */}
-            <View style={styles.infoCard}>
-              <View style={styles.avatarContainer}>
+            <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
+              <Card.Content style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
                 {user?.profile ? (
-                  <View style={styles.avatarImageWrapper}>
-                    {/* Placeholder image tag with profile URL */}
-                    <Text style={styles.avatarInitial}>{user.name?.[0]?.toUpperCase() || 'U'}</Text>
-                  </View>
+                  <Avatar.Image size={56} source={{ uri: user.profile }} />
                 ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Ionicons name="person" size={28} color={theme.iconMuted} />
-                  </View>
+                  <Avatar.Icon size={56} icon="account" style={{ backgroundColor: theme.primaryBackground }} color={theme.primary} />
                 )}
-              </View>
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoName} numberOfLines={1}>
-                  {user?.name || '1Klik User'}
-                </Text>
-                <Text style={styles.infoEmail} numberOfLines={1}>
-                  {user?.email || 'No email associated'}
-                </Text>
-              </View>
-            </View>
+                <View style={{ flex: 1 }}>
+                  <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }} numberOfLines={1}>
+                    {user?.name || '1Klik User'}
+                  </PaperText>
+                  <PaperText variant="bodySmall" style={{ color: theme.textSecondary, marginTop: 2 }} numberOfLines={1}>
+                    {user?.email || 'No email associated'}
+                  </PaperText>
+                </View>
+              </Card.Content>
+            </Card>
 
-            {/* Form Container */}
-            <View style={styles.formCard}>
-              <Text style={styles.inputLabel}>Username</Text>
+            {/* Username Customization Card */}
+            <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
+              <Card.Content style={{ gap: 12 }}>
+                <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+                  Account Customization
+                </PaperText>
+                <PaperText variant="bodySmall" style={{ color: theme.textSecondary, marginBottom: 8 }}>
+                  Update your account details and username. Changes will reflect on your home dashboard.
+                </PaperText>
 
-              <View style={[
-                styles.inputWrapper,
-                validationError ? styles.inputWrapperError : null,
-                !validationError && username ? styles.inputWrapperSuccess : null
-              ]}>
-                <Ionicons name="at-outline" size={20} color={theme.iconMuted} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
+                <PaperTextInput
+                  mode="outlined"
+                  label="Username"
                   value={username}
                   onChangeText={handleUsernameChange}
                   placeholder="enter_username"
@@ -244,87 +223,85 @@ export default function SettingsScreen() {
                   autoCorrect={false}
                   maxLength={20}
                   editable={!loading}
+                  textColor={theme.textPrimary}
+                  outlineColor={validationError ? theme.danger : theme.border}
+                  activeOutlineColor={theme.primary}
+                  left={<PaperTextInput.Affix text="@" />}
+                  right={
+                    username.length > 0 && !loading ? (
+                      <PaperTextInput.Icon icon="close-circle" onPress={() => handleUsernameChange('')} />
+                    ) : undefined
+                  }
+                  style={{ backgroundColor: theme.card }}
                 />
-                {username.length > 0 && !loading && (
-                  <TouchableOpacity onPress={() => handleUsernameChange('')}>
-                    <Ionicons name="close-circle" size={18} color={theme.iconMuted} />
-                  </TouchableOpacity>
-                )}
-              </View>
 
-              {/* Real-time validation message / guidance */}
-              {validationError ? (
-                <View style={styles.helperRow}>
-                  <Ionicons name="alert-circle-outline" size={14} color={theme.danger} />
-                  <Text style={[styles.helperText, styles.errorText]}>{validationError}</Text>
-                </View>
-              ) : (
-                <View style={styles.helperRow}>
-                  <Ionicons name="information-circle-outline" size={14} color={theme.textSecondary} />
-                  <Text style={styles.helperText}>
+                {validationError ? (
+                  <HelperText type="error" visible={true}>
+                    {validationError}
+                  </HelperText>
+                ) : (
+                  <HelperText type="info" visible={true}>
                     Only letters and numbers are allowed. Must start with a letter.
-                  </Text>
-                </View>
-              )}
-
-              {/* Status Feedbacks */}
-              {successMessage && (
-                <View style={[styles.alertBox, styles.successAlert]}>
-                  <Ionicons name="checkmark-circle-outline" size={18} color={theme.success} />
-                  <Text style={styles.successAlertText}>{successMessage}</Text>
-                </View>
-              )}
-
-              {errorMessage && (
-                <View style={[styles.alertBox, styles.errorAlert]}>
-                  <Ionicons name="warning-outline" size={18} color={theme.danger} />
-                  <Text style={styles.errorAlertText}>{errorMessage}</Text>
-                </View>
-              )}
-
-              {/* Save Button */}
-              <TouchableOpacity
-                style={[
-                  styles.saveButton,
-                  loading || !!validationError || !username ? styles.saveButtonDisabled : null
-                ]}
-                onPress={handleSave}
-                disabled={loading || !!validationError || !username}
-                activeOpacity={0.85}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color={theme.buttonPrimaryText} />
-                ) : (
-                  <>
-                    <Ionicons name="save-outline" size={18} color={theme.buttonPrimaryText} />
-                    <Text style={styles.saveButtonText}>Update Username</Text>
-                  </>
+                  </HelperText>
                 )}
-              </TouchableOpacity>
-            </View>
 
-            {/* App Settings Container */}
-            <View style={styles.formCard}>
-              <Text style={styles.sectionTitle}>App Preferences</Text>
-              <Text style={styles.sectionSubtitle}>
-                Customize your app experience.
-              </Text>
-
-              <View style={styles.themeToggleRow}>
-                <Text style={styles.themeToggleLabel}>Push Notifications</Text>
-                {checkingPermission ? (
-                  <ActivityIndicator size="small" color={theme.primary} />
-                ) : (
-                  <Switch
-                    value={notificationsEnabled}
-                    onValueChange={handleNotificationToggle}
-                    trackColor={{ false: theme.border, true: theme.primary }}
-                    thumbColor={theme.card}
-                  />
+                {successMessage && (
+                  <Surface style={{ padding: 12, borderRadius: 12, backgroundColor: theme.successBackground, flexDirection: 'row', alignItems: 'center', gap: 8 }} elevation={0}>
+                    <Ionicons name="checkmark-circle-outline" size={18} color={theme.success} />
+                    <PaperText variant="bodyMedium" style={{ color: theme.success, fontWeight: '700' }}>{successMessage}</PaperText>
+                  </Surface>
                 )}
-              </View>
-            </View>
 
+                {errorMessage && (
+                  <Surface style={{ padding: 12, borderRadius: 12, backgroundColor: theme.dangerBackground, flexDirection: 'row', alignItems: 'center', gap: 8 }} elevation={0}>
+                    <Ionicons name="warning-outline" size={18} color={theme.danger} />
+                    <PaperText variant="bodyMedium" style={{ color: theme.danger, fontWeight: '700' }}>{errorMessage}</PaperText>
+                  </Surface>
+                )}
+
+                <PaperButton
+                  mode="contained"
+                  onPress={handleSave}
+                  disabled={loading || !!validationError || !username}
+                  loading={loading}
+                  buttonColor={theme.primary}
+                  textColor="#ffffff"
+                  icon={({ size }) => <Ionicons name="save-outline" size={size || 18} color="#ffffff" />}
+                  style={{ borderRadius: 14, marginTop: 8 }}
+                  contentStyle={{ height: 50 }}
+                  labelStyle={{ fontSize: 15, fontWeight: '700' }}
+                >
+                  Update Username
+                </PaperButton>
+              </Card.Content>
+            </Card>
+
+            {/* App Preferences Card */}
+            <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8, elevation: 3 }}>
+              <Card.Content style={{ gap: 12 }}>
+                <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+                  App Preferences
+                </PaperText>
+                <PaperText variant="bodySmall" style={{ color: theme.textSecondary, marginBottom: 8 }}>
+                  Customize your push notifications and system preferences.
+                </PaperText>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 }}>
+                  <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700' }}>
+                    Push Notifications
+                  </PaperText>
+                  {checkingPermission ? (
+                    <ActivityIndicator size="small" color={theme.primary} />
+                  ) : (
+                    <PaperSwitch
+                      value={notificationsEnabled}
+                      onValueChange={handleNotificationToggle}
+                      color={theme.primary}
+                    />
+                  )}
+                </View>
+              </Card.Content>
+            </Card>
           </View>
         </KeyboardAwareScrollView>
       </KeyboardAvoidingView>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
+import { Card, Text as PaperText, ActivityIndicator, List } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 
 interface NewsSectionProps {
@@ -17,42 +18,51 @@ export default function NewsSection({
 }: NewsSectionProps) {
   return (
     <View style={styles.section}>
-      <View style={styles.sectionHeader}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
         <Ionicons name="newspaper" size={20} color={theme.primary} />
-        <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>MARKET HEADLINES</Text>
+        <PaperText variant="titleMedium" style={{ marginLeft: 8, fontWeight: '900', color: theme.textPrimary, letterSpacing: -0.5 }}>
+          MARKET HEADLINES
+        </PaperText>
       </View>
 
-      <View style={styles.newsList}>
+      <View style={{ gap: 12 }}>
         {(() => {
           if (newsLoading) {
             return <ActivityIndicator size="large" color={theme.primary} style={{ marginVertical: 32 }} />;
           }
           if (news.length > 0) {
             return news.map((item, index) => (
-              <TouchableOpacity
+              <Card
                 key={item.id || item.title || index}
-                activeOpacity={0.7}
-                style={[styles.newsItem, { backgroundColor: theme.card, borderColor: theme.border }]}
+                style={{ backgroundColor: theme.card, borderRadius: 16, elevation: 1 }}
               >
-                <View style={[styles.newsDot, { backgroundColor: theme.primary }]} />
-                <View style={styles.newsContent}>
-                  <Text style={[styles.newsTitle, { color: theme.textPrimary }]}>{item.title}</Text>
-                  {item.published && (
-                    <View style={styles.newsMeta}>
-                      <Ionicons name="time-outline" size={12} color={theme.textSecondary} />
-                      <Text style={[styles.newsDate, { color: theme.textSecondary }]}>
-                        {new Date(item.published * 1000).toLocaleString()}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
+                <Card.Content>
+                  <List.Item
+                    title={item.title}
+                    titleNumberOfLines={3}
+                    titleStyle={{ color: theme.textPrimary, fontWeight: '700', fontSize: 14, lineHeight: 20 }}
+                    description={
+                      item.published
+                        ? `${new Date(item.published * 1000).toLocaleString()}`
+                        : undefined
+                    }
+                    descriptionStyle={{ color: theme.textSecondary, fontSize: 11, marginTop: 4 }}
+                    left={(props) => (
+                      <List.Icon {...props} icon="newspaper-variant-outline" color={theme.primary} />
+                    )}
+                  />
+                </Card.Content>
+              </Card>
             ));
           }
           return (
-            <View style={[styles.emptyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>NO NEWS AVAILABLE FOR THIS SYMBOL</Text>
-            </View>
+            <Card style={{ backgroundColor: theme.card, borderRadius: 24, borderStyle: 'dashed' }}>
+              <Card.Content style={{ alignItems: 'center', paddingVertical: 24 }}>
+                <PaperText variant="labelMedium" style={{ color: theme.textSecondary, fontWeight: '800' }}>
+                  NO NEWS AVAILABLE FOR THIS SYMBOL
+                </PaperText>
+              </Card.Content>
+            </Card>
           );
         })()}
       </View>

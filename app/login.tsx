@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import { Card, Button as PaperButton, Text as PaperText, Surface } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { moderateScale } from 'react-native-size-matters';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
@@ -33,9 +34,7 @@ export default function LoginScreen() {
   }, [user, router]);
 
   useEffect(() => {
-    // Retrieve the Google Client ID configured in your .env file
     const clientID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
-
     GoogleSignin.configure({
       webClientId: clientID,
       offlineAccess: false,
@@ -48,7 +47,6 @@ export default function LoginScreen() {
       setError(null);
 
       await GoogleSignin.hasPlayServices();
-
       const signInResponse = await GoogleSignin.signIn();
       const idToken = signInResponse.data?.idToken || (signInResponse as any).idToken;
 
@@ -56,19 +54,12 @@ export default function LoginScreen() {
         throw new Error('Failed to retrieve ID Token from Google SDK.');
       }
 
-      // 2. Validate the native token with your Spring Boot backend validation endpoint
       await googleAPI.googleTokenValidation(idToken);
-
-      // 3. Fetch the full user details using the secure session cookie (this handles cookie sync lag)
       await getMeWithRetry(2, 100);
-
-      // 5. Update global AuthContext state & wait for useEffect to redirect
       await refreshUserData();
-
     } catch (err: any) {
       console.error('Native Google Sign-In Error Details:', err);
 
-      // Handle user cancellation (12501) gracefully
       if (err.code === '12501' || err.message?.includes('Sign_in_cancel')) {
         setError("Sign-in canceled.");
       } else {
@@ -106,8 +97,6 @@ export default function LoginScreen() {
 
   return (
     <View style={[styles.safeArea, layout.screenPadding, { backgroundColor: '#000000' }]}>
-
-
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         enabled={Platform.OS === 'ios'}
@@ -125,39 +114,40 @@ export default function LoginScreen() {
           <View style={[styles.container, layout.centeredContent]}>
             {/* Title Brand Section */}
             <View style={{ alignItems: 'center', marginBottom: 40 }}>
-              <Text style={[styles.brandName, { color: '#ffffff', fontSize: moderateScale(26) }]}>Welcome to 1Klik</Text>
-              <Text style={[styles.brandTagline, { color: '#94a3b8', fontSize: moderateScale(15) }]}>
+              <PaperText variant="headlineLarge" style={{ color: '#ffffff', fontWeight: '800', textAlign: 'center', fontSize: moderateScale(26) }}>
+                Welcome to 1Klik
+              </PaperText>
+              <PaperText variant="bodyLarge" style={{ color: '#94a3b8', textAlign: 'center', marginTop: 8, fontSize: moderateScale(15) }}>
                 Sign in to access your trading dashboard
-              </Text>
+              </PaperText>
             </View>
-            {/* Login Options Card */}
-            <View style={[styles.formCard, { backgroundColor: '#111827', borderColor: '#374151' }]}>
-              {error ? (
-                <View style={styles.errorAlert}>
-                  <Ionicons name="alert-circle-outline" size={20} color={theme.danger} />
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
-              ) : null}
 
-              {/* Google Sign In Button (Strictly Native Google Sign-In!) */}
-              <TouchableOpacity
-                style={styles.googleButton}
-                activeOpacity={0.85}
-                onPress={handleGoogleLogin}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color={theme.textPrimary} />
-                ) : (
-                  <View style={styles.googleButtonContent}>
-                    <View style={styles.googleIconCircle}>
-                      <Ionicons name="logo-google" size={18} color="#e04f3f" />
-                    </View>
-                    <Text style={styles.googleButtonText}>Continue with Google</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
+            {/* Login Options Paper Card */}
+            <Card style={{ backgroundColor: '#111827', borderColor: '#374151', borderWidth: 1, borderRadius: 24, padding: 8 }}>
+              <Card.Content>
+                {error ? (
+                  <Surface style={[styles.errorAlert, { backgroundColor: theme.dangerBackground, borderRadius: 12, padding: 12, marginBottom: 16 }]} elevation={0}>
+                    <Ionicons name="alert-circle-outline" size={20} color={theme.danger} />
+                    <PaperText style={{ color: theme.danger, marginLeft: 8, flex: 1, fontWeight: '600' }}>{error}</PaperText>
+                  </Surface>
+                ) : null}
+
+                <PaperButton
+                  mode="contained"
+                  onPress={handleGoogleLogin}
+                  disabled={loading}
+                  loading={loading}
+                  buttonColor="#ffffff"
+                  textColor="#000000"
+                  icon={({ size }) => <Ionicons name="logo-google" size={size || 18} color="#e04f3f" />}
+                  contentStyle={{ height: 50 }}
+                  labelStyle={{ fontSize: 16, fontWeight: '700' }}
+                  style={{ borderRadius: 14 }}
+                >
+                  Continue with Google
+                </PaperButton>
+              </Card.Content>
+            </Card>
           </View>
         </KeyboardAwareScrollView>
       </KeyboardAvoidingView>

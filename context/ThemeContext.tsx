@@ -2,12 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { useColorScheme } from 'react-native';
 import { userPreferenceAPI } from '../services/api';
+import { MD3Theme } from 'react-native-paper';
 import { Colors, darkColors, lightColors } from '../theme/colors';
+import { paperLightTheme, paperDarkTheme } from '../theme/paperTheme';
 import { useAuth } from './AuthContext';
 
 type ThemeContextType = {
   isDarkMode: boolean;
   theme: Colors;
+  paperTheme: MD3Theme;
   toggleTheme: (value?: boolean) => void;
   themeLoaded: boolean;
 };
@@ -67,13 +70,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [isDarkMode, user]);
 
   const theme = isDarkMode ? darkColors : lightColors;
+  const paperTheme = isDarkMode ? paperDarkTheme : paperLightTheme;
 
   const value = useMemo(() => ({
     isDarkMode,
     theme,
+    paperTheme,
     toggleTheme,
     themeLoaded
-  }), [isDarkMode, theme, toggleTheme, themeLoaded]);
+  }), [isDarkMode, theme, paperTheme, toggleTheme, themeLoaded]);
 
   return (
     <ThemeContext.Provider value={value}>

@@ -1,19 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { View } from 'react-native';
+import { Card, Text as PaperText, Chip, Button as PaperButton } from 'react-native-paper';
 
 interface HistoryRowProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
-  /** Type tag (e.g. "MTF BUY" / "AUTO"). */
   readonly badgeLabel: string;
-  readonly badgeContainerStyle: any;
-  readonly badgeTextStyle: any;
-  /** Primary identifier — symbol or strategy name. */
+  readonly badgeContainerStyle?: any;
+  readonly badgeTextStyle?: any;
   readonly title: string;
-  /** Secondary metric shown at the right — share count or amount. */
   readonly meta: string;
-  /** Grey meta line under the title (target date / order date). */
   readonly footerText: string;
   readonly broker?: string;
   readonly orderStatus?: string;
@@ -28,32 +25,25 @@ interface HistoryRowProps {
 
 function resolveStatusColors(
   status: string | undefined,
-  statusColor: string | undefined
+  statusColor: string | undefined,
+  theme: any
 ): { bg: string; fg: string } {
   if (statusColor) {
-    return { bg: `${statusColor}1F`, fg: statusColor };
+    return { bg: `${statusColor}22`, fg: statusColor };
   }
   const upper = status?.toUpperCase();
   if (upper === 'PENDING') {
-    return { bg: '#FEF3C7', fg: '#D97706' };
+    return { bg: theme.warningBackground || 'rgba(245, 158, 11, 0.2)', fg: theme.warningText || '#d97706' };
   }
   if (upper === 'EXECUTED' || upper === 'COMPLETED') {
-    return { bg: '#D1FAE5', fg: '#059669' };
+    return { bg: theme.successBackground || 'rgba(16, 185, 129, 0.2)', fg: theme.success || '#10b981' };
   }
-  return { bg: '#F3F4F6', fg: '#6B7280' };
+  return { bg: theme.borderLight || '#1c1c1e', fg: theme.textSecondary || '#94a3b8' };
 }
 
-/**
- * One order-history row, styled after the Zerodha Kite orders list: a coloured
- * side tag + bold symbol, broker badge, order status pill, target/strategy metadata,
- * and subtle Edit / Cancel actions. Shared between the MTF and Strategy sections of HistoryTab.
- */
 export default function HistoryRow({
-  styles,
   theme,
   badgeLabel,
-  badgeContainerStyle,
-  badgeTextStyle,
   title,
   meta,
   footerText,
@@ -68,79 +58,88 @@ export default function HistoryRow({
   onDelete,
 }: HistoryRowProps) {
   const displayStatus = statusLabel || orderStatus;
-  const { bg: statusBg, fg: statusFg } = resolveStatusColors(displayStatus, statusColor);
+  const { bg: statusBg, fg: statusFg } = resolveStatusColors(displayStatus, statusColor, theme);
   const hasStrategy = Boolean(strategyName || targetPercentage);
 
-  let subRowContent: React.ReactNode = null;
-  if (hasStrategy) {
-    subRowContent = (
-      <Text style={styles.ohMeta} numberOfLines={1}>
-        {strategyName}
-        {strategyName && targetPercentage ? ' • ' : ''}
-        {targetPercentage ? `Target: +${targetPercentage}%` : ''}
-      </Text>
-    );
-  } else if (footerText) {
-    subRowContent = (
-      <Text style={styles.ohMeta} numberOfLines={1}>{footerText}</Text>
-    );
-  }
-
   return (
-    <View style={styles.ohRow}>
-      {/* Top Row: Type Tag, Symbol, Broker (Left) | Qty (Right) */}
-      <View style={styles.ohTopRow}>
-        <View style={styles.ohLeft}>
-          <View style={[styles.ohSideTag, badgeContainerStyle]}>
-            <Text style={[styles.ohSideTagText, badgeTextStyle]}>{badgeLabel}</Text>
+    <Card style={{ backgroundColor: theme.card, borderRadius: 16, marginBottom: 10, elevation: 2 }}>
+      <Card.Content style={{ gap: 8 }}>
+        {/* Top Header */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+            <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ color: theme.primary, fontWeight: '800', fontSize: 10 }}>
+              {badgeLabel}
+            </Chip>
+            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }} numberOfLines={1}>
+              {title}
+            </PaperText>
+            {broker ? (
+              <Chip compact style={{ backgroundColor: theme.borderLight }} textStyle={{ color: theme.textSecondary, fontSize: 10 }}>
+                {broker}
+              </Chip>
+            ) : null}
           </View>
-          <Text style={styles.ohSymbol} numberOfLines={1}>{title}</Text>
-          {broker ? (
-            <View style={styles.ohBrokerTag}>
-              <Text style={styles.ohBrokerTagText} numberOfLines={1}>{broker}</Text>
-            </View>
+          <PaperText variant="titleSmall" style={{ fontWeight: '800', color: theme.textPrimary }}>
+            {meta}
+          </PaperText>
+        </View>
+
+        {/* Strategy / Status Row */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ flex: 1, marginRight: 8 }}>
+            {hasStrategy ? (
+              <PaperText variant="bodySmall" style={{ color: theme.textSecondary, fontWeight: '600' }} numberOfLines={1}>
+                {strategyName} {strategyName && targetPercentage ? '• ' : ''}{targetPercentage ? `Target: +${targetPercentage}%` : ''}
+              </PaperText>
+            ) : footerText ? (
+              <PaperText variant="bodySmall" style={{ color: theme.textSecondary }} numberOfLines={1}>
+                {footerText}
+              </PaperText>
+            ) : null}
+          </View>
+
+          {displayStatus ? (
+            <Chip compact style={{ backgroundColor: statusBg }} textStyle={{ color: statusFg, fontWeight: '800', fontSize: 10 }}>
+              {displayStatus.toUpperCase()}
+            </Chip>
           ) : null}
         </View>
-        <Text style={styles.ohQty} numberOfLines={1}>{meta}</Text>
-      </View>
 
-      {/* Sub Row: Details / Strategy (Left) | Status Pill (Right) */}
-      <View style={styles.ohSubRow}>
-        <View style={{ flex: 1, marginRight: 6 }}>
-          {subRowContent}
-        </View>
-
-        {displayStatus ? (
-          <View style={[styles.ohStatusTag, { backgroundColor: statusBg }]}>
-            <Text style={[styles.ohStatusTagText, { color: statusFg }]} numberOfLines={1}>
-              {displayStatus.toUpperCase()}
-            </Text>
-          </View>
+        {hasStrategy && footerText ? (
+          <PaperText variant="labelSmall" style={{ color: theme.textSecondary }}>
+            {footerText}
+          </PaperText>
         ) : null}
-      </View>
 
-      {/* Date Row (shown if strategy info was in sub row) */}
-      {hasStrategy && footerText ? (
-        <Text style={styles.ohDateText} numberOfLines={1}>{footerText}</Text>
-      ) : null}
+        {reason ? (
+          <PaperText variant="bodySmall" style={{ color: theme.danger, fontWeight: '600' }}>
+            Reason: {reason}
+          </PaperText>
+        ) : null}
 
-      {/* Failure Reason Text */}
-      {reason ? (
-        <Text style={styles.ohReason} numberOfLines={2}>Reason: {reason}</Text>
-      ) : null}
+        {/* Action Buttons */}
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+          <PaperButton
+            compact
+            mode="text"
+            onPress={onEdit}
+            icon={({ size }) => <Ionicons name="create-outline" size={size || 14} color={theme.textSecondary} />}
+            textColor={theme.textSecondary}
+          >
+            Edit
+          </PaperButton>
 
-      {/* Action Footer */}
-      <View style={styles.ohActions}>
-        <TouchableOpacity onPress={onEdit} style={styles.ohActionBtn} activeOpacity={0.7} hitSlop={8}>
-          <Ionicons name="create-outline" size={14} color={theme.textSecondary} />
-          <Text style={[styles.ohActionText, { color: theme.textSecondary }]}>Edit</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={onDelete} style={styles.ohActionBtn} activeOpacity={0.7} hitSlop={8}>
-          <Ionicons name="trash-outline" size={14} color={theme.danger} />
-          <Text style={[styles.ohActionText, { color: theme.danger }]}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <PaperButton
+            compact
+            mode="text"
+            onPress={onDelete}
+            icon={({ size }) => <Ionicons name="trash-outline" size={size || 14} color={theme.danger} />}
+            textColor={theme.danger}
+          >
+            Cancel
+          </PaperButton>
+        </View>
+      </Card.Content>
+    </Card>
   );
 }

@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import { Text as PaperText, ProgressBar } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CalculatorResults from '../components/calculator/CalculatorResults';
 import CalculatorStepOne from '../components/calculator/CalculatorStepOne';
 import CalculatorStepTwo from '../components/calculator/CalculatorStepTwo';
+import DatePickerModal from '../components/common/DatePickerModal';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { useMargins } from '../context/MarginContext';
 import { useTheme } from '../context/ThemeContext';
@@ -22,7 +23,6 @@ import {
   mtfInterest,
 } from '../utils/charges';
 import { rankMarginSymbols } from '../utils/margins';
-import { buildCalendarDays } from '../utils/calendar';
 
 export default function CalculatorScreen() {
   const insets = useSafeAreaInsets();
@@ -77,7 +77,6 @@ export default function CalculatorScreen() {
   const [results, setResults] = useState<any>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Calculate days held whenever entryDate or exitDate changes
   useEffect(() => {
     if (entryDate) {
       const start = new Date(entryDate);
@@ -98,7 +97,6 @@ export default function CalculatorScreen() {
     }
   }, [entryDate, exitDate]);
 
-  // Filter and sort stocks list
   const filteredMargins = rankMarginSymbols(margins, searchQuery);
 
   const validateStepOne = (): boolean => {
@@ -163,10 +161,7 @@ export default function CalculatorScreen() {
     const days = daysHeld || 0;
     const qtyVal = Number.parseFloat(quantity);
 
-    // Calculate Exit Target price
     const sp = sellType === 'exact' ? spInput : bp * (1 + spInput / 100);
-
-    // Calculate Shares count
     const shares = quantityType === 'quantity' ? qtyVal : Math.trunc((qtyVal * leverage) / bp);
 
     const totalValue = shares * bp;
@@ -175,7 +170,7 @@ export default function CalculatorScreen() {
     const grossProfit = (sp - bp) * shares;
     const turnover = (bp + sp) * shares;
 
-    const brokerage = 2 * BROKERAGE_PER_LEG; // buy + sell legs
+    const brokerage = 2 * BROKERAGE_PER_LEG;
     const STT = days > 0 ? turnover * STT_DELIVERY_RATE : shares * sp * STT_INTRADAY_SELL_RATE;
     const stampCharges = shares * bp * (days > 0 ? STAMP_DELIVERY_RATE : STAMP_INTRADAY_RATE);
     const transCharges = turnover * TRANSACTION_RATE;
@@ -215,22 +210,24 @@ export default function CalculatorScreen() {
     return `₹${valStr}`;
   };
 
+  const selectedDateObj = datePickerTarget === 'entry'
+    ? (entryDate ? new Date(entryDate) : new Date())
+    : (exitDate ? new Date(exitDate) : new Date());
+
   return (
     <View style={[styles.safeArea, layout.screenPadding]}>
-
-
       {/* Steps Indicator / Result Header */}
       {view === 'form' && (
-        <View style={styles.progressContainer}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressStepText}>STEP {activeStep} OF 2</Text>
-            <Text style={styles.progressTitleText}>
+        <View style={{ paddingHorizontal: layout.horizontalPadding, paddingTop: insets.top + 12, paddingBottom: 16 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+            <PaperText variant="labelMedium" style={{ color: theme.primary, fontWeight: '800' }}>
+              STEP {activeStep} OF 2
+            </PaperText>
+            <PaperText variant="bodySmall" style={{ color: theme.textSecondary, fontWeight: '600' }}>
               {activeStep === 1 ? 'Configure Entry & Target' : 'Holding Days & Size'}
-            </Text>
+            </PaperText>
           </View>
-          <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: activeStep === 1 ? '50%' : '100%' }]} />
-          </View>
+          <ProgressBar progress={activeStep === 1 ? 0.5 : 1.0} color={theme.primary} style={{ borderRadius: 4, height: 6 }} />
         </View>
       )}
 
@@ -325,116 +322,39 @@ export default function CalculatorScreen() {
       </KeyboardAvoidingView>
 
       {/* Date Picker Modal */}
-      <Modal
+      <DatePickerModal
+        styles={styles}
+        theme={theme}
         visible={showDatePicker}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowDatePicker(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowDatePicker(false)}
-        >
-          <View style={styles.modalCalendarContainer} onStartShouldSetResponder={() => true}>
-            <View style={styles.calendarHeader}>
-              <TouchableOpacity onPress={handlePrevMonth} style={styles.calendarNavBtn}>
-                <Ionicons name="chevron-back" size={18} color={theme.textPrimary} />
-              </TouchableOpacity>
-              <Text style={styles.calendarMonthText}>
-                {pickerDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-              </Text>
-              <TouchableOpacity onPress={handleNextMonth} style={styles.calendarNavBtn}>
-                <Ionicons name="chevron-forward" size={18} color={theme.textPrimary} />
-              </TouchableOpacity>
-            </View>
+        pickerDate={pickerDate}
+        selectedDate={selectedDateObj}
+        onPrevMonth={handlePrevMonth}
+        onNextMonth={handleNextMonth}
+        onClose={() => setShowDatePicker(false)}
+        onSelectDate={(date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const dateString = `${year}-${month}-${day}`;
 
-            <View style={styles.calendarGrid}>
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((label, idx) => (
-                <View key={`wk-${idx}`} style={styles.calendarHeaderDayCell}>
-                  <Text style={styles.calendarHeaderDayText}>{label}</Text>
-                </View>
-              ))}
-              {(() => {
-                const calendarDays = buildCalendarDays(pickerDate);
-
-                let currentSelectionDate = null;
-                if (datePickerTarget === 'entry') {
-                  currentSelectionDate = entryDate ? new Date(entryDate) : null;
-                } else {
-                  currentSelectionDate = exitDate ? new Date(exitDate) : null;
-                }
-
-                const minAllowedDate = datePickerTarget === 'exit' && entryDate
-                  ? new Date(entryDate)
-                  : null;
-
-                if (minAllowedDate) {
-                  minAllowedDate.setHours(0, 0, 0, 0);
-                }
-
-                return calendarDays.map((cell) => {
-                  const dayDate = cell.date;
-                  if (!dayDate) {
-                    return <View key={cell.key} style={styles.calendarDayCell} />;
-                  }
-                  const isSelected = currentSelectionDate?.getDate() === dayDate.getDate() &&
-                    currentSelectionDate?.getMonth() === dayDate.getMonth() &&
-                    currentSelectionDate?.getFullYear() === dayDate.getFullYear();
-
-                  const dayDateAtMidnight = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
-                  const isPastDate = minAllowedDate ? dayDateAtMidnight < minAllowedDate : false;
-
-                  return (
-                    <TouchableOpacity
-                      key={cell.key}
-                      style={[
-                        styles.calendarDayCell,
-                        isSelected && styles.selectedDayCell,
-                        isPastDate && styles.pastDayCell
-                      ]}
-                      onPress={isPastDate ? undefined : () => {
-                        // We use a manual string format so timezone adjustments don't shift the day
-                        const year = dayDate.getFullYear();
-                        const month = String(dayDate.getMonth() + 1).padStart(2, '0');
-                        const day = String(dayDate.getDate()).padStart(2, '0');
-                        const dateString = `${year}-${month}-${day}`;
-
-                        if (datePickerTarget === 'entry') {
-                          setEntryDate(dateString);
-                          if (exitDate && new Date(exitDate) < dayDate) {
-                            setExitDate(dateString);
-                          }
-                        } else {
-                          setExitDate(dateString);
-                        }
-                        setShowDatePicker(false);
-                      }}
-                      disabled={isPastDate}
-                      activeOpacity={isPastDate ? 1 : 0.7}
-                    >
-                      <Text style={[
-                        styles.calendarDayText,
-                        isSelected && styles.selectedDayText,
-                        isPastDate && styles.pastDayText
-                      ]}>
-                        {dayDate.getDate()}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                });
-              })()}
-            </View>
-
-            <TouchableOpacity
-              style={styles.calendarCloseBtn}
-              onPress={() => setShowDatePicker(false)}
-            >
-              <Text style={styles.calendarCloseBtnText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+          if (datePickerTarget === 'entry') {
+            setEntryDate(dateString);
+            if (exitDate && new Date(exitDate) < date) {
+              setExitDate(dateString);
+            }
+          } else {
+            setExitDate(dateString);
+          }
+        }}
+        isDateDisabled={(date) => {
+          if (datePickerTarget === 'exit' && entryDate) {
+            const entryAtMidnight = new Date(entryDate);
+            entryAtMidnight.setHours(0, 0, 0, 0);
+            return date < entryAtMidnight;
+          }
+          return false;
+        }}
+      />
     </View>
   );
 }

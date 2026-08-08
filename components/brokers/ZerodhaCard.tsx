@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ActivityIndicator, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { View } from 'react-native';
+import { Card, Text as PaperText, Button as PaperButton, Switch as PaperSwitch } from 'react-native-paper';
 import ZerodhaHoldings from './ZerodhaHoldings';
 import FormInput from '../common/FormInput';
 import BrokerConnectionStatus from './BrokerConnectionStatus';
@@ -65,7 +66,7 @@ export default function ZerodhaCard({
   handleSaveZerodhaConfig
 }: ZerodhaCardProps) {
   return (
-    <View>
+    <View style={{ gap: 16 }}>
       <BrokerConnectionStatus
         styles={styles}
         theme={theme}
@@ -79,115 +80,132 @@ export default function ZerodhaCard({
 
       {/* Login Action Card if disconnected but config exists */}
       {!is404Error && isTokenExpired && (
-        <View style={[styles.formCard, { marginTop: 16 }]}>
-          <Text style={styles.formTitle}>Reconnect Required</Text>
-          <Text style={styles.formSubtitle}>Your Kite Connect session has expired. Click below to re-authenticate.</Text>
+        <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8 }}>
+          <Card.Content style={{ gap: 8 }}>
+            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+              Reconnect Required
+            </PaperText>
+            <PaperText variant="bodySmall" style={{ color: theme.textSecondary }}>
+              Your Kite Connect session has expired. Click below to re-authenticate.
+            </PaperText>
 
-          <TouchableOpacity
-            style={[styles.submitButton, { marginTop: 16 }]}
-            onPress={handleConnectKite}
-            disabled={autoConnectLoading}
-          >
-            {autoConnectLoading ? (
-              <ActivityIndicator size="small" color="#ffffff" />
-            ) : (
-              <>
-                <Ionicons name="flash-outline" size={20} color="#ffffff" />
-                <Text style={styles.submitButtonText}>Connect to Kite</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+            <PaperButton
+              mode="contained"
+              onPress={handleConnectKite}
+              disabled={autoConnectLoading}
+              loading={autoConnectLoading}
+              buttonColor={theme.primary}
+              textColor="#ffffff"
+              icon={({ size }) => <Ionicons name="flash-outline" size={size || 18} color="#ffffff" />}
+              style={{ borderRadius: 12, marginTop: 8 }}
+              contentStyle={{ height: 48 }}
+            >
+              Connect to Kite
+            </PaperButton>
+          </Card.Content>
+        </Card>
       )}
 
-      {/* Holdings Section - always show */}
+      {/* Holdings Section */}
       <ZerodhaHoldings styles={styles} theme={theme} />
 
       {/* Config Form */}
       {is404Error && (
-        <View style={[styles.formCard, { marginTop: 16 }]}>
-          <Text style={styles.formTitle}>Zerodha Configuration</Text>
-          <Text style={styles.formSubtitle}>Enter your Kite Connect API credentials below.</Text>
+        <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8 }}>
+          <Card.Content style={{ gap: 12 }}>
+            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+              Zerodha Configuration
+            </PaperText>
+            <PaperText variant="bodySmall" style={{ color: theme.textSecondary, marginBottom: 8 }}>
+              Enter your Kite Connect API credentials below.
+            </PaperText>
 
-          <FormInput
-            styles={styles}
-            theme={theme}
-            label="KITE API KEY *"
-            icon="key-outline"
-            placeholder="Enter your Kite API Key"
-            value={apiKey}
-            onChangeText={(text) => { setApiKey(text); setFormError(null); }}
-          />
+            <FormInput
+              styles={styles}
+              theme={theme}
+              label="KITE API KEY *"
+              icon="key-outline"
+              placeholder="Enter your Kite API Key"
+              value={apiKey}
+              onChangeText={(text) => { setApiKey(text); setFormError(null); }}
+            />
 
-          <FormInput
-            styles={styles}
-            theme={theme}
-            label="KITE API SECRET *"
-            icon="lock-closed-outline"
-            placeholder="Enter your Kite API Secret"
-            value={apiSecret}
-            onChangeText={(text) => { setApiSecret(text); setFormError(null); }}
-            secureTextEntry
-          />
+            <FormInput
+              styles={styles}
+              theme={theme}
+              label="KITE API SECRET *"
+              icon="lock-closed-outline"
+              placeholder="Enter your Kite API Secret"
+              value={apiSecret}
+              onChangeText={(text) => { setApiSecret(text); setFormError(null); }}
+              secureTextEntry
+            />
 
-          <View style={[styles.inputGroup, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="power-outline" size={18} color={theme.textSecondary} />
-              <Text style={[styles.inputLabel, { marginBottom: 0 }]}>ENABLE AUTOLOGIN</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="power-outline" size={18} color={theme.textSecondary} />
+                <PaperText variant="bodyMedium" style={{ fontWeight: '700', color: theme.textPrimary }}>
+                  ENABLE AUTOLOGIN
+                </PaperText>
+              </View>
+              <PaperSwitch value={enableAutoLogin} onValueChange={setEnableAutoLogin} color={theme.primary} />
             </View>
-            <Switch value={enableAutoLogin} onValueChange={setEnableAutoLogin} trackColor={{ false: theme.borderLight, true: theme.primary }} thumbColor="#ffffff" />
-          </View>
 
-          {enableAutoLogin && (
-            <>
-              <FormInput
-                styles={styles}
-                theme={theme}
-                label="USER NAME *"
-                icon="person-outline"
-                placeholder="Enter your Zerodha User Name"
-                value={userName}
-                onChangeText={(text) => { setUserName(text); setFormError(null); }}
-              />
-              <FormInput
-                styles={styles}
-                theme={theme}
-                label="PASSWORD *"
-                icon="lock-closed-outline"
-                placeholder="Enter your Password"
-                value={password}
-                onChangeText={(text) => { setPassword(text); setFormError(null); }}
-                secureTextEntry
-              />
-              <FormInput
-                styles={styles}
-                theme={theme}
-                label="TOTP SECRET *"
-                icon="keypad-outline"
-                placeholder="Enter your TOTP Secret"
-                value={totpSecret}
-                onChangeText={(text) => { setTotpSecret(text); setFormError(null); }}
-                secureTextEntry
-              />
-            </>
-          )}
-
-          {formError && (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle-outline" size={16} color={theme.danger} />
-              <Text style={styles.errorText}>{formError}</Text>
-            </View>
-          )}
-
-          <TouchableOpacity style={[styles.submitButton, savingConfig && styles.disabledButton]} onPress={handleSaveZerodhaConfig} disabled={savingConfig}>
-            {savingConfig ? <ActivityIndicator size="small" color="#ffffff" /> : (
+            {enableAutoLogin && (
               <>
-                <Ionicons name="checkmark-circle-outline" size={20} color="#ffffff" />
-                <Text style={styles.submitButtonText}>Save API Config</Text>
+                <FormInput
+                  styles={styles}
+                  theme={theme}
+                  label="USER NAME *"
+                  icon="person-outline"
+                  placeholder="Enter your Zerodha User Name"
+                  value={userName}
+                  onChangeText={(text) => { setUserName(text); setFormError(null); }}
+                />
+                <FormInput
+                  styles={styles}
+                  theme={theme}
+                  label="PASSWORD *"
+                  icon="lock-closed-outline"
+                  placeholder="Enter your Password"
+                  value={password}
+                  onChangeText={(text) => { setPassword(text); setFormError(null); }}
+                  secureTextEntry
+                />
+                <FormInput
+                  styles={styles}
+                  theme={theme}
+                  label="TOTP SECRET *"
+                  icon="keypad-outline"
+                  placeholder="Enter your TOTP Secret"
+                  value={totpSecret}
+                  onChangeText={(text) => { setTotpSecret(text); setFormError(null); }}
+                  secureTextEntry
+                />
               </>
             )}
-          </TouchableOpacity>
-        </View>
+
+            {formError && (
+              <PaperText variant="bodySmall" style={{ color: theme.danger, fontWeight: '600' }}>
+                {formError}
+              </PaperText>
+            )}
+
+            <PaperButton
+              mode="contained"
+              onPress={handleSaveZerodhaConfig}
+              disabled={savingConfig}
+              loading={savingConfig}
+              buttonColor={theme.primary}
+              textColor="#ffffff"
+              icon={({ size }) => <Ionicons name="checkmark-circle-outline" size={size || 18} color="#ffffff" />}
+              style={{ borderRadius: 12, marginTop: 8 }}
+              contentStyle={{ height: 48 }}
+            >
+              Save API Config
+            </PaperButton>
+          </Card.Content>
+        </Card>
       )}
     </View>
   );

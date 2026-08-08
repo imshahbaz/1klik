@@ -1,0 +1,68 @@
+import { MD3LightTheme, MD3DarkTheme, MD3Theme } from 'react-native-paper';
+import { lightColors, darkColors } from './colors';
+
+export const paperLightTheme: MD3Theme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: lightColors.primary,
+    onPrimary: '#ffffff',
+    primaryContainer: lightColors.primaryBackground,
+    onPrimaryContainer: lightColors.primary,
+    secondary: lightColors.secondary,
+    onSecondary: '#ffffff',
+    secondaryContainer: lightColors.infoBackground,
+    onSecondaryContainer: lightColors.secondary,
+    background: lightColors.background,
+    onBackground: lightColors.textPrimary,
+    surface: lightColors.card,
+    onSurface: lightColors.textPrimary,
+    surfaceVariant: lightColors.borderLight,
+    onSurfaceVariant: lightColors.textSecondary,
+    outline: lightColors.border,
+    outlineVariant: lightColors.borderLight,
+    error: lightColors.danger,
+    onError: '#ffffff',
+    errorContainer: lightColors.dangerBackground,
+    onErrorContainer: lightColors.danger,
+    elevation: {
+      ...MD3LightTheme.colors.elevation,
+      level1: lightColors.card,
+      level2: lightColors.card,
+      level3: lightColors.card,
+    },
+  },
+};
+
+export const paperDarkTheme: MD3Theme = {
+  ...MD3DarkTheme,
+  colors: {
+    ...MD3DarkTheme.colors,
+    primary: darkColors.primary,
+    onPrimary: '#ffffff',
+    primaryContainer: darkColors.primaryBackground,
+    onPrimaryContainer: darkColors.primary,
+    secondary: darkColors.secondary,
+    onSecondary: '#ffffff',
+    secondaryContainer: darkColors.infoBackground,
+    onSecondaryContainer: darkColors.secondary,
+    background: darkColors.background,
+    onBackground: darkColors.textPrimary,
+    surface: darkColors.card,
+    onSurface: darkColors.textPrimary,
+    surfaceVariant: darkColors.borderLight,
+    onSurfaceVariant: darkColors.textSecondary,
+    outline: darkColors.border,
+    outlineVariant: darkColors.borderLight,
+    error: darkColors.danger,
+    onError: '#ffffff',
+    errorContainer: darkColors.dangerBackground,
+    onErrorContainer: darkColors.danger,
+    elevation: {
+      ...MD3DarkTheme.colors.elevation,
+      level1: darkColors.card,
+      level2: darkColors.card,
+      level3: darkColors.card,
+    },
+  },
+};

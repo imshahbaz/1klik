@@ -235,6 +235,13 @@ function StyledStatusBar() {
   return <StatusBar style={isDarkMode ? "light" : "dark"} />;
 }
 
+import { PaperProvider } from 'react-native-paper';
+
+function PaperWrapper({ children }: { children: React.ReactNode }) {
+  const { paperTheme } = useTheme();
+  return <PaperProvider theme={paperTheme}>{children}</PaperProvider>;
+}
+
 export default function RootLayout() {
   return (
     <ErrorBoundary>
@@ -242,15 +249,17 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <AuthProvider>
             <ThemeProvider>
-              <AlertProvider>
-                <SecurityProvider>
-                  <MarginProvider>
-                    <StrategyProvider>
-                      <AppContent />
-                    </StrategyProvider>
-                  </MarginProvider>
-                </SecurityProvider>
-              </AlertProvider>
+              <PaperWrapper>
+                <AlertProvider>
+                  <SecurityProvider>
+                    <MarginProvider>
+                      <StrategyProvider>
+                        <AppContent />
+                      </StrategyProvider>
+                    </MarginProvider>
+                  </SecurityProvider>
+                </AlertProvider>
+              </PaperWrapper>
             </ThemeProvider>
           </AuthProvider>
         </SafeAreaProvider>

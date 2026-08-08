@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import { Portal, Modal as PaperModal, Surface, Text as PaperText, Button as PaperButton } from 'react-native-paper';
 
 interface OrderResultModalProps {
   readonly styles: any;
@@ -12,13 +12,7 @@ interface OrderResultModalProps {
   readonly onClose: () => void;
 }
 
-/**
- * Full-screen feedback modal shown after the MTF order create/update request
- * resolves. `success` renders a green confirmation, `error` a red failure —
- * either way only friendly text is shown, never backend status codes.
- */
 export default function OrderResultModal({
-  styles,
   theme,
   visible,
   variant,
@@ -32,79 +26,64 @@ export default function OrderResultModal({
   const icon = isSuccess ? 'checkmark-circle' : 'close-circle';
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={onClose}
+    <Portal>
+      <PaperModal
+        visible={visible}
+        onDismiss={onClose}
+        contentContainerStyle={{
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20,
+        }}
       >
-        <View
-          style={[styles.editModalContainer, { alignItems: 'center', paddingVertical: 28 }]}
-          onStartShouldSetResponder={() => true}
+        <Surface
+          style={{
+            backgroundColor: theme.card,
+            borderRadius: 24,
+            width: '100%',
+            maxWidth: 340,
+            padding: 24,
+            alignItems: 'center',
+            elevation: 5,
+          }}
+          elevation={4}
         >
-          <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            <View
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 36,
-                backgroundColor: accentBackground,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name={icon} size={44} color={accent} />
-            </View>
-          </View>
-
-          <Text
+          <Surface
             style={{
-              fontSize: 17,
-              fontWeight: '800',
-              color: theme.textPrimary,
-              textAlign: 'center',
-              marginBottom: 8,
-            }}
-          >
-            {title}
-          </Text>
-
-          <Text
-            style={{
-              fontSize: 13,
-              lineHeight: 19,
-              fontWeight: '500',
-              color: theme.textSecondary,
-              textAlign: 'center',
-              marginBottom: 20,
-            }}
-          >
-            {message}
-          </Text>
-
-          <TouchableOpacity
-            style={{
-              alignSelf: 'stretch',
-              height: 48,
-              borderRadius: 12,
-              backgroundColor: isSuccess ? theme.success : theme.primary,
+              width: 64,
+              height: 64,
+              borderRadius: 32,
+              backgroundColor: accentBackground,
               alignItems: 'center',
               justifyContent: 'center',
+              marginBottom: 16,
             }}
-            onPress={onClose}
-            activeOpacity={0.8}
+            elevation={0}
           >
-            <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '800', letterSpacing: 0.2 }}>
-              {isSuccess ? 'Done' : 'Got it'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    </Modal>
+            <Ionicons name={icon} size={36} color={accent} />
+          </Surface>
+
+          <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary, textAlign: 'center', marginBottom: 8 }}>
+            {title}
+          </PaperText>
+
+          <PaperText variant="bodyMedium" style={{ color: theme.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: 20 }}>
+            {message}
+          </PaperText>
+
+          <PaperButton
+            mode="contained"
+            onPress={onClose}
+            buttonColor={isSuccess ? theme.success : theme.primary}
+            textColor="#ffffff"
+            style={{ width: '100%', borderRadius: 12 }}
+            contentStyle={{ height: 48 }}
+            labelStyle={{ fontSize: 15, fontWeight: '700' }}
+          >
+            {isSuccess ? 'Done' : 'Got it'}
+          </PaperButton>
+        </Surface>
+      </PaperModal>
+    </Portal>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SegmentedButtons } from 'react-native-paper';
 import { WebView } from 'react-native-webview';
 import { ScreenScaffold } from '../../components/ScreenScaffold';
 import { CustomAlert } from '../../context/AlertContext';
@@ -475,21 +476,15 @@ export default function BrokersConfigScreen() {
   return (
     <ScreenScaffold styles={styles} layout={layout} insets={insets}>
           {/* Top Switcher */}
-          <View style={[styles.tabContainer, { marginBottom: 24 }] as any}>
-            <TouchableOpacity
-              style={[styles.tabButton, activeBrokerTab === 'zerodha' && styles.activeTabButton] as any}
-              onPress={() => setActiveBrokerTab('zerodha')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.tabButtonLabel, activeBrokerTab === 'zerodha' && styles.activeTabButtonLabel] as any}>ZERODHA</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabButton, activeBrokerTab === 'rupeezy' && styles.activeTabButton] as any}
-              onPress={() => setActiveBrokerTab('rupeezy')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.tabButtonLabel, activeBrokerTab === 'rupeezy' && styles.activeTabButtonLabel] as any}>RUPEEZY</Text>
-            </TouchableOpacity>
+          <View style={{ marginBottom: 20 }}>
+            <SegmentedButtons
+              value={activeBrokerTab}
+              onValueChange={(val) => setActiveBrokerTab(val as 'zerodha' | 'rupeezy')}
+              buttons={[
+                { value: 'zerodha', label: 'ZERODHA' },
+                { value: 'rupeezy', label: 'RUPEEZY' },
+              ]}
+            />
           </View>
 
           {activeBrokerTab === 'zerodha' && (

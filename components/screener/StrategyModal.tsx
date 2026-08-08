@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import { View, ScrollView } from 'react-native';
+import { Portal, Modal as PaperModal, Surface, Text as PaperText, IconButton, Chip, Divider, TouchableRipple } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 
 function formatSuccessRate(rate: unknown): string | null {
@@ -12,7 +13,7 @@ function formatSuccessRate(rate: unknown): string | null {
 }
 
 interface StrategyModalProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly dropdownVisible: boolean;
   readonly setDropdownVisible: (val: boolean) => void;
@@ -23,7 +24,6 @@ interface StrategyModalProps {
 }
 
 export default function StrategyModal({
-  styles,
   theme,
   dropdownVisible,
   setDropdownVisible,
@@ -33,87 +33,88 @@ export default function StrategyModal({
   getStrategyMetadata
 }: StrategyModalProps) {
   return (
-    <Modal
-      visible={dropdownVisible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={() => setDropdownVisible(false)}
-    >
-      <TouchableOpacity
-        style={styles.dropdownOverlay}
-        activeOpacity={1}
-        onPress={() => setDropdownVisible(false)}
+    <Portal>
+      <PaperModal
+        visible={dropdownVisible}
+        onDismiss={() => setDropdownVisible(false)}
+        contentContainerStyle={{
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20,
+        }}
       >
-        <View
-          style={styles.dropdownMenuCard}
-          onStartShouldSetResponder={() => true}
+        <Surface
+          style={{
+            backgroundColor: theme.card,
+            borderRadius: 24,
+            width: '100%',
+            maxWidth: 360,
+            maxHeight: '80%',
+            padding: 16,
+            elevation: 5,
+          }}
+          elevation={4}
         >
-          <View style={styles.dropdownMenuHeader}>
-            <Text style={styles.dropdownMenuTitle}>Select Strategy</Text>
-            <TouchableOpacity
-              style={styles.dropdownCloseBtn}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+              Select Strategy
+            </PaperText>
+            <IconButton
+              icon={({ size, color }) => <Ionicons name="close" size={size || 20} color={color || theme.textSecondary} />}
               onPress={() => setDropdownVisible(false)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="close" size={18} color={theme.textSecondary} />
-            </TouchableOpacity>
+            />
           </View>
 
-          <View style={styles.dropdownOptionsList}>
+          <Divider style={{ backgroundColor: theme.border, marginBottom: 8 }} />
+
+          <ScrollView style={{ width: '100%' }}>
             {strategies.map((item, index) => {
               const isSelected = selectedStrategy === item.name;
               const metadata = getStrategyMetadata(item.name);
               const successRateText = formatSuccessRate(item.successRate);
+
               return (
-                <TouchableOpacity
+                <TouchableRipple
                   key={item.name + index}
-                  style={[
-                    styles.dropdownOptionRow,
-                    isSelected && styles.selectedDropdownOptionRow
-                  ]}
-                  activeOpacity={0.7}
+                  style={{
+                    padding: 12,
+                    borderRadius: 14,
+                    backgroundColor: isSelected ? theme.primaryBackground : 'transparent',
+                    marginBottom: 6,
+                  }}
                   onPress={() => handleStrategyPress(item.name)}
                 >
-                  <View style={styles.optionLeft}>
-                    <View style={styles.iconCircleSmall}>
-                      <Ionicons
-                        name={metadata.iconName}
-                        size={14}
-                        color={theme.textSecondary}
-                      />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+                      <Surface style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: isSelected ? theme.primaryBackground : theme.borderLight, alignItems: 'center', justifyContent: 'center' }} elevation={0}>
+                        <Ionicons name={metadata.iconName} size={16} color={isSelected ? theme.primary : theme.textSecondary} />
+                      </Surface>
+                      <View style={{ flex: 1 }}>
+                        <PaperText variant="titleSmall" style={{ fontWeight: isSelected ? '800' : '600', color: isSelected ? theme.primary : theme.textPrimary }} numberOfLines={1}>
+                          {item.name}
+                        </PaperText>
+                        <Chip compact textStyle={{ fontSize: 10, fontWeight: '700' }} style={{ marginTop: 2, alignSelf: 'flex-start' }}>
+                          {metadata.badgeText}
+                        </Chip>
+                      </View>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[
-                        styles.optionNameText,
-                        isSelected && styles.selectedOptionNameText
-                      ]} numberOfLines={1}>
-                        {item.name}
-                      </Text>
-                      <Text style={[
-                        styles.optionIntervalText,
-                        isSelected && styles.selectedOptionIntervalText
-                      ]}>
-                        {metadata.badgeText}
-                      </Text>
-                    </View>
+
+                    {successRateText && (
+                      <Chip compact style={{ backgroundColor: theme.successBackground }} textStyle={{ color: theme.success, fontSize: 11, fontWeight: '800' }}>
+                        {successRateText}
+                      </Chip>
+                    )}
+
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={20} color={theme.primary} style={{ marginLeft: 8 }} />
+                    )}
                   </View>
-
-                  {successRateText && (
-                    <View style={styles.successRateBadge}>
-                      <Text style={styles.successRateValue}>{successRateText}</Text>
-                      <Text style={styles.successRateLabel}>Success Rate</Text>
-                    </View>
-                  )}
-
-                  {isSelected && (
-                    <Ionicons name="checkmark" size={16} color={theme.success} />
-                  )}
-                </TouchableOpacity>
+                </TouchableRipple>
               );
             })}
-          </View>
-        </View>
-      </TouchableOpacity>
-    </Modal>
+          </ScrollView>
+        </Surface>
+      </PaperModal>
+    </Portal>
   );
 }

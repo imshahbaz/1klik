@@ -1,8 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SegmentedButtons } from 'react-native-paper';
 import { ScreenScaffold } from '../../components/ScreenScaffold';
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
@@ -440,33 +440,21 @@ export default function TradeScreen() {
         contentInsetAdjustmentBehavior="automatic"
         extraKeyboardSpace={72}
       >
-        {/* Custom Premium Segmented Tab Bar */}
-          <View style={styles.tabContainer as any}>
-            {[
-              { id: 'execute', label: 'EXECUTE', icon: 'flash' },
-              { id: 'strategy', label: 'STRATEGY', icon: 'analytics' },
-              { id: 'history', label: 'HISTORY', icon: 'receipt' },
-            ].map((tab) => (
-              <TouchableOpacity
-                key={tab.id}
-                style={[styles.tabButton, activeTab === tab.id && styles.activeTabButton] as any}
-                onPress={() => handleTabChange(tab.id as any)}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name={activeTab === tab.id ? (tab.icon as any) : (`${tab.icon}-outline` as any)}
-                  size={16}
-                  color={activeTab === tab.id ? theme.primary : theme.textSecondary}
-                />
-                <Text style={[styles.tabButtonLabel, activeTab === tab.id && styles.activeTabButtonLabel] as any}>
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+        {/* Segmented Tab Bar */}
+        <View style={{ marginBottom: 16 }}>
+          <SegmentedButtons
+            value={activeTab}
+            onValueChange={(val) => handleTabChange(val as 'execute' | 'strategy' | 'history')}
+            buttons={[
+              { value: 'execute', label: 'EXECUTE', icon: 'flash' },
+              { value: 'strategy', label: 'STRATEGY', icon: 'chart-line' },
+              { value: 'history', label: 'HISTORY', icon: 'history' },
+            ]}
+          />
+        </View>
 
-          {/* Tab Views Render */}
-          {renderTabContent()}
+        {/* Tab Views Render */}
+        {renderTabContent()}
 
       </ScreenScaffold>
 

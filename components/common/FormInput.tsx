@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Text, TextInput, TextInputProps, View } from 'react-native';
+import { TextInputProps, View } from 'react-native';
+import { TextInput as PaperTextInput } from 'react-native-paper';
 
 interface FormInputProps {
-  readonly styles: any;
+  readonly styles?: any;
   readonly theme: any;
   readonly label: string;
   readonly value: string;
@@ -18,9 +19,7 @@ interface FormInputProps {
 }
 
 /**
- * Labelled text field matching the app's `inputGroup`/`inputWrapper` styling.
- * Replaces the label + (optional) leading icon + TextInput block that was
- * duplicated across the broker config cards.
+ * React Native Paper powered Form Input component matching app aesthetics.
  */
 export default function FormInput({
   styles,
@@ -37,25 +36,36 @@ export default function FormInput({
   editable,
 }: FormInputProps) {
   return (
-    <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <View style={styles.inputWrapper}>
-        {icon && (
-          <Ionicons name={icon} size={18} color={theme.textSecondary} style={styles.inputIcon} />
-        )}
-        <TextInput
-          style={styles.textInput}
-          placeholder={placeholder}
-          placeholderTextColor={theme.placeholder}
-          value={value}
-          onChangeText={onChangeText}
-          secureTextEntry={secureTextEntry}
-          autoCapitalize={autoCapitalize}
-          autoCorrect={autoCorrect}
-          keyboardType={keyboardType}
-          editable={editable}
-        />
-      </View>
+    <View style={styles?.inputGroup || { marginBottom: 16 }}>
+      <PaperTextInput
+        mode="outlined"
+        label={label}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={autoCorrect}
+        keyboardType={keyboardType}
+        editable={editable}
+        textColor={theme.textPrimary}
+        placeholderTextColor={theme.placeholder}
+        outlineColor={theme.border}
+        activeOutlineColor={theme.primary}
+        left={
+          icon ? (
+            <PaperTextInput.Icon
+              icon={({ size, color }) => (
+                <Ionicons name={icon} size={size || 18} color={color || theme.textSecondary} />
+              )}
+            />
+          ) : undefined
+        }
+        style={{
+          backgroundColor: theme.card,
+          fontSize: 14,
+        }}
+      />
     </View>
   );
 }

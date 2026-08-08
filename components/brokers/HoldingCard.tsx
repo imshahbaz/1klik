@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { ScaledSheet, moderateScale } from 'react-native-size-matters';
+import { View, TouchableOpacity } from 'react-native';
+import { Card, Text as PaperText, Chip, Button as PaperButton, Divider, Surface } from 'react-native-paper';
 import { buyCharges, sellCharges, mtfInterest, breakEvenSellAmount } from '../../utils/charges';
 import type { Holding } from '../../services/api/types';
 
@@ -18,242 +18,6 @@ interface HoldingCardProps {
 const formatINR = (value: number) =>
   value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-/**
- * Style factory keyed on theme. Sizes use the `@ms` (moderateScale) suffix so
- * text and spacing adapt to screen size, consistent with the rest of the app's
- * theme files. Per-row dynamic colors (profit/loss) are applied inline on top.
- */
-const createStyles = (theme: any) =>
-  ScaledSheet.create({
-    card: {
-      marginBottom: '16@ms',
-      borderWidth: 1,
-      borderLeftWidth: 4,
-      borderRadius: '16@ms',
-      backgroundColor: theme.card,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      elevation: 2,
-      overflow: 'hidden',
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '16@ms',
-      backgroundColor: 'transparent',
-    },
-    headerLeft: {
-      flex: 1,
-      paddingRight: '12@ms',
-    },
-    symbolRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: '4@ms',
-    },
-    symbolText: {
-      color: theme.textPrimary,
-      fontSize: '15@ms',
-      fontWeight: '600',
-      flexShrink: 1,
-    },
-    mtfBadge: {
-      marginLeft: '8@ms',
-      backgroundColor: 'rgba(59, 130, 246, 0.1)',
-      paddingHorizontal: '6@ms',
-      paddingVertical: '2@ms',
-      borderRadius: '4@ms',
-    },
-    mtfBadgeText: {
-      color: theme.primary,
-      fontSize: '9@ms',
-      fontWeight: '700',
-    },
-    sharesText: {
-      color: theme.textSecondary,
-      fontSize: '12@ms',
-    },
-    headerRight: {
-      flexShrink: 1,
-      alignItems: 'flex-end',
-    },
-    ltpText: {
-      color: theme.textPrimary,
-      fontSize: '15@ms',
-      fontWeight: '600',
-    },
-    pnlText: {
-      fontSize: '12@ms',
-      fontWeight: '500',
-      marginTop: '4@ms',
-    },
-    expanded: {
-      paddingHorizontal: '16@ms',
-      paddingBottom: '16@ms',
-      backgroundColor: 'transparent',
-      borderTopWidth: 1,
-      borderTopColor: theme.borderLight,
-    },
-    statBox: {
-      flexDirection: 'row',
-      marginTop: '16@ms',
-      marginBottom: '16@ms',
-      backgroundColor: theme.card,
-      borderRadius: '12@ms',
-      padding: '12@ms',
-      borderWidth: 1,
-      borderColor: theme.borderLight,
-    },
-    statCol: { flex: 1 },
-    statLabel: {
-      color: theme.textSecondary,
-      fontSize: '11@ms',
-      fontWeight: '600',
-      textTransform: 'uppercase',
-      marginBottom: '4@ms',
-    },
-    statValue: {
-      color: theme.textPrimary,
-      fontSize: '15@ms',
-      fontWeight: '700',
-    },
-    statDivider: {
-      width: 1,
-      backgroundColor: theme.borderLight,
-      marginHorizontal: '12@ms',
-    },
-    breakEvenBox: {
-      backgroundColor: 'rgba(245, 158, 11, 0.05)',
-      borderRadius: '12@ms',
-      padding: '12@ms',
-      marginBottom: '16@ms',
-      borderWidth: 1,
-      borderColor: 'rgba(245, 158, 11, 0.2)',
-    },
-    breakEvenRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '8@ms',
-    },
-    breakEvenLabel: {
-      color: theme.textSecondary,
-      fontSize: '12@ms',
-      fontWeight: '600',
-      flexShrink: 1,
-      paddingRight: '8@ms',
-    },
-    breakEvenValue: {
-      color: theme.primary,
-      fontSize: '16@ms',
-      fontWeight: '800',
-    },
-    chargeRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: '4@ms',
-    },
-    chargeLabel: {
-      color: theme.textSecondary,
-      fontSize: '12@ms',
-      fontWeight: '500',
-      flexShrink: 1,
-      paddingRight: '8@ms',
-    },
-    chargeValue: {
-      color: theme.danger,
-      fontSize: '12@ms',
-      fontWeight: '600',
-    },
-    interestRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: '4@ms',
-      paddingTop: '8@ms',
-      borderTopWidth: 1,
-      borderTopColor: 'rgba(245, 158, 11, 0.1)',
-    },
-    interestLabel: {
-      fontSize: '12@ms',
-      fontWeight: '700',
-      flexShrink: 1,
-      paddingRight: '8@ms',
-    },
-    interestValue: {
-      fontSize: '12@ms',
-      fontWeight: '800',
-    },
-    breakdownLabel: {
-      color: theme.textSecondary,
-      fontSize: '11@ms',
-      fontWeight: '600',
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
-      marginBottom: '8@ms',
-    },
-    detailRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-    },
-    detailDate: {
-      color: theme.textSecondary,
-      fontSize: '12@ms',
-      marginBottom: '2@ms',
-    },
-    detailQty: {
-      color: theme.textPrimary,
-      fontSize: '14@ms',
-      fontWeight: '600',
-    },
-    detailMetaRow: {
-      flexDirection: 'row',
-      gap: '12@ms',
-      marginTop: '4@ms',
-      flexWrap: 'wrap',
-    },
-    detailMetaText: {
-      color: theme.textSecondary,
-      fontSize: '11@ms',
-    },
-    detailActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: '16@ms',
-      marginTop: '4@ms',
-      marginLeft: '8@ms',
-    },
-    deleteButton: {
-      marginTop: '12@ms',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '10@ms',
-      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-      borderRadius: '8@ms',
-    },
-    deleteButtonText: {
-      color: theme.danger,
-      fontWeight: '700',
-      fontSize: '13@ms',
-      marginLeft: '6@ms',
-    },
-  });
-
-/**
- * A single portfolio holding row with its expandable MTF breakdown.
- *
- * All per-holding derived values (P&L, MTF interest, buy/sell charges,
- * break-even price) are computed in a single `useMemo` keyed on `holding`, so
- * the math only re-runs when that holding's data changes. Memoized with
- * `React.memo` so rows that didn't change skip re-rendering entirely.
- *
- * The financial formulas are preserved exactly as they were; only the styling
- * changed — from hardcoded pixel values to screen-scaled (`@ms`) styles.
- */
 function HoldingCardBase({
   holding,
   theme,
@@ -263,12 +27,7 @@ function HoldingCardBase({
   onDeleteDetail,
   onDeleteHolding,
 }: HoldingCardProps) {
-  const styles = useMemo(() => createStyles(theme), [theme]);
-
   const metrics = useMemo(() => {
-    // Coerce every backend field to a number: a missing/non-numeric quantity or
-    // price would otherwise turn every derived value (avg, P&L, break-even) into
-    // NaN and render literal "NaN" in the UI.
     const details = (holding.holdingDetails ?? []).map((d: any) => ({
       ...d,
       quantity: Number(d?.quantity) || 0,
@@ -313,8 +72,6 @@ function HoldingCardBase({
       return { ...detail, interest, days, detailBuyCharges };
     });
 
-    // Estimated sell charges (based on current LTP) and the break-even sell price
-    // that covers cost + accrued interest + buy charges + sell charges.
     const estSellCharges = sellCharges(totalQty * ltp);
     const breakEven = breakEvenSellAmount(totalCost + totalInterest + totalBuyCharges);
     const breakEvenPrice = totalQty > 0 ? breakEven / totalQty : 0;
@@ -351,159 +108,130 @@ function HoldingCardBase({
   } = metrics;
 
   const isProfit = pnl >= 0;
-  const warningColor = theme.warning || '#F59E0B';
-
-  let borderColor = theme.borderLight;
-  if (isExpanded) {
-    borderColor = isProfit ? theme.success : theme.danger;
-  }
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          borderColor,
-          borderLeftColor: isProfit ? theme.success : theme.danger,
-        },
-      ]}
+    <Card
+      style={{
+        backgroundColor: theme.card,
+        borderRadius: 20,
+        marginBottom: 12,
+        borderLeftWidth: 5,
+        borderLeftColor: isProfit ? theme.success : theme.danger,
+        elevation: 2,
+      }}
+      onPress={() => onToggle(holding.symbol)}
     >
-      <TouchableOpacity style={styles.header} onPress={() => onToggle(holding.symbol)} activeOpacity={0.7}>
-        <View style={styles.headerLeft}>
-          <View style={styles.symbolRow}>
-            <Text style={styles.symbolText} numberOfLines={1} ellipsizeMode="tail">
-              {holding.symbol}
-            </Text>
-            {leverage > 1 && (
-              <View style={styles.mtfBadge}>
-                <Text style={styles.mtfBadgeText}>{leverage}x MTF</Text>
-              </View>
-            )}
+      <Card.Content style={{ gap: 12 }}>
+        {/* Header */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+                {holding.symbol}
+              </PaperText>
+              {leverage > 1 && (
+                <Chip compact style={{ backgroundColor: theme.primaryBackground }} textStyle={{ color: theme.primary, fontSize: 10, fontWeight: '800' }}>
+                  {leverage}x MTF
+                </Chip>
+              )}
+            </View>
+            <PaperText variant="bodySmall" style={{ color: theme.textSecondary, marginTop: 2 }}>
+              {totalQty} Shares
+            </PaperText>
           </View>
-          <Text style={styles.sharesText}>{totalQty} Shares</Text>
+
+          <View style={{ alignItems: 'flex-end' }}>
+            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+              ₹{formatINR(ltp)}
+            </PaperText>
+            <PaperText variant="bodySmall" style={{ color: isProfit ? theme.success : theme.danger, fontWeight: '700', marginTop: 2 }}>
+              {isProfit ? '+' : ''}₹{formatINR(pnl)} ({pnlPercent.toFixed(2)}%)
+            </PaperText>
+          </View>
         </View>
-        <View style={styles.headerRight}>
-          <Text style={styles.ltpText} numberOfLines={1}>
-            ₹{formatINR(ltp)}
-          </Text>
-          <Text
-            style={[styles.pnlText, { color: isProfit ? theme.success : theme.danger }]}
-            numberOfLines={1}
-          >
-            {isProfit ? '+' : ''}₹{formatINR(pnl)} ({pnlPercent.toFixed(2)}%)
-          </Text>
-        </View>
-      </TouchableOpacity>
 
-      {isExpanded && (
-        <View style={styles.expanded}>
-          <View style={styles.statBox}>
-            <View style={styles.statCol}>
-              <Text style={styles.statLabel}>Avg. Price</Text>
-              <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>₹{formatINR(avgPrice)}</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statCol}>
-              <Text style={styles.statLabel}>Invested Margin</Text>
-              <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>₹{formatINR(totalMarginUsed)}</Text>
-            </View>
-          </View>
-
-          <View style={styles.breakEvenBox}>
-            <View style={styles.breakEvenRow}>
-              <Text style={styles.breakEvenLabel}>Break-Even Target</Text>
-              <Text style={styles.breakEvenValue} numberOfLines={1}>
-                ₹{formatINR(breakEvenPrice)}
-              </Text>
-            </View>
-
-            {totalBuyCharges > 0 && (
-              <View style={styles.chargeRow}>
-                <Text style={styles.chargeLabel}>Past Buy Charges</Text>
-                <Text style={styles.chargeValue} numberOfLines={1}>
-                  - ₹{formatINR(totalBuyCharges)}
-                </Text>
+        {isExpanded && (
+          <View style={{ gap: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.borderLight }}>
+            <Surface style={{ flexDirection: 'row', padding: 12, borderRadius: 14, backgroundColor: theme.borderLight }} elevation={0}>
+              <View style={{ flex: 1 }}>
+                <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '700' }}>AVG. PRICE</PaperText>
+                <PaperText variant="titleSmall" style={{ color: theme.textPrimary, fontWeight: '800', marginTop: 2 }}>₹{formatINR(avgPrice)}</PaperText>
               </View>
-            )}
-
-            <View style={styles.chargeRow}>
-              <Text style={styles.chargeLabel}>Est. Sell Charges</Text>
-              <Text style={styles.chargeValue} numberOfLines={1}>
-                - ₹{formatINR(estSellCharges)}
-              </Text>
-            </View>
-
-            {totalInterest > 0 && (
-              <View style={styles.interestRow}>
-                <Text style={[styles.interestLabel, { color: warningColor }]}>Accrued MTF Interest</Text>
-                <Text style={[styles.interestValue, { color: warningColor }]} numberOfLines={1}>
-                  - ₹{formatINR(totalInterest)}
-                </Text>
+              <Divider style={{ width: 1, height: '100%', marginHorizontal: 12 }} />
+              <View style={{ flex: 1 }}>
+                <PaperText variant="labelSmall" style={{ color: theme.textSecondary, fontWeight: '700' }}>INVESTED MARGIN</PaperText>
+                <PaperText variant="titleSmall" style={{ color: theme.textPrimary, fontWeight: '800', marginTop: 2 }}>₹{formatINR(totalMarginUsed)}</PaperText>
               </View>
-            )}
-          </View>
+            </Surface>
 
-          <View style={{ marginTop: moderateScale(8) }}>
-            <Text style={styles.breakdownLabel}>Holding Breakdown</Text>
+            {/* Break-even box */}
+            <Surface style={{ padding: 12, borderRadius: 14, backgroundColor: theme.warningBackground, gap: 6 }} elevation={0}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700' }}>Break-Even Target</PaperText>
+                <PaperText variant="titleMedium" style={{ color: theme.primary, fontWeight: '900' }}>₹{formatINR(breakEvenPrice)}</PaperText>
+              </View>
+              {totalBuyCharges > 0 && (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <PaperText variant="bodySmall" style={{ color: theme.textSecondary }}>Past Buy Charges</PaperText>
+                  <PaperText variant="bodySmall" style={{ color: theme.danger, fontWeight: '700' }}>- ₹{formatINR(totalBuyCharges)}</PaperText>
+                </View>
+              )}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <PaperText variant="bodySmall" style={{ color: theme.textSecondary }}>Est. Sell Charges</PaperText>
+                <PaperText variant="bodySmall" style={{ color: theme.danger, fontWeight: '700' }}>- ₹{formatINR(estSellCharges)}</PaperText>
+              </View>
+              {totalInterest > 0 && (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <PaperText variant="bodySmall" style={{ color: theme.warningText, fontWeight: '700' }}>Accrued MTF Interest</PaperText>
+                  <PaperText variant="bodySmall" style={{ color: theme.warningText, fontWeight: '800' }}>- ₹{formatINR(totalInterest)}</PaperText>
+                </View>
+              )}
+            </Surface>
 
-            {detailsWithInterest.map((detail: any, dIndex: number) => {
-              const buyDateStr = detail.buyDate ? new Date(detail.buyDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : 'N/A';
-              return (
-                <View
-                  key={detail.id || dIndex}
-                  style={{
-                    paddingVertical: moderateScale(10),
-                    borderBottomWidth: dIndex === detailsWithInterest.length - 1 ? 0 : 1,
-                    borderBottomColor: theme.borderLight,
-                  }}
-                >
-                  <View style={styles.detailRow}>
+            {/* Holding Breakdown */}
+            <View>
+              <PaperText variant="labelMedium" style={{ color: theme.textSecondary, fontWeight: '800', marginBottom: 8 }}>
+                HOLDING BREAKDOWN
+              </PaperText>
+              {detailsWithInterest.map((detail: any, dIndex: number) => {
+                const buyDateStr = detail.buyDate ? new Date(detail.buyDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : 'N/A';
+                return (
+                  <View key={detail.id || dIndex} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: theme.borderLight }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.detailDate}>
+                      <PaperText variant="bodySmall" style={{ color: theme.textSecondary }}>
                         {buyDateStr} {detail.days > 0 ? `(${detail.days}d)` : ''}
-                      </Text>
-                      <Text style={styles.detailQty}>
+                      </PaperText>
+                      <PaperText variant="bodyMedium" style={{ color: theme.textPrimary, fontWeight: '700' }}>
                         {detail.quantity} @ ₹{detail.price?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                      </Text>
-                      <View style={styles.detailMetaRow}>
-                        {detail.interest > 0 && (
-                          <Text style={styles.detailMetaText}>
-                            Int: <Text style={{ color: warningColor }}>₹{formatINR(detail.interest)}</Text>
-                          </Text>
-                        )}
-                        <Text style={styles.detailMetaText}>
-                          Chg: <Text style={{ color: theme.danger }}>₹{detail.detailBuyCharges?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</Text>
-                        </Text>
-                      </View>
+                      </PaperText>
                     </View>
-                    <View style={styles.detailActions}>
-                      <TouchableOpacity
-                        onPress={() => onEditDetail(holding.symbol, detail)}
-                        activeOpacity={0.7}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <Ionicons name="pencil" size={moderateScale(16)} color={theme.textSecondary} />
+
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <TouchableOpacity onPress={() => onEditDetail(holding.symbol, detail)}>
+                        <Ionicons name="pencil" size={18} color={theme.textSecondary} />
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => onDeleteDetail(holding.symbol, detail.id)}
-                        activeOpacity={0.7}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <Ionicons name="trash-outline" size={moderateScale(16)} color={theme.textSecondary} />
+                      <TouchableOpacity onPress={() => onDeleteDetail(holding.symbol, detail.id)}>
+                        <Ionicons name="trash-outline" size={18} color={theme.danger} />
                       </TouchableOpacity>
                     </View>
                   </View>
-                </View>
-              );
-            })}
+                );
+              })}
+            </View>
+
+            <PaperButton
+              mode="contained"
+              buttonColor={theme.danger}
+              onPress={() => onDeleteHolding(holding.symbol)}
+              icon={({ size }) => <Ionicons name="trash-outline" size={size || 16} color="#ffffff" />}
+              style={{ borderRadius: 12, marginTop: 8 }}
+            >
+              Delete Holding
+            </PaperButton>
           </View>
-          <TouchableOpacity style={styles.deleteButton} onPress={() => onDeleteHolding(holding.symbol)} activeOpacity={0.7}>
-            <Ionicons name="trash-outline" size={moderateScale(16)} color={theme.danger} />
-            <Text style={styles.deleteButtonText}>Delete Holding</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
+        )}
+      </Card.Content>
+    </Card>
   );
 }
 

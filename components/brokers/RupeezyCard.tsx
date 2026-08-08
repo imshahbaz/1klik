@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
+import { Card, Text as PaperText, Button as PaperButton } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { CustomAlert } from '../../context/AlertContext';
 import FormInput from '../common/FormInput';
@@ -45,7 +46,7 @@ export default function RupeezyCard({
   setShowRupeezyWebView
 }: RupeezyCardProps) {
   return (
-    <View>
+    <View style={{ gap: 16 }}>
       <BrokerConnectionStatus
         styles={styles}
         theme={theme}
@@ -59,76 +60,89 @@ export default function RupeezyCard({
 
       {/* Login Action Card if disconnected but config exists */}
       {!isRupeezy404Error && isRupeezyTokenExpired && (
-        <View style={[styles.formCard, { marginTop: 16 }]}>
-          <Text style={styles.formTitle}>Reconnect Required</Text>
-          <Text style={styles.formSubtitle}>Your Rupeezy session has expired. Click below to re-authenticate.</Text>
-          
-          <TouchableOpacity
-            style={[styles.submitButton, { marginTop: 16 }]}
-            onPress={() => {
-              if (!rupeezyAppId) {
-                CustomAlert.alert("Missing App ID", "No saved App ID found. Please save your API config first.");
-                return;
-              }
-              setShowRupeezyWebView(true);
-            }}
-          >
-            <Ionicons name="flash-outline" size={20} color="#ffffff" />
-            <Text style={styles.submitButtonText}>Connect to Rupeezy</Text>
-          </TouchableOpacity>
-        </View>
+        <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8 }}>
+          <Card.Content style={{ gap: 8 }}>
+            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+              Reconnect Required
+            </PaperText>
+            <PaperText variant="bodySmall" style={{ color: theme.textSecondary }}>
+              Your Rupeezy session has expired. Click below to re-authenticate.
+            </PaperText>
+
+            <PaperButton
+              mode="contained"
+              onPress={() => {
+                if (!rupeezyAppId) {
+                  CustomAlert.alert("Missing App ID", "No saved App ID found. Please save your API config first.");
+                  return;
+                }
+                setShowRupeezyWebView(true);
+              }}
+              buttonColor={theme.primary}
+              textColor="#ffffff"
+              icon={({ size }) => <Ionicons name="flash-outline" size={size || 18} color="#ffffff" />}
+              style={{ borderRadius: 12, marginTop: 8 }}
+              contentStyle={{ height: 48 }}
+            >
+              Connect to Rupeezy
+            </PaperButton>
+          </Card.Content>
+        </Card>
       )}
 
       {/* Config Form */}
       {isRupeezy404Error && (
-        <View style={[styles.formCard, { marginTop: 16 }]}>
-          <View style={styles.formHeaderContainer}>
-            <View style={styles.actionIconCircle}>
-              <Ionicons name="business-outline" size={22} color={theme.primary} />
-            </View>
-            <View style={styles.actionTextContainer}>
-              <Text style={styles.formTitle}>Rupeezy Configuration</Text>
-              <Text style={styles.formSubtitle}>Enter your App ID and API Secret below.</Text>
-            </View>
-          </View>
+        <Card style={{ backgroundColor: theme.card, borderRadius: 24, padding: 8 }}>
+          <Card.Content style={{ gap: 12 }}>
+            <PaperText variant="titleMedium" style={{ fontWeight: '800', color: theme.textPrimary }}>
+              Rupeezy Configuration
+            </PaperText>
+            <PaperText variant="bodySmall" style={{ color: theme.textSecondary, marginBottom: 8 }}>
+              Enter your App ID and API Secret below.
+            </PaperText>
 
-          <FormInput
-            styles={styles}
-            theme={theme}
-            label="APP ID *"
-            icon="apps-outline"
-            placeholder="Enter App ID"
-            value={rupeezyAppId}
-            onChangeText={(text) => { setRupeezyAppId(text); setRupeezyError(null); }}
-          />
+            <FormInput
+              styles={styles}
+              theme={theme}
+              label="APP ID *"
+              icon="apps-outline"
+              placeholder="Enter App ID"
+              value={rupeezyAppId}
+              onChangeText={(text) => { setRupeezyAppId(text); setRupeezyError(null); }}
+            />
 
-          <FormInput
-            styles={styles}
-            theme={theme}
-            label="API SECRET *"
-            icon="lock-closed-outline"
-            placeholder="Enter API Secret"
-            value={rupeezyApiSecret}
-            onChangeText={(text) => { setRupeezyApiSecret(text); setRupeezyError(null); }}
-            secureTextEntry
-          />
+            <FormInput
+              styles={styles}
+              theme={theme}
+              label="API SECRET *"
+              icon="lock-closed-outline"
+              placeholder="Enter API Secret"
+              value={rupeezyApiSecret}
+              onChangeText={(text) => { setRupeezyApiSecret(text); setRupeezyError(null); }}
+              secureTextEntry
+            />
 
-          {rupeezyError && (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle-outline" size={16} color={theme.danger} />
-              <Text style={styles.errorText}>{rupeezyError}</Text>
-            </View>
-          )}
-
-          <TouchableOpacity style={[styles.submitButton, rupeezySaving && styles.disabledButton]} onPress={handleSaveRupeezyConfig} disabled={rupeezySaving}>
-            {rupeezySaving ? <ActivityIndicator size="small" color="#ffffff" /> : (
-              <>
-                <Ionicons name="checkmark-circle-outline" size={20} color="#ffffff" />
-                <Text style={styles.submitButtonText}>Save Rupeezy Config</Text>
-              </>
+            {rupeezyError && (
+              <PaperText variant="bodySmall" style={{ color: theme.danger, fontWeight: '600' }}>
+                {rupeezyError}
+              </PaperText>
             )}
-          </TouchableOpacity>
-        </View>
+
+            <PaperButton
+              mode="contained"
+              onPress={handleSaveRupeezyConfig}
+              disabled={rupeezySaving}
+              loading={rupeezySaving}
+              buttonColor={theme.primary}
+              textColor="#ffffff"
+              icon={({ size }) => <Ionicons name="checkmark-circle-outline" size={size || 18} color="#ffffff" />}
+              style={{ borderRadius: 12, marginTop: 8 }}
+              contentStyle={{ height: 48 }}
+            >
+              Save Rupeezy Config
+            </PaperButton>
+          </Card.Content>
+        </Card>
       )}
     </View>
   );
