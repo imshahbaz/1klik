@@ -191,11 +191,12 @@ function AppContent() {
           style={[
             StyleSheet.absoluteFill,
             {
-              // splash-icon.png is opaque with its own #010102 backdrop baked
-              // in, so the screen behind it must be that exact colour or the
-              // logo reads as a square tile. Keep this in sync with the
-              // expo-splash-screen backgroundColor in app.json.
-              backgroundColor: '#010102',
+              // splash-icon.png is opaque with a near-black backdrop baked in,
+              // so this must stay black to hide the tile edge — and must match
+              // the expo-splash-screen backgroundColor in app.json, along with
+              // the 200dp image size, so the native splash hands over to this
+              // one without the logo jumping.
+              backgroundColor: '#000000',
               opacity: splashOpacity,
               justifyContent: 'center',
               alignItems: 'center',
@@ -206,21 +207,22 @@ function AppContent() {
           <Image
             source={require('../assets/images/splash-icon.png')}
             contentFit="contain"
-            style={{ width: 180, height: 180 }}
+            style={{ width: 200, height: 200 }}
           />
           <View
             style={{
-              width: 140,
-              height: 2,
-              backgroundColor: '#232A35',
-              marginTop: 28,
+              width: 200,
+              height: 4,
+              backgroundColor: isDarkMode ? '#1e293b' : '#e2e8f0',
+              borderRadius: 2,
+              marginTop: 24,
               overflow: 'hidden',
             }}
           >
             <Animated.View
               style={{
                 height: '100%',
-                backgroundColor: '#FF7A3D',
+                backgroundColor: theme.primary || '#3b82f6',
                 width: progressAnim.interpolate({
                   inputRange: [0, 1],
                   outputRange: ['0%', '100%'],
