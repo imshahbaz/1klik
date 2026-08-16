@@ -65,6 +65,9 @@ export interface FormattedStrategyOrder {
   price: number;
   time: string;
   status: string;
+  orderStatus?: string;
+  statusLabel?: string;
+  statusColor?: string;
   reason?: string;
   strategyName: string;
   amount: number;
@@ -107,9 +110,12 @@ export const formatStrategyOrders = (rawData: any): FormattedStrategyOrder[] => 
     qty: order.quantity ?? order.qty ?? 0,
     price: order.price ?? 0,
     time: order.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    status: order.status || 'COMPLETED',
+    status: order.status || order.orderStatus || 'COMPLETED',
+    orderStatus: order.orderStatus || order.status || 'COMPLETED',
+    statusLabel: order.statusLabel || undefined,
+    statusColor: order.statusColor || undefined,
     reason: order.reason || undefined,
-    strategyName: order.strategyName || 'RSI15MIN',
+    strategyName: order.strategyName || '',
     amount: order.amount || 0,
     // Display string ("6 Jul 2026"), same as the MTF section's targetDate. The
     // edit flow converts it back to ISO via parseTargetDate before it re-enters

@@ -142,7 +142,9 @@ export default function HistoryTab({
                   theme={theme}
                   badgeLabel="AUTO"
                   title={log.strategyName}
-                  orderStatus={log.status}
+                  orderStatus={log.orderStatus || log.status}
+                  statusLabel={log.statusLabel}
+                  statusColor={log.statusColor}
                   details={[
                     { label: 'AMOUNT', value: `₹${log.amount.toLocaleString('en-IN')}`, mono: true },
                     { label: 'BROKER', value: log.broker || '—' },

@@ -134,6 +134,9 @@ export interface StrategyOrder {
   date?: string;
   amount?: number;
   broker?: string;
+  orderStatus?: string;
+  statusLabel?: string;
+  statusColor?: string;
 }
 
 /** Market quote returned by `GET /api/angelone/ltp`. */
