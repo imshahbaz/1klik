@@ -62,14 +62,18 @@ export interface ScanResult {
 
 /** Feature flags / client config controlling which auth methods are shown. */
 export interface AppConfig {
+  id?: string;
+  environment?: string;
   auth: {
     google: boolean;
     email: boolean;
-    truecaller: boolean;
+    trueCaller: boolean;
   };
   components: {
     heatMap: boolean;
   };
+  allowedDailyStrategies?: string[];
+  allowedContinuousStrategies?: string[];
 }
 
 /** A margin row returned by `GET /api/margin/all`. */
@@ -130,6 +134,9 @@ export interface StrategyOrder {
   date?: string;
   amount?: number;
   broker?: string;
+  orderStatus?: string;
+  statusLabel?: string;
+  statusColor?: string;
 }
 
 /** Market quote returned by `GET /api/angelone/ltp`. */

@@ -9,16 +9,16 @@ import { Panel, SectionHeader } from '../ui/Panel';
 import { Tag } from '../ui/Feedback';
 import { numeric, radius, space } from '../../theme/tokens';
 
-export const EXECUTE_STRATEGIES = ['TARGET PROFIT', 'TRAILING PROFIT'] as const;
-export type ExecuteStrategy = (typeof EXECUTE_STRATEGIES)[number];
+export type ExecuteStrategy = string;
 
 interface ExecuteTabProps {
   readonly styles?: any;
   readonly theme: any;
   readonly tradeBroker: 'ZERODHA' | 'RUPEEZY';
   readonly setTradeBroker: (broker: 'ZERODHA' | 'RUPEEZY') => void;
-  readonly tradeStrategyName: ExecuteStrategy;
-  readonly setTradeStrategyName: (name: ExecuteStrategy) => void;
+  readonly tradeStrategyName: string;
+  readonly setTradeStrategyName: (name: string) => void;
+  readonly strategyOptions?: readonly string[];
   readonly tradeTargetPercentage: string;
   readonly setTradeTargetPercentage: (value: string) => void;
   readonly tradeSymbol: string;
@@ -51,6 +51,7 @@ export default function ExecuteTab({
   setTradeBroker,
   tradeStrategyName,
   setTradeStrategyName,
+  strategyOptions,
   tradeTargetPercentage,
   setTradeTargetPercentage,
   tradeSymbol,
@@ -68,6 +69,7 @@ export default function ExecuteTab({
   formatDateString,
 }: ExecuteTabProps) {
   const [showStrategyDropdown, setShowStrategyDropdown] = useState(false);
+  const options = strategyOptions || [];
 
   return (
     <View>
@@ -213,9 +215,9 @@ export default function ExecuteTab({
       <StrategyDropdownModal
         theme={theme}
         visible={showStrategyDropdown}
-        options={EXECUTE_STRATEGIES}
+        options={options}
         selected={tradeStrategyName}
-        onSelect={(name) => setTradeStrategyName(name as ExecuteStrategy)}
+        onSelect={(name) => setTradeStrategyName(name)}
         onClose={() => setShowStrategyDropdown(false)}
       />
     </View>
