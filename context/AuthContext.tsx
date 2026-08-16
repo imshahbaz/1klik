@@ -25,15 +25,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 const CONFIG_CACHE_KEY = 'app_global_config';
-const CACHE_EXPIRY = 300000;
+const CACHE_EXPIRY = 60000;
 
 // Notification permissions and listener handling is managed within the AuthProvider useEffect below
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [appConfig, setAppConfig] = useState<AppConfig>({
-        auth: { google: true, email: true, truecaller: true },
-        components: { heatMap: true }
+        auth: { google: true, email: true, trueCaller: true },
+        components: { heatMap: true },
+        allowedDailyStrategies: [],
+        allowedContinuousStrategies: [],
     });
 
     const [appLoading, setAppLoading] = useState(true);
@@ -46,8 +48,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const cached = cachedStr ? JSON.parse(cachedStr) : null;
             const now = Date.now();
 
-            if (!forceRefresh && cached && (now - cached.timestamp < CACHE_EXPIRY)) {
+            if (cached?.data) {
                 setAppConfig(cached.data);
+            }
+
+            if (!forceRefresh && cached && (now - cached.timestamp < CACHE_EXPIRY)) {
                 setConfigLoading(false);
                 return;
             }
@@ -99,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setBootProgress(1);
                     }
                 };
-                fetchGlobalConfig().finally(checkDone);
+                fetchGlobalConfig(true).finally(checkDone);
                 refreshUserData().finally(checkDone);
             }
         };

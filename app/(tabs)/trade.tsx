@@ -1,28 +1,28 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
+import DatePickerModal from '../../components/common/DatePickerModal';
+import ExecuteTab, { ExecuteAction } from '../../components/trade/ExecuteTab';
+import HistoryTab from '../../components/trade/HistoryTab';
+import OrderResultModal from '../../components/trade/OrderResultModal';
+import StrategyTab, { StrategyAction } from '../../components/trade/StrategyTab';
+import Screen from '../../components/ui/Screen';
+import Tabs from '../../components/ui/Tabs';
+import TopBar from '../../components/ui/TopBar';
 import { CustomAlert } from '../../context/AlertContext';
 import { useAuth } from '../../context/AuthContext';
-import { useRequireAuth } from '../../hooks/useRequireAuth';
-import { useOrderHistory } from '../../hooks/useOrderHistory';
 import { useMargins } from '../../context/MarginContext';
-import { useStrategies } from '../../context/StrategyContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useOrderHistory } from '../../hooks/useOrderHistory';
+import { useRequireAuth } from '../../hooks/useRequireAuth';
 import {
-  strategyOrderAPI,
   orderAPI,
+  strategyOrderAPI,
   type CreateOrderPayload,
   type CreateStrategyOrderPayload,
 } from '../../services/api';
-import Screen from '../../components/ui/Screen';
-import TopBar from '../../components/ui/TopBar';
-import Tabs from '../../components/ui/Tabs';
-import ExecuteTab, { ExecuteAction, ExecuteStrategy } from '../../components/trade/ExecuteTab';
-import StrategyTab, { StrategyAction } from '../../components/trade/StrategyTab';
-import HistoryTab from '../../components/trade/HistoryTab';
-import OrderResultModal from '../../components/trade/OrderResultModal';
-import DatePickerModal from '../../components/common/DatePickerModal';
+import { rankMarginSymbols } from '../../utils/margins';
 import { getOrderResult } from '../../utils/orderError';
 import { getStrategyOrderResult } from '../../utils/strategyOrderError';
 import {
@@ -30,21 +30,24 @@ import {
   formatIsoDate,
   parseTargetDate,
 } from '../../utils/tradeFormatters';
-import { rankMarginSymbols } from '../../utils/margins';
 
 export default function TradeScreen() {
-  const { user, appLoading } = useAuth();
+  const { user, appLoading, appConfig } = useAuth();
   const { theme } = useTheme();
 
   useRequireAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const { margins: marginsData } = useMargins();
-  const { fifteenMinuteStrategies } = useStrategies();
 
-  const strategyOptions = useMemo(
-    () => fifteenMinuteStrategies.map((s) => s.name),
-    [fifteenMinuteStrategies]
+  const allowedExecuteStrategies = useMemo(
+    () => appConfig?.allowedDailyStrategies || [],
+    [appConfig?.allowedDailyStrategies]
+  );
+
+  const continuousStrategyOptions = useMemo(
+    () => appConfig?.allowedContinuousStrategies || [],
+    [appConfig?.allowedContinuousStrategies]
   );
 
   // Top 10 margin matches for the current search, ranked by relevance.
@@ -65,9 +68,17 @@ export default function TradeScreen() {
   const [pickerDate, setPickerDate] = useState(new Date());
   const [executingTrade, setExecutingTrade] = useState(false);
   const [tradeBroker, setTradeBroker] = useState<'ZERODHA' | 'RUPEEZY'>('ZERODHA');
-  const [tradeStrategyName, setTradeStrategyName] = useState<ExecuteStrategy>('TRAILING PROFIT');
+  const [tradeStrategyName, setTradeStrategyName] = useState<string>(
+    allowedExecuteStrategies[0] || ''
+  );
   const [tradeTargetPercentage, setTradeTargetPercentage] = useState('');
 
+  // Auto-select first strategy when options populate asynchronously
+  useEffect(() => {
+    if (!tradeStrategyName && allowedExecuteStrategies.length > 0) {
+      setTradeStrategyName(allowedExecuteStrategies[0]);
+    }
+  }, [allowedExecuteStrategies, tradeStrategyName]);
 
   // Order-history data layer (lists, fetch, deletes) lives in a dedicated hook.
   const {
@@ -96,11 +107,18 @@ export default function TradeScreen() {
 
   // Strategy Order Form State
   const [strategyFormData, setStrategyFormData] = useState({
-    strategyName: 'RSI15MIN',
+    strategyName: continuousStrategyOptions[0] || '',
     amount: '',
     date: '',
     broker: 'ZERODHA' as 'ZERODHA' | 'RUPEEZY',
   });
+
+  useEffect(() => {
+    if (!strategyFormData.strategyName && continuousStrategyOptions.length > 0) {
+      setStrategyFormData((prev) => ({ ...prev, strategyName: continuousStrategyOptions[0] }));
+    }
+  }, [continuousStrategyOptions, strategyFormData.strategyName]);
+
   const [editingStrategyOrderId, setEditingStrategyOrderId] = useState<string | null>(null);
   const [submittingStrategy, setSubmittingStrategy] = useState(false);
   const [datePickerTarget, setDatePickerTarget] = useState<'execute' | 'strategy'>('execute');
@@ -123,13 +141,18 @@ export default function TradeScreen() {
     setTradeQty('10');
     setTargetDate(new Date());
     setTradeBroker('ZERODHA');
-    setTradeStrategyName('TRAILING PROFIT');
+    setTradeStrategyName(allowedExecuteStrategies[0] || '');
     setTradeTargetPercentage('');
     setEditingMtfOrderId(null);
   };
 
   const resetStrategyForm = () => {
-    setStrategyFormData({ strategyName: 'RSI15MIN', amount: '', date: '', broker: 'ZERODHA' });
+    setStrategyFormData({
+      strategyName: continuousStrategyOptions[0] || '',
+      amount: '',
+      date: '',
+      broker: 'ZERODHA',
+    });
     setEditingStrategyOrderId(null);
   };
 
@@ -235,7 +258,7 @@ export default function TradeScreen() {
       setSearchQuery('');
       setTradeQty('10');
       setTargetDate(new Date());
-      setTradeStrategyName('TRAILING PROFIT');
+      setTradeStrategyName(allowedExecuteStrategies[0] || '');
       setTradeTargetPercentage('');
     } catch (err: any) {
       console.error('Failed to process MTF order:', err);
@@ -263,6 +286,7 @@ export default function TradeScreen() {
             setTradeBroker={setTradeBroker}
             tradeStrategyName={tradeStrategyName}
             setTradeStrategyName={setTradeStrategyName}
+            strategyOptions={allowedExecuteStrategies}
             tradeTargetPercentage={tradeTargetPercentage}
             setTradeTargetPercentage={setTradeTargetPercentage}
             tradeSymbol={tradeSymbol}
@@ -289,7 +313,7 @@ export default function TradeScreen() {
         return (
           <StrategyTab
             theme={theme}
-            strategyOptions={strategyOptions}
+            strategyOptions={continuousStrategyOptions}
             strategyFormData={strategyFormData}
             setStrategyFormData={setStrategyFormData}
             setDatePickerTarget={setDatePickerTarget}
@@ -387,7 +411,7 @@ export default function TradeScreen() {
       }
 
       setStrategyFormData({
-        strategyName: 'RSI15MIN',
+        strategyName: continuousStrategyOptions[0] || '',
         amount: '',
         date: '',
         broker: 'ZERODHA',

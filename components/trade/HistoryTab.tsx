@@ -20,7 +20,7 @@ interface HistoryTabProps {
   readonly setTargetDate: (date: Date) => void;
   readonly setPickerDate: (date: Date) => void;
   readonly setTradeBroker: (broker: 'ZERODHA' | 'RUPEEZY') => void;
-  readonly setTradeStrategyName: (name: 'TARGET PROFIT' | 'TRAILING PROFIT') => void;
+  readonly setTradeStrategyName: (name: string) => void;
   readonly setTradeTargetPercentage: (value: string) => void;
   readonly setEditingMtfOrderId: (id: string | null) => void;
   readonly setActiveTab: (tab: 'execute' | 'strategy' | 'history') => void;
