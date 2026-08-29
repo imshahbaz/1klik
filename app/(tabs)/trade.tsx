@@ -208,8 +208,8 @@ export default function TradeScreen() {
 
     const isTargetProfit = tradeStrategyName === 'TARGET PROFIT';
     const targetPercentageVal = Number.parseFloat(tradeTargetPercentage);
-    if (isTargetProfit && (Number.isNaN(targetPercentageVal) || targetPercentageVal < 0.4 || targetPercentageVal > 20)) {
-      CustomAlert.alert('Execution Alert', 'Target % is required and must be between 0.4 and 20.');
+    if (isTargetProfit && (Number.isNaN(targetPercentageVal) || targetPercentageVal < 0.19 || targetPercentageVal > 20)) {
+      CustomAlert.alert('Execution Alert', 'Target % is required and must be between 0.19 and 20.');
       return;
     }
 

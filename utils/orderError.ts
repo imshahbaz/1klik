@@ -95,7 +95,7 @@ export function getOrderResult(
       if (hasDetail(problem, 'target percentage should be between')) {
         return {
           title: 'Check Target %',
-          message: 'Target percentage must be between 0.4 and 20.',
+          message: 'Target percentage must be between 0.19 and 20.',
         };
       }
       if (hasDetail(problem, 'invalid order strategy')) {
