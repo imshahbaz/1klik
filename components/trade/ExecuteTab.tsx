@@ -106,7 +106,7 @@ export default function ExecuteTab({
         {tradeStrategyName === 'TARGET PROFIT' ? (
           <Field
             label="Target"
-            hint="0.4 – 20"
+            hint="0.19 – 20"
             value={tradeTargetPercentage}
             onChangeText={setTradeTargetPercentage}
             keyboardType="numeric"
