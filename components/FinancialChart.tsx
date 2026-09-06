@@ -119,16 +119,47 @@ export default function FinancialChart({ rawData, theme, height = 400 }: ChartPr
     const byTime = new Map<string, Candle>();
 
     for (const d of rawData) {
-      if (!d?.mtimestamp) continue;
-      const parts = d.mtimestamp.split('-');
-      if (parts.length !== 3) continue;
+      const rawTimestamp = d?.timestamp;
+      if (!rawTimestamp) continue;
 
-      const [day, month, year] = parts;
-      const monthNum = MONTH_TO_NUM[month] || '01';
-      const open = Number.parseFloat(d.chOpeningPrice);
-      const high = Number.parseFloat(d.chTradeHighPrice);
-      const low = Number.parseFloat(d.chTradeLowPrice);
-      const close = Number.parseFloat(d.chClosingPrice);
+      let time = '';
+      if (typeof rawTimestamp === 'string') {
+        if (rawTimestamp.includes('-')) {
+          const parts = rawTimestamp.split('-');
+          if (parts.length === 3) {
+            if (parts[0].length === 4) {
+              // Format: YYYY-MM-DD
+              time = rawTimestamp.slice(0, 10);
+            } else {
+              const [day, month, year] = parts;
+              const monthNum = MONTH_TO_NUM[month] || (month.length === 2 ? month.padStart(2, '0') : '01');
+              time = `${year}-${monthNum}-${day.padStart(2, '0')}`;
+            }
+          }
+        } else {
+          const parsed = new Date(rawTimestamp);
+          if (!Number.isNaN(parsed.getTime())) {
+            time = parsed.toISOString().slice(0, 10);
+          }
+        }
+      } else if (typeof rawTimestamp === 'number') {
+        const parsed = new Date(rawTimestamp);
+        if (!Number.isNaN(parsed.getTime())) {
+          time = parsed.toISOString().slice(0, 10);
+        }
+      }
+
+      if (!time) continue;
+
+      const rawOpen = d.open;
+      const rawHigh = d.high;
+      const rawLow = d.low;
+      const rawClose = d.close;
+
+      const open = typeof rawOpen === 'number' ? rawOpen : Number.parseFloat(rawOpen);
+      const high = typeof rawHigh === 'number' ? rawHigh : Number.parseFloat(rawHigh);
+      const low = typeof rawLow === 'number' ? rawLow : Number.parseFloat(rawLow);
+      const close = typeof rawClose === 'number' ? rawClose : Number.parseFloat(rawClose);
 
       if (
         Number.isNaN(open) || Number.isNaN(high) || Number.isNaN(low) || Number.isNaN(close) ||
@@ -137,7 +168,6 @@ export default function FinancialChart({ rawData, theme, height = 400 }: ChartPr
         continue;
       }
 
-      const time = `${year}-${monthNum}-${day.padStart(2, '0')}`;
       byTime.set(time, { time, open, high, low, close });
     }
 
