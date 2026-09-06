@@ -14,7 +14,7 @@ import {
   Margin,
   MtfOrder,
   NewsItem,
-  NseCandle,
+  Candle,
   ScanResult,
   Strategy,
   StrategyOrder,
@@ -43,7 +43,7 @@ export const strategyAPI = {
       `/api/chartink/fetchWithMargin?strategy=${encodeURIComponent(strategyName)}`
     ),
   fetchChartData: (symbol: string) =>
-    api.get<ApiResponse<NseCandle[]>>(`/api/nse/history?symbol=${encodeURIComponent(symbol)}`),
+    api.get<ApiResponse<Candle[]>>(`/api/nse/history?symbol=${encodeURIComponent(symbol)}`),
 };
 
 export const marginAPI = {

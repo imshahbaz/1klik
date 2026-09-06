@@ -102,13 +102,12 @@ export interface AiAnalysis {
 }
 
 /** A daily candle returned by `GET /api/nse/history`. */
-export interface NseCandle {
-  chSymbol?: string;
-  chOpeningPrice?: number | string;
-  chTradeHighPrice?: number | string;
-  chTradeLowPrice?: number | string;
-  chClosingPrice?: number | string;
-  mtimestamp?: string;
+export interface Candle {
+  open?: number | string;
+  high?: number | string;
+  low?: number | string;
+  close?: number | string;
+  timestamp?: string;
 }
 
 /** A scheduled MTF order returned by `GET /api/order/user/:userId`. */
